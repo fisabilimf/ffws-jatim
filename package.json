@@ -1,0 +1,23 @@
+{
+  "name": "ffws-jatim",
+  "version": "1.0.0",
+  "description": "Repo for Flood Forecasting and Weather System Jawa Timur",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fisabilimf/ffws-jatim.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/fisabilimf/ffws-jatim/issues"
+  },
+  "homepage": "https://github.com/fisabilimf/ffws-jatim#readme",
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.0.2",
+    "vite": "^7.1.3"
+  }
+}
