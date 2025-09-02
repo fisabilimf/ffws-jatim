@@ -18,9 +18,7 @@
                     <label for="search" class="sr-only">Cari</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                            </svg>
+                            <i class="fas fa-search h-5 w-5 text-gray-400"></i>
                         </div>
                         <input type="text" 
                                name="search" 
@@ -48,17 +46,15 @@
                             <div class="flex items-center space-x-1">
                                 <span>{{ $header['label'] }}</span>
                                 @if($sortable && isset($header['sortable']) && $header['sortable'])
-                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        @if($sortColumn === $header['key'])
-                                            @if($sortDirection === 'asc')
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
-                                            @else
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                            @endif
+                                    @if($sortColumn === $header['key'])
+                                        @if($sortDirection === 'asc')
+                                            <i class="fas fa-sort-up w-4 h-4 text-gray-400"></i>
                                         @else
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                                            <i class="fas fa-sort-down w-4 h-4 text-gray-400"></i>
                                         @endif
-                                    </svg>
+                                    @else
+                                        <i class="fas fa-sort w-4 h-4 text-gray-400"></i>
+                                    @endif
                                 @endif
                             </div>
                         </th>
@@ -93,10 +89,20 @@
                                             <div class="flex items-center space-x-2">
                                                 @if(isset($row['actions']))
                                                     @foreach($row['actions'] as $action)
-                                                        <a href="{{ $action['url'] }}" 
-                                                           class="text-{{ $action['color'] ?? 'blue' }}-600 hover:text-{{ $action['color'] ?? 'blue' }}-900">
-                                                            {{ $action['label'] }}
-                                                        </a>
+                                                        @if(isset($action['method']) && $action['method'] === 'DELETE')
+                                                            <form action="{{ $action['url'] }}" method="POST" class="inline" onsubmit="return confirm('{{ $action['confirm'] ?? 'Apakah Anda yakin?' }}')">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" class="text-{{ $action['color'] ?? 'red' }}-600 hover:text-{{ $action['color'] ?? 'red' }}-900">
+                                                                    {{ $action['label'] }}
+                                                                </button>
+                                                            </form>
+                                                        @else
+                                                            <a href="{{ $action['url'] }}" 
+                                                               class="text-{{ $action['color'] ?? 'blue' }}-600 hover:text-{{ $action['color'] ?? 'blue' }}-900">
+                                                                {{ $action['label'] }}
+                                                            </a>
+                                                        @endif
                                                     @endforeach
                                                 @endif
                                             </div>
@@ -114,9 +120,7 @@
                     <tr>
                         <td colspan="{{ count($headers) }}" class="px-6 py-12 text-center text-gray-500">
                             <div class="flex flex-col items-center">
-                                <svg class="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
-                                </svg>
+                                <i class="fas fa-inbox w-12 h-12 text-gray-400 mb-4"></i>
                                 <p class="text-lg font-medium text-gray-900 mb-2">Tidak ada data</p>
                                 <p class="text-gray-500">Belum ada data yang tersedia.</p>
                             </div>

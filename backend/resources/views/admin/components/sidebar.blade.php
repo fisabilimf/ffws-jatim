@@ -6,12 +6,12 @@
     
     <!-- Logo -->
     <div class="flex items-center justify-between h-16 px-6 border-b border-gray-200">
-        <div class="flex items-center">
+        <a href="{{ route('admin.dashboard') }}" class="flex items-center group hover:opacity-80 transition">
             <div class="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden bg-white">
                 <img src="{{ asset('assets/images/PUSDAJATIM.png') }}" alt="Logo PUSDAJATIM" class="object-contain w-full h-full" />
             </div>
             <span class="ml-3 text-xl font-semibold text-gray-900">FFWS</span>
-        </div>
+        </a>
         
         <!-- Toggle button -->
         <button @click="open = !open" 
@@ -32,7 +32,7 @@
                       {{ request()->routeIs('admin.dashboard') 
                          ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-700' 
                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
-                <i class="fas fa-tachometer-alt mr-3 h-5 w-5"></i>
+                <i class="fas fa-tachometer-alt mr-3"></i>
                 Dashboard
             </a>
             
@@ -42,7 +42,7 @@
                       {{ request()->routeIs('admin.users.*') 
                          ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-700' 
                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
-                <i class="fas fa-users mr-3 h-5 w-5"></i>
+                <i class="fas fa-users mr-3"></i>
                 Manajemen User
             </a>
             
@@ -52,7 +52,7 @@
                       {{ request()->routeIs('admin.settings.*') 
                          ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-700' 
                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
-                <i class="fas fa-cog mr-3 h-5 w-5"></i>
+                <i class="fas fa-cog mr-3"></i>
                 Pengaturan
             </a>
         </div>
@@ -65,7 +65,7 @@
                     @csrf
                     <button type="submit" 
                             class="group w-full flex items-center px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200">
-                        <i class="fas fa-sign-out-alt mr-3 h-5 w-5"></i>
+                        <i class="fas fa-sign-out-alt mr-3"></i>
                         Keluar
                     </button>
                 </form>
@@ -73,32 +73,3 @@
         </div>
     </nav>
 </aside>
-
-<!-- Mobile overlay -->
-<div x-show="open" 
-     @click="open = false"
-     class="fixed inset-0 z-20 bg-black bg-opacity-50 lg:hidden"
-     x-transition:enter="transition ease-out duration-300"
-     x-transition:enter-start="opacity-0"
-     x-transition:enter-end="opacity-100"
-     x-transition:leave="transition ease-in duration-200"
-     x-transition:leave-start="opacity-100"
-     x-transition:leave-end="opacity-0">
-</div>
-
-<!-- Floating Toggle Button (when sidebar is closed) -->
-<div x-show="!open" 
-     class="fixed top-4 left-4 z-40 lg:hidden"
-     x-transition:enter="transition ease-out duration-300"
-     x-transition:enter-start="opacity-0 scale-75"
-     x-transition:enter-end="opacity-100 scale-100"
-     x-transition:leave="transition ease-in duration-200"
-     x-transition:leave-start="opacity-100 scale-100"
-     x-transition:leave-end="opacity-0 scale-75">
-    <button @click="open = true" 
-            class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
-        <i class="fas fa-bars w-6 h-6"></i>
-    </button>
-</div>
-
-
