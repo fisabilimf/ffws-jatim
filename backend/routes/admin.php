@@ -38,6 +38,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         Route::post('/clear-cache', [SettingController::class, 'clearCache'])->name('cache.clear');
         Route::post('/clear-config', [SettingController::class, 'clearConfig'])->name('config.clear');
     });
+
+    // Master Data
+    Route::prefix('master')->name('master.')->group(function () {
+        // Halaman data wilayah
+        Route::view('/kabupaten', 'admin.master.kabupaten')->name('kabupaten');
+        Route::view('/kecamatan', 'admin.master.kecamatan')->name('kecamatan');
+        Route::view('/desa', 'admin.master.desa')->name('desa');
+    });
     
     // Profile & Account
     Route::prefix('profile')->name('profile.')->group(function () {

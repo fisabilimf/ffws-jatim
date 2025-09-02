@@ -60,15 +60,40 @@
         <!-- Divider -->
         <div class="mt-6 pt-6 border-t border-gray-200">
             <div class="space-y-1">
-                <!-- Logout -->
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" 
-                            class="group w-full flex items-center px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200">
-                        <i class="fas fa-sign-out-alt mr-3"></i>
-                        Keluar
-                    </button>
-                </form>
+                <!-- Master Heading -->
+                <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Master</div>
+
+                <!-- Master: Kabupaten -->
+                <a href="{{ route('admin.master.kabupaten') }}" 
+                   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200
+                          {{ request()->routeIs('admin.master.kabupaten') 
+                             ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-700' 
+                             : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                    <i class="fas fa-city mr-3"></i>
+                    Kabupaten
+                </a>
+
+                <!-- Master: Kecamatan -->
+                <a href="{{ route('admin.master.kecamatan') }}" 
+                   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200
+                          {{ request()->routeIs('admin.master.kecamatan') 
+                             ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-700' 
+                             : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                    <i class="fas fa-layer-group mr-3"></i>
+                    Kecamatan
+                </a>
+
+                <!-- Master: Desa -->
+                <a href="{{ route('admin.master.desa') }}" 
+                   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200
+                          {{ request()->routeIs('admin.master.desa') 
+                             ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-700' 
+                             : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                    <i class="fas fa-home mr-3"></i>
+                    Desa
+                </a>
+
+                
             </div>
         </div>
     </nav>
