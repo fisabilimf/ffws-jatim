@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const FloodWarningTicker = () => {
+const FloodWarningTicker = ({ onDataUpdate }) => {
   // Function to generate detailed history data (20 data points representing 10 minutes)
   const generateDetailedHistory = (currentValue) => {
     const history = [];
@@ -62,6 +62,13 @@ const FloodWarningTicker = () => {
     const interval = setInterval(updateTickerData, 3000);
     return () => clearInterval(interval);
   }, []);
+
+  // Send data to parent component whenever tickerData changes
+  useEffect(() => {
+    if (onDataUpdate && tickerData) {
+      onDataUpdate(tickerData);
+    }
+  }, [tickerData, onDataUpdate]);
 
   // Auto-scroll ticker
   useEffect(() => {
