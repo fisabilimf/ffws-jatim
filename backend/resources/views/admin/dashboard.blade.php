@@ -78,15 +78,15 @@
                 <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
                 <div class="space-y-3">
                     <a href="{{ route('admin.users.index') }}" class="flex items-center p-3 text-sm font-medium text-gray-700 bg-gray-50 rounded-lg hover:bg-gray-100">
-                        <i class="fas fa-users h-5 w-5 text-gray-400 mr-3"></i>
+                        <i class="fas fa-users text-gray-400 mr-3"></i>
                         Kelola Users
                     </a>
                     <a href="{{ route('admin.settings.index') }}" class="flex items-center p-3 text-sm font-medium text-gray-700 bg-gray-50 rounded-lg hover:bg-gray-100">
-                        <i class="fas fa-cog h-5 w-5 text-gray-400 mr-3"></i>
+                        <i class="fas fa-cog text-gray-400 mr-3"></i>
                         Pengaturan Sistem
                     </a>
                     <a href="{{ route('admin.profile.index') }}" class="flex items-center p-3 text-sm font-medium text-gray-700 bg-gray-50 rounded-lg hover:bg-gray-100">
-                        <i class="fas fa-user h-5 w-5 text-gray-400 mr-3"></i>
+                        <i class="fas fa-user text-gray-400 mr-3"></i>
                         Profil Saya
                     </a>
                 </div>
