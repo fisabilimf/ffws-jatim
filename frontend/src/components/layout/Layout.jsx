@@ -8,9 +8,7 @@ const Layout = ({ children }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <div className="w-full py-2 bg-blue-50">
-        <FloodWarningTicker />
-      </div>
+      <FloodWarningTicker />
       <main className="w-full p-6">
         {children || <Dashboard />}
       </main>

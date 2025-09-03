@@ -127,6 +127,28 @@ const Dashboard = () => {
           </div>
         </Card>
       </div>
+
+      {/* Additional Content for Testing Scroll */}
+      <div className="space-y-6">
+        <Card title="Additional Information">
+          <div className="space-y-4">
+            <p className="text-gray-600">
+              Ini adalah konten tambahan untuk menguji sticky positioning pada Flood Warning Ticker. 
+              Scroll ke bawah untuk melihat efek sticky pada ticker.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {Array.from({ length: 9 }, (_, i) => (
+                <div key={i} className="bg-gray-100 p-4 rounded-lg">
+                  <h4 className="font-medium text-gray-900 mb-2">Item {i + 1}</h4>
+                  <p className="text-sm text-gray-600">
+                    Deskripsi untuk item {i + 1}. Ini membantu menambah konten untuk testing scroll.
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
+      </div>
     </div>
   )
 }
