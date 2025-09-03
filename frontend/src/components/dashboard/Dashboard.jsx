@@ -23,7 +23,7 @@ const Dashboard = () => {
   // Konfigurasi prediksi
   const predictionConfig = {
     model: 'LSTM',
-    period: '1 '
+    period: '1 Jam'
   }
   
   // Data tabel prediksi

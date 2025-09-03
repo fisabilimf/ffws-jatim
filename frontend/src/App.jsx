@@ -1,9 +1,9 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Layout from './components/layout/Layout'
-import Dashboard from './components/dashboard/Dashboard'
-import History from './components/dashboard/History'
-import Home from './components/Home'
+import Dashboard from './features/dashboard/Dashboard'
+import History from './features/history/History'
+import Home from './pages/Home'
 import './App.css'
 
 function App() {
