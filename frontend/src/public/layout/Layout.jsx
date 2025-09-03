@@ -1,6 +1,4 @@
 import React, { useState } from 'react'
-import Header from './Header'
-import Footer from './Footer'
 import Dashboard from '../pages/Dashboard'
 import FloodWarningTicker from '../components/FloodTicker'
 import MapboxMap from '../components/MapboxMap'
@@ -19,7 +17,6 @@ const Layout = ({ children }) => {
       <main className="w-full p-6">
         {children || <Dashboard />}
       </main>
-      <Footer />
     </div>
   )
 }
