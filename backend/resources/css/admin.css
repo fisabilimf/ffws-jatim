@@ -1,5 +1,81 @@
 /* Admin Panel Custom Styles */
 
+/* Fix sidebar and main content spacing */
+.min-h-screen.flex {
+    margin: 0;
+    padding: 0;
+}
+
+.flex-1.flex.flex-col {
+    margin: 0;
+    padding: 0;
+}
+
+/* Ensure no unwanted spacing */
+body {
+    margin: 0;
+    padding: 0;
+}
+
+/* Sidebar positioning fixes */
+aside.fixed {
+    top: 0;
+    left: 0;
+    height: 100vh;
+}
+
+aside.lg\:relative {
+    position: relative;
+    height: 100vh;
+}
+
+/* Mini sidebar - hide all text and center icons only */
+@media (min-width: 1024px) {
+    /* Hide text completely in mini sidebar */
+    .sidebar-nav-item .transition-opacity {
+        transition: opacity 0.3s ease-in-out;
+    }
+    
+    /* Center icons in mini sidebar */
+    .sidebar-nav-item.justify-center {
+        justify-content: center;
+        padding: 0.75rem 0.5rem;
+    }
+    
+    /* Hide master heading completely in mini sidebar */
+    .sidebar-nav-item .opacity-0.h-0 {
+        height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+    }
+    
+    /* Ensure no text is visible in mini sidebar */
+    .sidebar-nav-item .opacity-0 {
+        opacity: 0 !important;
+        width: 0 !important;
+        overflow: hidden !important;
+    }
+    
+    /* Hide logo text completely in mini sidebar */
+    .sidebar-logo .opacity-0.w-0 {
+        opacity: 0 !important;
+        width: 0 !important;
+        margin-left: 0 !important;
+        overflow: hidden !important;
+    }
+    
+    /* Toggle button styling in topnav */
+    .sidebar-toggle-btn {
+        transition: all 0.2s ease-in-out;
+    }
+    
+    .sidebar-toggle-btn:hover {
+        background-color: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+}
+
 /* Custom scrollbar */
 .admin-scrollbar::-webkit-scrollbar {
     width: 6px;
