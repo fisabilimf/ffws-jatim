@@ -1,25 +1,30 @@
 <!-- Sidebar -->
-<aside class="bg-white shadow-lg w-64 min-h-screen flex-shrink-0 transition-all duration-300 ease-in-out fixed lg:relative z-30" 
-       x-data="{ open: false }" 
-       :class="{ '-translate-x-full lg:translate-x-0': !open, 'translate-x-0': open }"
-       x-init="open = window.innerWidth >= 1024">
+<aside class="bg-white min-h-screen flex-shrink-0 transition-all duration-300 ease-in-out fixed lg:relative z-30 sidebar-mobile lg:sidebar-desktop" 
+       :class="{ 
+           '-translate-x-full': !$store.sidebar.open && window.innerWidth < 1024,
+           'translate-x-0': $store.sidebar.open || window.innerWidth >= 1024,
+           'w-16': !$store.sidebar.open && window.innerWidth >= 1024,
+           'w-64': $store.sidebar.open || window.innerWidth < 1024
+       }">
     
     <!-- Logo -->
     <div class="flex items-center justify-between h-16 px-6 border-b border-gray-200">
-        <a href="{{ route('admin.dashboard') }}" class="flex items-center group hover:opacity-80 transition">
+        <a href="{{ route('admin.dashboard') }}" class="flex items-center group sidebar-logo">
             <div class="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden bg-white">
                 <img src="{{ asset('assets/images/PUSDAJATIM.png') }}" alt="Logo PUSDAJATIM" class="object-contain w-full h-full" />
             </div>
-            <span class="ml-3 text-xl font-semibold text-gray-900">FFWS</span>
+            <!-- Full logo text (hidden when sidebar is collapsed) -->
+            <span class="ml-3 text-xl font-semibold text-gray-900 transition-opacity duration-300"
+                  :class="{ 'opacity-0 lg:opacity-100': $store.sidebar.open, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">FFWS</span>
         </a>
         
-        <!-- Toggle button -->
-        <button @click="open = !open" 
-                class="text-gray-500 hover:text-gray-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded-md p-1">
+        <!-- Toggle button (hidden on desktop) -->
+        <button @click="$store.sidebar.toggle()" 
+                class="lg:hidden sidebar-toggle-btn text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded-md p-1">
             <!-- Burger Icon -->
-            <i x-show="!open" class="fas fa-bars w-6 h-6 transition-all duration-300"></i>
+            <i x-show="!$store.sidebar.open" class="fas fa-bars w-6 h-6 transition-all duration-300"></i>
             <!-- Close Icon -->
-            <i x-show="open" class="fas fa-times w-6 h-6 transition-all duration-300"></i>
+            <i x-show="$store.sidebar.open" class="fas fa-times w-6 h-6 transition-all duration-300"></i>
         </button>
     </div>
     
@@ -28,32 +33,41 @@
         <div class="space-y-1">
             <!-- Dashboard -->
             <a href="{{ route('admin.dashboard') }}" 
-               class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200
+               class="sidebar-nav-item group flex items-center px-3 py-2 text-sm font-medium rounded-md relative
                       {{ request()->routeIs('admin.dashboard') 
-                         ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-700' 
-                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
-                <i class="fas fa-tachometer-alt mr-3"></i>
-                Dashboard
+                         ? 'active' 
+                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}"
+               :title="$store.sidebar.open ? '' : 'Dashboard'">
+                <i class="fas fa-tachometer-alt transition-all duration-300"
+                   :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
+                <span class="transition-opacity duration-300"
+                      :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Dashboard</span>
             </a>
             
             <!-- Users Management -->
             <a href="{{ route('admin.users.index') }}" 
-               class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200
+               class="sidebar-nav-item group flex items-center px-3 py-2 text-sm font-medium rounded-md relative
                       {{ request()->routeIs('admin.users.*') 
-                         ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-700' 
-                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
-                <i class="fas fa-users mr-3"></i>
-                Manajemen User
+                         ? 'active' 
+                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}"
+               :title="$store.sidebar.open ? '' : 'Manajemen User'">
+                <i class="fas fa-users transition-all duration-300"
+                   :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
+                <span class="transition-opacity duration-300"
+                      :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Manajemen User</span>
             </a>
             
             <!-- Settings -->
             <a href="{{ route('admin.settings.index') }}" 
-               class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200
+               class="sidebar-nav-item group flex items-center px-3 py-2 text-sm font-medium rounded-md relative
                       {{ request()->routeIs('admin.settings.*') 
-                         ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-700' 
-                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
-                <i class="fas fa-cog mr-3"></i>
-                Pengaturan
+                         ? 'active' 
+                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}"
+               :title="$store.sidebar.open ? '' : 'Pengaturan'">
+                <i class="fas fa-cog transition-all duration-300"
+                   :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
+                <span class="transition-opacity duration-300"
+                      :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Pengaturan</span>
             </a>
         </div>
         
@@ -61,36 +75,46 @@
         <div class="mt-6 pt-6 border-t border-gray-200">
             <div class="space-y-1">
                 <!-- Master Heading -->
-                <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Master</div>
+                <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider transition-opacity duration-300"
+                     :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Master</div>
 
                 <!-- Master: Kabupaten -->
                 <a href="{{ route('admin.master.kabupaten') }}" 
-                   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200
+                   class="sidebar-nav-item group flex items-center px-3 py-2 text-sm font-medium rounded-md relative
                           {{ request()->routeIs('admin.master.kabupaten') 
-                             ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-700' 
-                             : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
-                    <i class="fas fa-city mr-3"></i>
-                    Kabupaten
+                             ? 'active' 
+                             : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}"
+                   :title="$store.sidebar.open ? '' : 'Kabupaten'">
+                    <i class="fas fa-city transition-all duration-300"
+                       :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
+                    <span class="transition-opacity duration-300"
+                          :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Kabupaten</span>
                 </a>
 
                 <!-- Master: Kecamatan -->
                 <a href="{{ route('admin.master.kecamatan') }}" 
-                   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200
+                   class="sidebar-nav-item group flex items-center px-3 py-2 text-sm font-medium rounded-md relative
                           {{ request()->routeIs('admin.master.kecamatan') 
-                             ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-700' 
-                             : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
-                    <i class="fas fa-layer-group mr-3"></i>
-                    Kecamatan
+                             ? 'active' 
+                             : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}"
+                   :title="$store.sidebar.open ? '' : 'Kecamatan'">
+                    <i class="fas fa-layer-group transition-all duration-300"
+                       :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
+                    <span class="transition-opacity duration-300"
+                          :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Kecamatan</span>
                 </a>
 
                 <!-- Master: Desa -->
                 <a href="{{ route('admin.master.desa') }}" 
-                   class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200
+                   class="sidebar-nav-item group flex items-center px-3 py-2 text-sm font-medium rounded-md relative
                           {{ request()->routeIs('admin.master.desa') 
-                             ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-700' 
-                             : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
-                    <i class="fas fa-home mr-3"></i>
-                    Desa
+                             ? 'active' 
+                             : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}"
+                   :title="$store.sidebar.open ? '' : 'Desa'">
+                    <i class="fas fa-home transition-all duration-300"
+                       :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
+                    <span class="transition-opacity duration-300"
+                          :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Desa</span>
                 </a>
 
                 

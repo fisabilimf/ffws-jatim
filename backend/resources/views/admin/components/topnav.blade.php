@@ -4,7 +4,12 @@
         <!-- Left side -->
         <div class="flex items-center">
             <!-- Mobile menu button -->
-            <button @click="$dispatch('toggle-sidebar')" class="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100">
+            <button @click="$store.sidebar.toggle()" class="lg:hidden sidebar-toggle-btn p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100">
+                <i class="fas fa-bars w-6 h-6"></i>
+            </button>
+            
+            <!-- Desktop sidebar toggle button -->
+            <button @click="$store.sidebar.toggle()" class="hidden lg:block sidebar-toggle-btn p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100">
                 <i class="fas fa-bars w-6 h-6"></i>
             </button>
             
@@ -32,7 +37,7 @@
         <div class="flex items-center space-x-4">
             <!-- Notifications -->
             <button class="p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-md relative">
-                <i class="fas fa-bell w-6 h-6"></i>
+                <i class="fas fa-bell"></i>
                 <!-- Notification badge -->
                 <span class="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-400"></span>
             </button>

@@ -4,6 +4,35 @@ import Alpine from 'alpinejs'
 // Make Alpine available globally
 window.Alpine = Alpine
 
+// Alpine Store for Sidebar
+Alpine.store('sidebar', {
+    open: window.innerWidth >= 1024,
+    
+    toggle() {
+        this.open = !this.open;
+    },
+    
+    close() {
+        this.open = false;
+    },
+    
+    openSidebar() {
+        this.open = true;
+    },
+    
+    init() {
+        // Set initial state based on screen size
+        this.open = window.innerWidth >= 1024;
+        
+        // Listen for window resize
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 1024) {
+                this.open = true;
+            }
+        });
+    }
+})
+
 // Admin Panel Components
 Alpine.data('adminPanel', () => ({
     // Sidebar state
