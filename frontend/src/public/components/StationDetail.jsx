@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 const StationDetail = ({ selectedStation, onClose }) => {
   const [stationData, setStationData] = useState(null);
   const [chartHistory, setChartHistory] = useState([]);
+  const [isVisible, setIsVisible] = useState(false);
 
   // Function to generate detailed history data
   const generateDetailedHistory = (currentValue) => {
@@ -26,8 +27,26 @@ const StationDetail = ({ selectedStation, onClose }) => {
         history: history
       });
       setChartHistory(history);
+      
+      // Small delay to ensure smooth slide-in animation
+      setTimeout(() => {
+        console.log('Setting isVisible to true for slide-in animation');
+        setIsVisible(true);
+      }, 10);
+    } else {
+      setIsVisible(false);
     }
   }, [selectedStation]);
+
+  // Handle close with animation
+  const handleClose = () => {
+    console.log('Starting slide-out animation');
+    setIsVisible(false);
+    setTimeout(() => {
+      console.log('Slide-out animation complete, closing panel');
+      onClose();
+    }, 300); // Wait for animation to complete
+  };
 
   // Update chart data in real-time
   useEffect(() => {
@@ -173,6 +192,15 @@ const StationDetail = ({ selectedStation, onClose }) => {
     }
   };
 
+  const getStatusDotColor = (status) => {
+    switch (status) {
+      case 'safe': return 'bg-green-500';
+      case 'warning': return 'bg-yellow-500';
+      case 'alert': return 'bg-red-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
   const getStatusText = (status) => {
     switch (status) {
       case 'safe': return 'Aman';
@@ -186,81 +214,123 @@ const StationDetail = ({ selectedStation, onClose }) => {
     return null;
   }
 
+  console.log('StationDetail render - isVisible:', isVisible, 'selectedStation:', selectedStation?.name);
+
   return (
-    <div className="fixed top-4 right-4 z-50 w-80 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold">{stationData.name}</h3>
-            <p className="text-blue-100 text-sm">{stationData.location}</p>
+    <>
+      {/* Slide-in Panel - No backdrop to avoid covering map */}
+      <div 
+        className={`fixed top-0 left-0 h-full w-96 bg-white shadow-2xl z-[60] transform transition-transform duration-300 ease-in-out ${
+          isVisible ? 'translate-x-0' : '-translate-x-full'
+        }`}
+        style={{
+          willChange: 'transform'
+        }}
+      >
+        {/* Header */}
+        <div className="bg-white border-b border-gray-200 p-4">
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={handleClose}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-gray-900">{stationData.name}</h3>
+              <p className="text-gray-500 text-sm">{stationData.location}</p>
+            </div>
+            <div className={`w-3 h-3 rounded-full ${getStatusDotColor(stationData.status)}`}></div>
           </div>
-          <button
-            onClick={onClose}
-            className="text-white hover:text-gray-200 transition-colors"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="p-4 space-y-4">
-        {/* Status Card */}
-        <div className={`p-3 rounded-lg border-2 ${getStatusBgColor(stationData.status)}`}>
-          <div className="flex items-center justify-between">
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-4 space-y-6">
+            {/* Status Card */}
+            <div className={`p-4 rounded-lg border-2 ${getStatusBgColor(stationData.status)}`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Status Saat Ini</p>
+                  <p className={`text-xl font-bold ${getStatusColor(stationData.status)}`}>
+                    {getStatusText(stationData.status)}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-3xl font-bold text-gray-900">
+                    {stationData.value.toFixed(1)}
+                  </p>
+                  <p className="text-sm text-gray-500">{stationData.unit}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-gray-200"></div>
+
+            {/* Chart Section */}
             <div>
-              <p className="text-sm text-gray-600">Status Saat Ini</p>
-              <p className={`text-lg font-bold ${getStatusColor(stationData.status)}`}>
-                {getStatusText(stationData.status)}
-              </p>
+              <h4 className="text-base font-medium text-gray-900 mb-2">Grafik Level Air</h4>
+              <p className="text-sm text-gray-500 mb-4">Data 10 menit terakhir</p>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <canvas
+                  id="station-detail-chart"
+                  width="320"
+                  height="160"
+                  className="w-full h-40 rounded bg-white"
+                />
+              </div>
             </div>
-            <div className="text-right">
-              <p className="text-2xl font-bold text-gray-900">
-                {stationData.value.toFixed(1)}
-              </p>
-              <p className="text-sm text-gray-500">{stationData.unit}</p>
+
+            {/* Divider */}
+            <div className="border-t border-gray-200"></div>
+
+            {/* Statistics Grid */}
+            <div>
+              <h4 className="text-base font-medium text-gray-900 mb-4">Statistik</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-sm text-gray-500 mb-1">Level Tertinggi</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {Math.max(...chartHistory).toFixed(1)}m
+                  </p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-sm text-gray-500 mb-1">Level Terendah</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {Math.min(...chartHistory).toFixed(1)}m
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-gray-200"></div>
+
+            {/* Additional Info */}
+            <div>
+              <h4 className="text-base font-medium text-gray-900 mb-4">Informasi Stasiun</h4>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-gray-600">ID Stasiun</span>
+                  <span className="text-gray-900 font-medium">#{stationData.id}</span>
+                </div>
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-gray-600">Lokasi</span>
+                  <span className="text-gray-900 font-medium text-right max-w-48">{stationData.location}</span>
+                </div>
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-gray-600">Update Terakhir</span>
+                  <span className="text-gray-900 font-medium">{new Date().toLocaleTimeString('id-ID')}</span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* Chart */}
-        <div className="bg-gray-50 rounded-lg p-3">
-          <h4 className="text-sm font-medium text-gray-700 mb-2">Grafik Level Air (10 Menit Terakhir)</h4>
-          <canvas
-            id="station-detail-chart"
-            width="320"
-            height="120"
-            className="w-full h-30 rounded"
-          />
-        </div>
-
-        {/* Statistics */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-gray-50 rounded-lg p-3">
-            <p className="text-xs text-gray-500">Level Tertinggi</p>
-            <p className="text-lg font-bold text-gray-900">
-              {Math.max(...chartHistory).toFixed(1)}m
-            </p>
-          </div>
-          <div className="bg-gray-50 rounded-lg p-3">
-            <p className="text-xs text-gray-500">Level Terendah</p>
-            <p className="text-lg font-bold text-gray-900">
-              {Math.min(...chartHistory).toFixed(1)}m
-            </p>
-          </div>
-        </div>
-
-        {/* Last Update */}
-        <div className="text-center">
-          <p className="text-xs text-gray-500">
-            Terakhir diperbarui: {new Date().toLocaleTimeString('id-ID')}
-          </p>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
