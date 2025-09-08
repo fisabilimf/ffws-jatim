@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-const MapboxMap = ({ tickerData }) => {
+const MapboxMap = ({ tickerData, onStationSelect }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [selectedStation, setSelectedStation] = useState(null);
@@ -72,8 +72,12 @@ const MapboxMap = ({ tickerData }) => {
 
         // Add click event to marker
         markerEl.addEventListener('click', () => {
-          setSelectedStation(station);
-          setIsSidecardOpen(true);
+          if (onStationSelect) {
+            onStationSelect(station);
+          } else {
+            setSelectedStation(station);
+            setIsSidecardOpen(true);
+          }
         });
       }
     });
@@ -139,7 +143,7 @@ const MapboxMap = ({ tickerData }) => {
   };
 
   return (
-    <div className="w-full h-96 rounded-lg overflow-hidden shadow-lg relative">
+    <div className="w-full h-screen overflow-hidden relative">
       <div ref={mapContainer} className="w-full h-full" />
       
       {/* Sidecard - Google Maps Style */}
@@ -226,24 +230,6 @@ const MapboxMap = ({ tickerData }) => {
           </div>
         </div>
       )}
-      
-      {/* Legend */}
-      <div className="bg-white p-3 border-t">
-        <div className="flex items-center justify-center space-x-6 text-sm">
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-green-500"></div>
-            <span className="text-gray-700">Aman</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-            <span className="text-gray-700">Waspada</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-red-500"></div>
-            <span className="text-gray-700">Bahaya</span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
