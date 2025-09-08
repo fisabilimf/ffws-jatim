@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const FloodWarningTicker = () => {
+const FloodWarningTicker = ({ onDataUpdate }) => {
   // Function to generate detailed history data (20 data points representing 10 minutes)
   const generateDetailedHistory = (currentValue) => {
     const history = [];
@@ -62,6 +62,13 @@ const FloodWarningTicker = () => {
     const interval = setInterval(updateTickerData, 3000);
     return () => clearInterval(interval);
   }, []);
+
+  // Send data to parent component whenever tickerData changes
+  useEffect(() => {
+    if (onDataUpdate && tickerData) {
+      onDataUpdate(tickerData);
+    }
+  }, [tickerData, onDataUpdate]);
 
   // Auto-scroll ticker
   useEffect(() => {
@@ -165,7 +172,33 @@ const FloodWarningTicker = () => {
       default: lineColor = '#6B7280'; break;
     }
     
-    // Draw line chart
+    // Create gradient for area fill
+    const gradient = ctx.createLinearGradient(0, 0, 0, height);
+    gradient.addColorStop(0, lineColor + '50'); // 50% opacity at top (near line)
+    gradient.addColorStop(0.3, lineColor + '40'); // 40% opacity near line
+    gradient.addColorStop(0.6, lineColor + '25'); // 25% opacity at middle
+    gradient.addColorStop(1, lineColor + '05'); // 5% opacity at bottom
+    
+    // Draw area fill below the line
+    ctx.beginPath();
+    ctx.fillStyle = gradient;
+    
+    // Start from bottom-left
+    ctx.moveTo(0, height);
+    
+    // Draw line to each data point
+    history.forEach((value, index) => {
+      const x = (index / (history.length - 1)) * width;
+      const y = height - ((value - minValue) / range) * height;
+      ctx.lineTo(x, y);
+    });
+    
+    // Complete the path to bottom-right and fill
+    ctx.lineTo(width, height);
+    ctx.closePath();
+    ctx.fill();
+    
+    // Draw the line chart on top
     ctx.beginPath();
     ctx.strokeStyle = lineColor;
     ctx.lineWidth = 2;
@@ -187,7 +220,14 @@ const FloodWarningTicker = () => {
   };
 
   return (
-    <div className="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 text-white p-2 shadow-lg">
+    <div 
+      className="sticky-ticker sticky top-0 z-50 bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 text-white p-2 shadow-lg"
+      style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 50
+      }}
+    >
       <div className="flex items-center justify-between mb-2 px-6">
         <div className="flex items-center space-x-2">
           <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
@@ -202,7 +242,7 @@ const FloodWarningTicker = () => {
         style={{ scrollBehavior: 'smooth' }}
       >
                  {tickerData.map((item) => (
-           <div key={item.id} className="flex items-center space-x-3 bg-blue-800/50 rounded-lg px-3 py-2 min-w-max">
+           <div key={item.id} className="flex items-center space-x-3 rounded-lg px-3 py-2 min-w-max transition-all duration-300 hover:bg-blue-700/30 hover:scale-105 hover:shadow-lg cursor-pointer">
              <div className={`w-3 h-3 rounded-full ${getStatusBgColor(item.status)}`}></div>
              <span className="text-xs text-blue-200 font-medium">{item.name}</span>
              <div className="flex items-center space-x-1">
@@ -213,7 +253,7 @@ const FloodWarningTicker = () => {
                 id={`chart-${item.id}`}
                 width="64"
                 height="32"
-                className="w-16 h-8 bg-blue-700 rounded"
+                className="w-16 h-8 rounded transition-all duration-300 hover:scale-105"
               />
            </div>
          ))}
