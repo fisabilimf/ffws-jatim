@@ -13,33 +13,19 @@
             ['key' => 'status', 'label' => 'Status', 'format' => 'status'],
             ['key' => 'actions', 'label' => 'Aksi', 'format' => 'actions'],
         ]"
-        :rows="[
-            ['no' => 1, 'kode' => '3510', 'nama' => 'Kabupaten Sidoarjo', 'provinsi' => 'Jawa Timur', 'status' => 'active', 'actions' => [
-                ['label' => 'Detail', 'url' => '#', 'color' => 'gray'],
-                ['label' => 'Edit', 'url' => '#', 'color' => 'yellow'],
-                ['label' => 'Hapus', 'url' => '#', 'color' => 'red', 'method' => 'DELETE', 'confirm' => 'Hapus data ini?'],
-            ]],
-            ['no' => 2, 'kode' => '3578', 'nama' => 'Kota Surabaya', 'provinsi' => 'Jawa Timur', 'status' => 'active', 'actions' => [
-                ['label' => 'Detail', 'url' => '#', 'color' => 'gray'],
-                ['label' => 'Edit', 'url' => '#', 'color' => 'yellow'],
-                ['label' => 'Hapus', 'url' => '#', 'color' => 'red', 'method' => 'DELETE', 'confirm' => 'Hapus data ini?'],
-            ]],
-            ['no' => 3, 'kode' => '3309', 'nama' => 'Kabupaten Semarang', 'provinsi' => 'Jawa Tengah', 'status' => 'inactive', 'actions' => [
-                ['label' => 'Detail', 'url' => '#', 'color' => 'gray'],
-                ['label' => 'Edit', 'url' => '#', 'color' => 'yellow'],
-                ['label' => 'Hapus', 'url' => '#', 'color' => 'red', 'method' => 'DELETE', 'confirm' => 'Hapus data ini?'],
-            ]],
-        ]"
+        :rows="$kabupatens ?? []"
         searchable
         search-placeholder="Cari kabupaten..."
-        pagination-text="Menampilkan 1–3 dari 3 data"
+        :pagination="$pagination ?? null"
     >
         <x-slot:filters>
-            <select class="py-2 px-3 border rounded focus:outline-none focus:ring focus:border-blue-300">
+            <select class="py-2 px-3 border rounded focus:outline-none focus:ring focus:border-blue-300" name="provinsi" id="provinsi-filter">
                 <option value="">Semua Provinsi</option>
-                <option>Jawa Timur</option>
-                <option>Jawa Tengah</option>
-                <option>Jawa Barat</option>
+                {{-- 
+                    @foreach($provinsis as $provinsi)
+                        <option value="{{ $provinsi->id }}">{{ $provinsi->nama }}</option>
+                    @endforeach 
+                --}}
             </select>
         </x-slot:filters>
         <x-slot:actions>
@@ -55,5 +41,3 @@
     </x-datatable>
 </div>
 @endsection
-
-

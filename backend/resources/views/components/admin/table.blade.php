@@ -89,18 +89,64 @@
                                             <div class="flex items-center space-x-2">
                                                 @if(isset($row['actions']))
                                                     @foreach($row['actions'] as $action)
-                                                        @if(isset($action['method']) && $action['method'] === 'DELETE')
-                                                            <form action="{{ $action['url'] }}" method="POST" class="inline" onsubmit="return confirm('{{ $action['confirm'] ?? 'Apakah Anda yakin?' }}')">
+                                                        @php
+                                                            // Normalisasi tipe aksi dari 'type' atau 'label'
+                                                            $rawType = strtolower(trim($action['type'] ?? ($action['label'] ?? '')));
+                                                            $isDeleteByType = str_contains($rawType, 'hapus') || str_contains($rawType, 'delete') || str_contains($rawType, 'destroy');
+                                                            $isViewByType = str_contains($rawType, 'detail') || str_contains($rawType, 'lihat') || str_contains($rawType, 'view') || str_contains($rawType, 'show');
+                                                            $isEditByType = str_contains($rawType, 'edit');
+
+                                                            // Tentukan method dan warna default berbasis tipe bila tidak diset
+                                                            $isDelete = isset($action['method']) && strtoupper($action['method']) === 'DELETE';
+                                                            if (!$isDelete && $isDeleteByType) {
+                                                                $isDelete = true;
+                                                            }
+
+                                                            // Pemetaan ikon default bila tidak disediakan
+                                                            $icon = $action['icon'] ?? null; // e.g. 'eye', 'pen', 'trash'
+                                                            if (!$icon) {
+                                                                $icon = $isDelete ? 'trash' : ($isEditByType ? 'pen' : ($isViewByType ? 'eye' : null));
+                                                            }
+
+                                                            $label = $action['label'] ?? null;
+                                                            $color = $action['color'] ?? ($isDelete ? 'red' : 'gray');
+                                                            $title = $action['title'] ?? ($label ?? ($isDelete ? 'Hapus' : ($isEditByType ? 'Edit' : ($isViewByType ? 'Detail' : 'Aksi'))));
+                                                            $baseBtn = 'inline-flex items-center justify-center w-9 h-9 rounded-lg border text-sm transition';
+                                                            $normalClasses = ' border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900';
+                                                            $dangerClasses = ' border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700';
+                                                            $btnClasses = $baseBtn . ($color === 'red' ? $dangerClasses : $normalClasses);
+                                                        @endphp
+
+                                                        @if($isDelete)
+                                                            <form action="{{ $action['url'] }}" method="POST" class="inline" data-confirm-delete="{{ $action['confirm'] ?? 'Data yang dihapus tidak dapat dikembalikan. Lanjutkan?' }}">
                                                                 @csrf
                                                                 @method('DELETE')
-                                                                <button type="submit" class="text-{{ $action['color'] ?? 'red' }}-600 hover:text-{{ $action['color'] ?? 'red' }}-900">
-                                                                    {{ $action['label'] }}
+                                                                <button type="submit" class="{{ $btnClasses }}" title="{{ $title }}">
+                                                                    @if($icon)
+                                                                        <i class="fas fa-{{ $icon }}"></i>
+                                                                    @else
+                                                                        <span class="sr-only">{{ $label ?? 'Hapus' }}</span>
+                                                                        <i class="fas fa-trash"></i>
+                                                                    @endif
                                                                 </button>
                                                             </form>
+                                                        @elseif(isset($action['onclick']))
+                                                            <button type="button" onclick="{{ $action['onclick'] }}" class="{{ $btnClasses }}" title="{{ $title }}">
+                                                                @if($icon)
+                                                                    <i class="fas fa-{{ $icon }}"></i>
+                                                                @else
+                                                                    <span class="sr-only">{{ $label ?? 'Aksi' }}</span>
+                                                                    <i class="fas fa-ellipsis"></i>
+                                                                @endif
+                                                            </button>
                                                         @else
-                                                            <a href="{{ $action['url'] }}" 
-                                                               class="text-{{ $action['color'] ?? 'blue' }}-600 hover:text-{{ $action['color'] ?? 'blue' }}-900">
-                                                                {{ $action['label'] }}
+                                                            <a href="{{ $action['url'] }}" class="{{ $btnClasses }}" title="{{ $title }}">
+                                                                @if($icon)
+                                                                    <i class="fas fa-{{ $icon }}"></i>
+                                                                @else
+                                                                    <span class="sr-only">{{ $label ?? 'Detail' }}</span>
+                                                                    <i class="fas fa-ellipsis"></i>
+                                                                @endif
                                                             </a>
                                                         @endif
                                                     @endforeach
