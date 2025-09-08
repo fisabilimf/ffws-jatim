@@ -1,9 +1,5 @@
 import React from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import Layout from './components/layout/Layout'
-import Dashboard from './features/dashboard/Dashboard'
-import History from './features/history/History'
-import Home from './pages/Home'
+import Layout from './public/layout/Layout'
 import './App.css'
 
 function App() {
@@ -21,4 +17,3 @@ function App() {
 }
 
 export default App
-

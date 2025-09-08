@@ -1,1 +1,20 @@
 @import "tailwindcss";
+
+/* Custom CSS untuk sticky positioning */
+.sticky-ticker {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+/* Memastikan parent container mendukung sticky */
+html, body {
+  height: 100%;
+  overflow-x: hidden;
+}
+
+/* Memastikan sticky berfungsi di berbagai browser */
+* {
+  box-sizing: border-box;
+}
