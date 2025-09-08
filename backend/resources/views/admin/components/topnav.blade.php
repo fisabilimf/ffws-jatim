@@ -3,36 +3,23 @@
     <div class="flex items-center justify-between h-16 px-6">
         <!-- Left side -->
         <div class="flex items-center">
-            <!-- Mobile menu button -->
-            <button @click="$dispatch('toggle-sidebar')" class="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100">
-                <i class="fas fa-bars w-6 h-6"></i>
+            <!-- Mobile toggle button -->
+            <button @click="$store.sidebar.toggle()" class="lg:hidden sidebar-toggle-btn p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100">
+                <i x-show="!$store.sidebar.open" class="fas fa-bars w-6 h-6 transition-all duration-300"></i>
+                <i x-show="$store.sidebar.open" class="fas fa-times w-6 h-6 transition-all duration-300"></i>
             </button>
             
-            <!-- Breadcrumb -->
-            <nav class="hidden md:flex ml-4" aria-label="Breadcrumb">
-                <ol class="flex items-center space-x-2">
-                    <li>
-                        <a href="{{ route('admin.dashboard') }}" class="text-gray-400 hover:text-gray-500">
-                            <i class="fas fa-home w-4 h-4"></i>
-                        </a>
-                    </li>
-                    @hasSection('breadcrumb')
-                        <li>
-                            <i class="fas fa-chevron-right w-4 h-4 text-gray-400"></i>
-                        </li>
-                        <li>
-                            <span class="text-sm text-gray-500">@yield('breadcrumb')</span>
-                        </li>
-                    @endif
-                </ol>
-            </nav>
+            <!-- Desktop toggle button -->
+            <button @click="$store.sidebar.toggle()" class="hidden lg:block sidebar-toggle-btn p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100">
+                <i class="fas fa-bars w-5 h-5 transition-all duration-300"></i>
+            </button>
         </div>
         
         <!-- Right side -->
         <div class="flex items-center space-x-4">
             <!-- Notifications -->
             <button class="p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-md relative">
-                <i class="fas fa-bell w-6 h-6"></i>
+                <i class="fas fa-bell"></i>
                 <!-- Notification badge -->
                 <span class="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-400"></span>
             </button>

@@ -19,13 +19,55 @@
     <!-- Additional CSS -->
     @stack('styles')
 </head>
-<body class="font-sans antialiased bg-gray-50">
+<body class="font-sans antialiased bg-gray-50" 
+      x-data="{}" 
+      x-init="
+          // Initialize Alpine store for sidebar state
+          Alpine.store('sidebar', {
+              open: window.innerWidth >= 1024,
+              toggle() {
+                  this.open = !this.open;
+              },
+              close() {
+                  this.open = false;
+              }
+          });
+          
+          // Handle window resize
+          window.addEventListener('resize', () => {
+              if (window.innerWidth >= 1024) {
+                  Alpine.store('sidebar').open = true;
+              } else {
+                  Alpine.store('sidebar').open = false;
+              }
+          });
+      ">
     <div class="min-h-screen flex">
         <!-- Sidebar -->
         @include('admin.components.sidebar')
         
+        <!-- Mobile Overlay -->
+        <div x-show="$store.sidebar.open && window.innerWidth < 1024" 
+             x-transition:enter="transition-opacity ease-linear duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition-opacity ease-linear duration-300"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             @click="$store.sidebar.close()"
+             class="sidebar-overlay fixed inset-0 z-20 bg-gray-600 bg-opacity-75 lg:hidden"
+             style="display: none;">
+        </div>
+        
         <!-- Main Content -->
-        <div class="flex-1 flex flex-col">
+        <div class="flex-1 flex flex-col transition-all duration-300 ease-in-out"
+             :class="{ 
+                 'ml-0': !$store.sidebar.open && window.innerWidth < 1024,
+                 'ml-64': $store.sidebar.open && window.innerWidth < 1024,
+                 'lg:ml-16': !$store.sidebar.open && window.innerWidth >= 1024,
+                 'lg:ml-64': $store.sidebar.open && window.innerWidth >= 1024
+             }"
+             style="min-height: 100vh;">
             <!-- Top Navigation -->
             @include('admin.components.topnav')
             
