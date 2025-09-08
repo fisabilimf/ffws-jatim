@@ -1,5 +1,5 @@
 <!-- Sidebar -->
-<aside class="bg-white min-h-screen flex-shrink-0 transition-transform duration-200 ease-out fixed lg:relative z-30 border-r border-gray-200" 
+<aside class="bg-white min-h-screen flex-shrink-0 transition-transform duration-200 ease-out fixed lg:relative z-30 border-r border-gray-200" x-cloak
        :class="{ 
            '-translate-x-full': !$store.sidebar.open && window.innerWidth < 1024,
            'translate-x-0': $store.sidebar.open || window.innerWidth >= 1024,
@@ -71,9 +71,23 @@
         <!-- Divider -->
         <div class="mt-6 pt-6 border-t border-gray-200">
             <div class="space-y-1">
+               <!-- Master: DAS -->
+               <a href="{{ route('admin.master.river-basins.index') }}" 
+                  class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative
+                         {{ request()->routeIs('admin.master.river-basins.*') 
+                            ? 'active' 
+                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}"
+                  :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-3 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }"
+                  :title="$store.sidebar.open ? '' : 'Daerah Aliran Sungai'">
+                   <i class="fas fa-water"
+                      :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
+                   <span
+                         :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Daerah Aliran Sungai</span>
+               </a>
                 <!-- Master Heading -->
                 <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider"
                      :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0 h-0 py-0 overflow-hidden': !$store.sidebar.open && window.innerWidth >= 1024 }">Master</div>
+
 
                 <!-- Master: Kabupaten -->
                 <a href="{{ route('admin.master.kabupaten') }}" 

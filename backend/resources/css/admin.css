@@ -1,5 +1,13 @@
 /* Admin Panel Custom Styles */
 
+[x-cloak] { display: none !important; }
+
+/* Matikan semua transition/animation saat initial load */
+.no-transitions, .no-transitions * {
+    transition: none !important;
+    animation: none !important;
+}
+
 /* Fix sidebar and main content spacing */
 .min-h-screen.flex {
     margin: 0;

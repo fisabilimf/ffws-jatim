@@ -1,5 +1,6 @@
 // Admin Panel JavaScript
 import Alpine from 'alpinejs'
+import Swal from 'sweetalert2'
 
 // Make Alpine available globally
 window.Alpine = Alpine
@@ -328,10 +329,51 @@ window.AdminUtils = {
     
     // Confirm action
     confirm(message = 'Apakah Anda yakin?') {
-        return new Promise((resolve) => {
-            const confirmed = window.confirm(message)
-            resolve(confirmed)
-        })
+        return Swal.fire({
+            title: 'Konfirmasi',
+            text: message,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, lanjutkan',
+            cancelButtonText: 'Batal',
+            reverseButtons: true
+        }).then(result => result.isConfirmed)
+    },
+
+    confirmDelete(message = 'Data yang dihapus tidak dapat dikembalikan. Lanjutkan?') {
+        return Swal.fire({
+            title: 'Hapus Data?',
+            text: message,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, hapus',
+            cancelButtonText: 'Batal',
+            reverseButtons: true
+        }).then(result => result.isConfirmed)
+    },
+
+    confirmSave(message = 'Simpan perubahan?') {
+        return Swal.fire({
+            title: 'Simpan Perubahan',
+            text: message,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Simpan',
+            cancelButtonText: 'Batal',
+            reverseButtons: true
+        }).then(result => result.isConfirmed)
+    },
+
+    confirmLogout(message = 'Yakin ingin keluar dari sistem?') {
+        return Swal.fire({
+            title: 'Keluar?',
+            text: message,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, keluar',
+            cancelButtonText: 'Batal',
+            reverseButtons: true
+        }).then(result => result.isConfirmed)
     },
     
     // Show loading state
@@ -354,7 +396,130 @@ window.AdminUtils = {
 // Start Alpine
 Alpine.start()
 
+// Lepas kelas no-transitions setelah halaman selesai load
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        if (document && document.body) {
+            document.body.classList.remove('no-transitions')
+        }
+    }, 0)
+})
+
 // Export for use in other modules
 export default Alpine
+
+// SweetAlert2 global helpers
+window.Swal = Swal
+
+// Toast helpers
+const Toast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true,
+})
+
+window.AdminUtils.toast = function(type = 'info', message = '', options = {}) {
+    const icon = ['success','error','warning','info','question'].includes(type) ? type : 'info'
+    return Toast.fire({ icon, title: message, ...options })
+}
+
+window.AdminUtils.toastSuccess = function(message, options = {}) {
+    return window.AdminUtils.toast('success', message, options)
+}
+
+window.AdminUtils.toastError = function(message, options = {}) {
+    return window.AdminUtils.toast('error', message, options)
+}
+
+window.AdminUtils.toastWarning = function(message, options = {}) {
+    return window.AdminUtils.toast('warning', message, options)
+}
+
+window.AdminUtils.toastInfo = function(message, options = {}) {
+    return window.AdminUtils.toast('info', message, options)
+}
+
+// Auto-bind confirm handlers for elements using data attributes
+//
+// Usage examples:
+// <a href="..." data-confirm>...</a>
+// <button type="submit" form="formId" data-confirm-delete>Hapus</button>
+// <form ... data-confirm-save>...</form>
+;
+(function initSweetAlertAutoBinding() {
+    if (window.__sweetalertAutoBound) return
+    window.__sweetalertAutoBound = true
+
+    // Click handler for elements with data-confirm* attributes
+    document.addEventListener('click', async (event) => {
+        const target = event.target.closest('[data-confirm],[data-confirm-delete],[data-confirm-save],[data-confirm-logout]')
+        if (!target) return
+
+        // Determine action type and message
+        let confirmed = false
+        if (target.hasAttribute('data-confirm-delete')) {
+            const msg = target.getAttribute('data-confirm-delete') || 'Data yang dihapus tidak dapat dikembalikan. Lanjutkan?'
+            confirmed = await window.AdminUtils.confirmDelete(msg)
+        } else if (target.hasAttribute('data-confirm-save')) {
+            const msg = target.getAttribute('data-confirm-save') || 'Simpan perubahan?'
+            confirmed = await window.AdminUtils.confirmSave(msg)
+        } else if (target.hasAttribute('data-confirm-logout')) {
+            const msg = target.getAttribute('data-confirm-logout') || 'Yakin ingin keluar dari sistem?'
+            confirmed = await window.AdminUtils.confirmLogout(msg)
+        } else if (target.hasAttribute('data-confirm')) {
+            const msg = target.getAttribute('data-confirm') || 'Apakah Anda yakin melakukan tindakan ini?'
+            confirmed = await window.AdminUtils.confirm(msg)
+        }
+
+        if (!confirmed) {
+            event.preventDefault()
+            event.stopPropagation()
+            return
+        }
+
+        // If target is a button without type or with type button, and attached form exists, submit it
+        // Otherwise allow default behavior (e.g., link navigation, submit button submit)
+        const isButton = target.tagName === 'BUTTON'
+        const typeAttr = (target.getAttribute('type') || '').toLowerCase()
+        if (isButton && (typeAttr === 'button' || typeAttr === '')) {
+            const formId = target.getAttribute('form')
+            const form = formId ? document.getElementById(formId) : target.closest('form')
+            if (form) {
+                event.preventDefault()
+                form.submit()
+            }
+        }
+    })
+
+    // Intercept form submits with data-confirm* attributes
+    document.addEventListener('submit', async (event) => {
+        const form = event.target
+        if (!(form instanceof HTMLFormElement)) return
+
+        const attr = ['data-confirm', 'data-confirm-delete', 'data-confirm-save', 'data-confirm-logout'].find(a => form.hasAttribute(a))
+        if (!attr) return
+
+        event.preventDefault()
+
+        let confirmed = false
+        if (attr === 'data-confirm-delete') {
+            const msg = form.getAttribute(attr) || 'Data yang dihapus tidak dapat dikembalikan. Lanjutkan?'
+            confirmed = await window.AdminUtils.confirmDelete(msg)
+        } else if (attr === 'data-confirm-save') {
+            const msg = form.getAttribute(attr) || 'Simpan perubahan?'
+            confirmed = await window.AdminUtils.confirmSave(msg)
+        } else if (attr === 'data-confirm-logout') {
+            const msg = form.getAttribute(attr) || 'Yakin ingin keluar dari sistem?'
+            confirmed = await window.AdminUtils.confirmLogout(msg)
+        } else {
+            const msg = form.getAttribute(attr) || 'Apakah Anda yakin melakukan tindakan ini?'
+            confirmed = await window.AdminUtils.confirm(msg)
+        }
+
+        if (confirmed) form.submit()
+    })
+})()
 
 

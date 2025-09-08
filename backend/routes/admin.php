@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\RiverBasinController;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,6 +46,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         Route::view('/kabupaten', 'admin.master.kabupaten')->name('kabupaten');
         Route::view('/kecamatan', 'admin.master.kecamatan')->name('kecamatan');
         Route::view('/desa', 'admin.master.desa')->name('desa');
+
+        // CRUD DAS (River Basins)
+        Route::prefix('river-basins')->name('river-basins.')->group(function () {
+            Route::get('/', [RiverBasinController::class, 'index'])->name('index');
+            Route::get('/create', [RiverBasinController::class, 'create'])->name('create');
+            Route::post('/', [RiverBasinController::class, 'store'])->name('store');
+            Route::get('/{river_basin}/edit', [RiverBasinController::class, 'edit'])->name('edit');
+            Route::put('/{river_basin}', [RiverBasinController::class, 'update'])->name('update');
+            Route::delete('/{river_basin}', [RiverBasinController::class, 'destroy'])->name('destroy');
+        });
     });
     
     // Profile & Account

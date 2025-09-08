@@ -1,6 +1,6 @@
 <!-- Flash Messages -->
 @if(session('success'))
-    <div class="mb-6 bg-green-50 border border-green-200 rounded-md p-4" x-data="{ show: true }" x-show="show">
+    <div class="mb-6 bg-green-50 border border-green-200 rounded-md p-4" x-data="{ show: true }" x-show="show" x-init="window.AdminUtils?.toastSuccess('{{ addslashes(session('success')) }}')">
         <div class="flex">
             <div class="flex-shrink-0">
                 <i class="fas fa-check-circle h-5 w-5 text-green-400"></i>
@@ -21,7 +21,7 @@
 @endif
 
 @if(session('error'))
-    <div class="mb-6 bg-red-50 border border-red-200 rounded-md p-4" x-data="{ show: true }" x-show="show">
+    <div class="mb-6 bg-red-50 border border-red-200 rounded-md p-4" x-data="{ show: true }" x-show="show" x-init="window.AdminUtils?.toastError('{{ addslashes(session('error')) }}')">
         <div class="flex">
             <div class="flex-shrink-0">
                 <i class="fas fa-exclamation-circle h-5 w-5 text-red-400"></i>
@@ -42,7 +42,7 @@
 @endif
 
 @if(session('warning'))
-    <div class="mb-6 bg-yellow-50 border border-yellow-200 rounded-md p-4" x-data="{ show: true }" x-show="show">
+    <div class="mb-6 bg-yellow-50 border border-yellow-200 rounded-md p-4" x-data="{ show: true }" x-show="show" x-init="window.AdminUtils?.toastWarning('{{ addslashes(session('warning')) }}')">
         <div class="flex">
             <div class="flex-shrink-0">
                 <i class="fas fa-exclamation-triangle h-5 w-5 text-yellow-400"></i>
@@ -63,7 +63,7 @@
 @endif
 
 @if(session('info'))
-    <div class="mb-6 bg-blue-50 border border-blue-200 rounded-md p-4" x-data="{ show: true }" x-show="show">
+    <div class="mb-6 bg-blue-50 border border-blue-200 rounded-md p-4" x-data="{ show: true }" x-show="show" x-init="window.AdminUtils?.toastInfo('{{ addslashes(session('info')) }}')">
         <div class="flex">
             <div class="flex-shrink-0">
                 <i class="fas fa-info-circle h-5 w-5 text-blue-400"></i>
@@ -85,7 +85,7 @@
 
 <!-- Validation Errors -->
 @if($errors->any())
-    <div class="mb-6 bg-red-50 border border-red-200 rounded-md p-4" x-data="{ show: true }" x-show="show">
+    <div class="mb-6 bg-red-50 border border-red-200 rounded-md p-4" x-data="{ show: true }" x-show="show" x-init="window.AdminUtils?.toastError('Ada kesalahan pada input. Periksa kembali.')">
         <div class="flex">
             <div class="flex-shrink-0">
                 <i class="fas fa-exclamation-circle h-5 w-5 text-red-400"></i>

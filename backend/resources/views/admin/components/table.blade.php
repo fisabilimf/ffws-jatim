@@ -90,7 +90,7 @@
                                                 @if(isset($row['actions']))
                                                     @foreach($row['actions'] as $action)
                                                         @if(isset($action['method']) && $action['method'] === 'DELETE')
-                                                            <form action="{{ $action['url'] }}" method="POST" class="inline" onsubmit="return confirm('{{ $action['confirm'] ?? 'Apakah Anda yakin?' }}')">
+                                                            <form action="{{ $action['url'] }}" method="POST" class="inline" data-confirm-delete="{{ $action['confirm'] ?? 'Data yang dihapus tidak dapat dikembalikan. Lanjutkan?' }}">
                                                                 @csrf
                                                                 @method('DELETE')
                                                                 <button type="submit" class="text-{{ $action['color'] ?? 'red' }}-600 hover:text-{{ $action['color'] ?? 'red' }}-900">
