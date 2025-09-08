@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-const MapboxMap = ({ tickerData }) => {
+const MapboxMap = ({ tickerData, onStationSelect }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [selectedStation, setSelectedStation] = useState(null);
@@ -72,8 +72,12 @@ const MapboxMap = ({ tickerData }) => {
 
         // Add click event to marker
         markerEl.addEventListener('click', () => {
-          setSelectedStation(station);
-          setIsSidecardOpen(true);
+          if (onStationSelect) {
+            onStationSelect(station);
+          } else {
+            setSelectedStation(station);
+            setIsSidecardOpen(true);
+          }
         });
       }
     });
