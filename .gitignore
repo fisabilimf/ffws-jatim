@@ -11,7 +11,7 @@ build/
 .env.production.local
 
 # Laravel ignores
-/vendor/
+/backend/vendor/
 .env
 .env.*
 Homestead.yaml
