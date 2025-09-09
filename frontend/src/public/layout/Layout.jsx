@@ -54,6 +54,7 @@ const Layout = ({ children }) => {
       <StationDetail 
         selectedStation={selectedStation}
         onClose={handleCloseStationDetail}
+        tickerData={tickerData}
       />
       
       {/* Main content - hidden in full screen mode */}
