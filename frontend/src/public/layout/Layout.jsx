@@ -28,14 +28,12 @@ const Layout = ({ children }) => {
   return (
     <div className="h-screen bg-gray-50 relative overflow-hidden">
       {/* Full Screen Map */}
-      {tickerData && (
-        <div className="w-full h-full">
-          <MapboxMap 
-            tickerData={tickerData} 
-            onStationSelect={handleStationSelect}
-          />
-        </div>
-      )}
+      <div className="w-full h-full relative z-0">
+        <MapboxMap 
+          tickerData={tickerData} 
+          onStationSelect={handleStationSelect}
+        />
+      </div>
       
       {/* Google Maps Style Searchbar */}
       <GoogleMapsSearchbar 
@@ -53,12 +51,11 @@ const Layout = ({ children }) => {
       <FloatingLegend />
       
       {/* Station Detail Modal */}
-      {selectedStation && (
-        <StationDetail 
-          selectedStation={selectedStation}
-          onClose={handleCloseStationDetail}
-        />
-      )}
+      <StationDetail 
+        selectedStation={selectedStation}
+        onClose={handleCloseStationDetail}
+        tickerData={tickerData}
+      />
       
       {/* Main content - hidden in full screen mode */}
       <main className="hidden">
