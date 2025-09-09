@@ -1,0 +1,14 @@
+Flask
+keras
+keras_tcn
+numpy
+pandas
+SQLAlchemy
+tensorflow
+gunicorn
+python-dotenv
+scikit-learn
+pytest
+joblib
+mysqlclient==1.4.6
+tensorflow-gpu==2.4.0
