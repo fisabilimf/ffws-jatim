@@ -30,16 +30,6 @@ const FloodWarningTicker = ({ tickerData, onStationSelect }) => {
     }
   }, [scrollPosition]);
 
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'safe': return 'text-green-500';
-      case 'warning': return 'text-yellow-500';
-      case 'alert': return 'text-red-500';
-      default: return 'text-gray-400';
-    }
-  };
-
   const getStatusBgColor = (status) => {
     switch (status) {
       case 'safe': return 'bg-green-500';
