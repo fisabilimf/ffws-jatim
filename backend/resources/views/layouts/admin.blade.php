@@ -85,8 +85,8 @@
                     </div>
                 @endif
                 
-                <!-- Flash Messages -->
-                @include('admin.components.flash-messages')
+                <!-- Flash Messages & SweetAlert -->
+                <x-admin.sweetalert />
                 
                 <!-- Main Content -->
                 @yield('content')

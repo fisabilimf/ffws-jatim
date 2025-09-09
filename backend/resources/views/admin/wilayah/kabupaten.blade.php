@@ -3,7 +3,7 @@
 @section('content')
 <div class="px-6 py-4">
     <h1 class="text-2xl font-semibold text-gray-900 mb-4">Master - Kabupaten</h1>
-    <x-datatable
+    <x-table
         title="Daftar Kabupaten"
         :headers="[
             ['key' => 'no', 'label' => 'No'],
@@ -38,6 +38,6 @@
                 Ekspor
             </button>
         </x-slot:actions>
-    </x-datatable>
+    </x-table>
 </div>
 @endsection

@@ -1,32 +1,49 @@
 @props([
+    'title' => null,
     'headers' => [],
     'rows' => [],
     'sortable' => false,
     'sortColumn' => null,
     'sortDirection' => 'asc',
     'pagination' => null,
+    'paginationText' => null,
     'searchable' => false,
     'searchQuery' => '',
+    'searchPlaceholder' => 'Cari...',
     'class' => ''
 ])
 
 <div class="bg-white shadow-sm rounded-lg border border-gray-200 {{ $class }}">
-    @if($searchable)
+    @if($title || $searchable || isset($filters) || isset($actions))
         <div class="px-6 py-4 border-b border-gray-200">
-            <div class="flex items-center space-x-4">
-                <div class="flex-1">
-                    <label for="search" class="sr-only">Cari</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fas fa-search h-5 w-5 text-gray-400"></i>
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    @if($title)
+                        <h2 class="text-lg font-semibold text-gray-900">{{ $title }}</h2>
+                    @endif
+                    @isset($filters)
+                        <div class="flex items-center gap-2">
+                            {{ $filters }}
                         </div>
-                        <input type="text" 
-                               name="search" 
-                               id="search" 
-                               value="{{ $searchQuery }}"
-                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                               placeholder="Cari...">
-                    </div>
+                    @endisset
+                </div>
+                <div class="flex items-center gap-2">
+                    @if($searchable)
+                        <label for="search" class="sr-only">Cari</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                                <i class="fa-solid fa-magnifying-glass h-5 w-5"></i>
+                            </span>
+                            <input id="search" type="text" placeholder="{{ $searchPlaceholder }}" 
+                                   value="{{ $searchQuery }}"
+                                   class="pl-10 pr-3 py-2 border rounded w-64 focus:outline-none focus:ring focus:border-blue-300" />
+                        </div>
+                    @endif
+                    @isset($actions)
+                        <div class="flex items-center gap-2">
+                            {{ $actions }}
+                        </div>
+                    @endisset
                 </div>
             </div>
         </div>
@@ -90,20 +107,17 @@
                                                 @if(isset($row['actions']))
                                                     @foreach($row['actions'] as $action)
                                                         @php
-                                                            // Normalisasi tipe aksi dari 'type' atau 'label'
                                                             $rawType = strtolower(trim($action['type'] ?? ($action['label'] ?? '')));
                                                             $isDeleteByType = str_contains($rawType, 'hapus') || str_contains($rawType, 'delete') || str_contains($rawType, 'destroy');
                                                             $isViewByType = str_contains($rawType, 'detail') || str_contains($rawType, 'lihat') || str_contains($rawType, 'view') || str_contains($rawType, 'show');
                                                             $isEditByType = str_contains($rawType, 'edit');
 
-                                                            // Tentukan method dan warna default berbasis tipe bila tidak diset
                                                             $isDelete = isset($action['method']) && strtoupper($action['method']) === 'DELETE';
                                                             if (!$isDelete && $isDeleteByType) {
                                                                 $isDelete = true;
                                                             }
 
-                                                            // Pemetaan ikon default bila tidak disediakan
-                                                            $icon = $action['icon'] ?? null; // e.g. 'eye', 'pen', 'trash'
+                                                            $icon = $action['icon'] ?? null;
                                                             if (!$icon) {
                                                                 $icon = $isDelete ? 'trash' : ($isEditByType ? 'pen' : ($isViewByType ? 'eye' : null));
                                                             }
@@ -177,9 +191,14 @@
         </table>
     </div>
     
-    @if($pagination)
-        <div class="px-6 py-3 border-t border-gray-200">
-            {{ $pagination }}
+    <div class="px-6 py-3 border-t border-gray-200 flex items-center justify-between">
+        @if($paginationText)
+            <p class="text-sm text-gray-600">{{ $paginationText }}</p>
+        @else
+            <span></span>
+        @endif
+        <div>
+            {{ $pagination ?? '' }}
         </div>
-    @endif
+    </div>
 </div>
