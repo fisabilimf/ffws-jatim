@@ -10,6 +10,7 @@ const Layout = ({ children }) => {
   const [tickerData, setTickerData] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedStation, setSelectedStation] = useState(null)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   const handleSearch = (query) => {
     setSearchQuery(query)
@@ -19,10 +20,12 @@ const Layout = ({ children }) => {
 
   const handleStationSelect = (station) => {
     setSelectedStation(station)
+    setIsSidebarOpen(true)
   }
 
   const handleCloseStationDetail = () => {
     setSelectedStation(null)
+    setIsSidebarOpen(false)
   }
 
   return (
@@ -39,12 +42,14 @@ const Layout = ({ children }) => {
       <GoogleMapsSearchbar 
         onSearch={handleSearch}
         placeholder="Cari stasiun monitoring banjir..."
+        isSidebarOpen={isSidebarOpen}
       />
       
       {/* Flood Ticker Categories */}
       <FloodInfoDetail 
         onDataUpdate={setTickerData}
         onStationSelect={handleStationSelect}
+        isSidebarOpen={isSidebarOpen}
       />
       
       {/* Floating Legend */}

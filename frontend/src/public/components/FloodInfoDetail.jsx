@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const FloodInfoDetail = ({ onDataUpdate, onStationSelect }) => {
+const FloodInfoDetail = ({ onDataUpdate, onStationSelect, isSidebarOpen = false }) => {
   // Function to generate detailed history data (20 data points representing 10 minutes)
   const generateDetailedHistory = (currentValue) => {
     const history = [];
@@ -209,7 +209,9 @@ const FloodInfoDetail = ({ onDataUpdate, onStationSelect }) => {
   }, []);
 
   return (
-    <div className="absolute top-16 sm:top-20 left-2 right-2 sm:left-4 sm:right-4 z-10">
+    <div className={`absolute top-16 sm:top-20 left-2 right-2 sm:left-4 sm:right-4 z-10 transition-all duration-300 ease-in-out ${
+      isSidebarOpen ? 'transform translate-x-80' : 'transform translate-x-0'
+    }`}>
       <div className="max-w-2xl mx-auto">
         <div 
           ref={tickerRef}

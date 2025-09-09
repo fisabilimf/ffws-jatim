@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const GoogleMapsSearchbar = ({ onSearch, placeholder = "Cari di Maps" }) => {
+const GoogleMapsSearchbar = ({ onSearch, placeholder = "Cari di Maps", isSidebarOpen = false }) => {
   const [searchValue, setSearchValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
 
@@ -12,7 +12,9 @@ const GoogleMapsSearchbar = ({ onSearch, placeholder = "Cari di Maps" }) => {
   };
 
   return (
-    <div className="absolute top-4 left-4 right-4 z-10">
+    <div className={`absolute top-4 left-4 right-4 z-10 transition-all duration-300 ease-in-out ${
+      isSidebarOpen ? 'transform translate-x-80' : 'transform translate-x-0'
+    }`}>
       <div className="max-w-2xl mx-auto">
         <form onSubmit={handleSearch} className="relative">
           <div className={`bg-white rounded-lg shadow-lg transition-all duration-200 ${
