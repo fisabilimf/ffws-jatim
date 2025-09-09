@@ -1,5 +1,5 @@
 import React from 'react'
-import Card from '../components/Card'
+import SideCard from '../components/SideCard'
 import Button from '../components/Button'
 
 const Dashboard = () => {
