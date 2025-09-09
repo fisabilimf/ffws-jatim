@@ -14,11 +14,11 @@ from .preprocess import preprocess_series, PreprocessOptions
 
 class ForecastError(Exception): pass
 
-def _fetch_series(session: Session, sensor_id: int, min_multiple: int) -> pd.DataFrame:
+def _fetch_series(session: Session, sensor_code: str, min_multiple: int) -> pd.DataFrame:
     # ambil lebih panjang (×4) untuk jaga-jaga preprocess (resample/trim)
     q = (
         select(DataActual.value, DataActual.received_at)
-        .where(DataActual.mas_sensor_id == sensor_id)
+        .where(DataActual.mas_sensor_code == sensor_code)
         .order_by(desc(DataActual.received_at))
         .limit(min_multiple)
     )
@@ -27,26 +27,34 @@ def _fetch_series(session: Session, sensor_id: int, min_multiple: int) -> pd.Dat
         raise ForecastError("No data points found")
     return pd.DataFrame(rows, columns=["value", "received_at"])
 
-def _get_sensor_and_model(session: Session, sensor_id: int, model_id: int | None):
-    sensor = session.get(MasSensors, sensor_id)
+def _get_sensor_and_model(session: Session, sensor_code: str, model_code: str | None):
+    # Get sensor by sensor_code
+    q_sensor = select(MasSensors).where(MasSensors.sensor_code == sensor_code)
+    sensor = session.execute(q_sensor).scalar_one_or_none()
     if sensor is None:
         raise ForecastError("Sensor not found")
-    if model_id is None:
-        if sensor.mas_model_id is None:
+    
+    # Get model by model_code
+    if model_code is None:
+        if sensor.mas_model_code is None:
             raise ForecastError("Sensor has no default model assigned")
-        model_id = sensor.mas_model_id
-    model = session.get(MasModels, model_id)
+        model_code = sensor.mas_model_code
+    
+    q_model = select(MasModels).where(MasModels.model_code == model_code)
+    model = session.execute(q_model).scalar_one_or_none()
     if model is None:
         raise ForecastError("Model not found")
-    if not model.n_steps_in or not model.n_steps_out:
-        raise ForecastError("Model n_steps_in/out not configured")
+    
     if not model.file_path:
         raise ForecastError("Model file_path missing")
     return sensor, model
 
-def predict_for_sensor(session: Session, settings: Settings, sensor_id: int, model_id: int | None = None) -> dict:
-    sensor, model = _get_sensor_and_model(session, sensor_id, model_id)
-    df = _fetch_series(session, sensor_id, model.n_steps_in * 4)
+def predict_for_sensor(session: Session, settings: Settings, sensor_code: str, model_code: str | None = None) -> dict:
+    sensor, model = _get_sensor_and_model(session, sensor_code, model_code)
+    
+    # For now, assume 48 as min steps in (we'll need to get this from model configuration)
+    min_steps = 48
+    df = _fetch_series(session, sensor_code, min_steps * 4)
 
     # === PREPROCESS ===
     pp_opts = PreprocessOptions(
@@ -57,12 +65,12 @@ def predict_for_sensor(session: Session, settings: Settings, sensor_id: int, mod
         use_external_pipeline=False,
     )
     try:
-        x, step_minutes, idx = preprocess_series(df, model.n_steps_in, pp_opts)
+        x, step_minutes, idx = preprocess_series(df, min_steps, pp_opts)
     except ValueError as e:
         raise ForecastError(str(e))
 
     # Scalers
-    x_scaler, y_scaler = load_scalers(session, settings, model.id, sensor.id)
+    x_scaler, y_scaler = load_scalers(session, settings, model.model_code, sensor.sensor_code)
     if x_scaler is not None:
         x = x_scaler.transform(x.reshape(-1, 1)).reshape(-1)
 
@@ -84,15 +92,16 @@ def predict_for_sensor(session: Session, settings: Settings, sensor_id: int, mod
 
     now = datetime.utcnow()
     base_ts = idx[-1].to_pydatetime()
+    # For now, assume 24 steps out (we'll need to get this from model configuration)
+    n_steps_out = min(24, len(yhat))
     rows_out = []
-    for i in range(model.n_steps_out):
+    for i in range(n_steps_out):
         pred_ts = base_ts + timedelta(minutes=step_minutes * (i + 1))
         val = float(yhat[i] if i < len(yhat) else yhat[-1])
         status = classify_threshold(val, sensor.threshold_safe, sensor.threshold_warning, sensor.threshold_danger)
         rows_out.append(DataPrediction(
-            mas_sensor_id=sensor.id,
             mas_sensor_code=sensor.sensor_code,
-            mas_model_id=model.id,
+            mas_model_code=model.model_code,
             prediction_run_at=now,
             prediction_for_ts=pred_ts,
             predicted_value=val,
@@ -103,49 +112,46 @@ def predict_for_sensor(session: Session, settings: Settings, sensor_id: int, mod
     session.commit()
 
     return {
-        "sensor_id": sensor.id,
         "sensor_code": sensor.sensor_code,
-        "model_id": model.id,
+        "model_code": model.model_code,
         "model_type": model.model_type,
-        "n_steps_in": model.n_steps_in,
-        "n_steps_out": model.n_steps_out,
         "step_minutes": step_minutes,
         "rows_inserted": len(rows_out),
     }
 
-def predict_for_basin(session: Session, settings: Settings, river_basin_id: int, only_active: bool = True) -> dict:
+def predict_for_basin(session: Session, settings: Settings, river_basin_code: str, only_active: bool = True) -> dict:
     """
-    Jalankan forecast berurutan untuk seluruh sensor yang berada di mas_river_basins.id = river_basin_id.
+    Jalankan forecast berurutan untuk seluruh sensor yang berada di mas_river_basins.code = river_basin_code.
     Mengembalikan ringkasan sukses/gagal per sensor.
     """
     # cari sensors lewat devices di basin tsb
-    # hanya sensor yang punya model (sensor.mas_model_id IS NOT NULL)
+    # hanya sensor yang punya model (sensor.mas_model_code IS NOT NULL)
     from sqlalchemy import text
     base_sql = """
-        SELECT s.id AS sensor_id
+        SELECT s.sensor_code AS sensor_code
         FROM mas_devices d
-        JOIN mas_sensors s ON s.device_id = d.id
-        WHERE d.mas_river_basin_id = :rbid
+        JOIN mas_sensors s ON s.mas_device_code = d.device_code
+        WHERE d.mas_river_basin_code = :rbcode
     """
     if only_active:
         base_sql += " AND d.status = 'active' AND s.status = 'active'"
-    base_sql += " AND s.mas_model_id IS NOT NULL"
+    base_sql += " AND s.mas_model_code IS NOT NULL"
 
-    sensors = [row[0] for row in session.execute(text(base_sql), {"rbid": river_basin_id}).all()]
+    sensors = [row[0] for row in session.execute(text(base_sql), {"rbcode": river_basin_code}).all()]
 
-    summary = {"river_basin_id": river_basin_id, "total_sensors": len(sensors),
+    summary = {"river_basin_code": river_basin_code, "total_sensors": len(sensors),
                "ok": 0, "failed": 0, "details": []}
 
-    for sid in sensors:
+    for sensor_code in sensors:
         try:
-            result = predict_for_sensor(session, settings, sid, None)
+            result = predict_for_sensor(session, settings, sensor_code, None)
             summary["ok"] += 1
-            summary["details"].append({"sensor_id": sid, "status": "ok", "rows_inserted": result["rows_inserted"]})
+            summary["details"].append({"sensor_code": sensor_code, "status": "ok", "rows_inserted": result["rows_inserted"]})
         except ForecastError as e:
             summary["failed"] += 1
-            summary["details"].append({"sensor_id": sid, "status": "error", "error": str(e)})
+            summary["details"].append({"sensor_code": sensor_code, "status": "error", "error": str(e)})
         except Exception as e:
             summary["failed"] += 1
-            summary["details"].append({"sensor_id": sid, "status": "error", "error": f"internal: {e}"})
+            summary["details"].append({"sensor_code": sensor_code, "status": "error", "error": f"internal: {e}"})
             # lanjut ke sensor berikutnya (jangan hentikan batch)
     return summary

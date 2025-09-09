@@ -1,6 +1,6 @@
 from functools import lru_cache
-from keras.models import load_model
-from keras_tcn.tcn import TCN
+from tensorflow.keras.models import load_model
+from tcn import TCN
 from .utils import normalize_paths
 from .config import Settings
 

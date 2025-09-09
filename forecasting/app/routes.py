@@ -10,8 +10,8 @@ def list_models():
     Session = current_app.config["DB_SESSION"]
     with Session() as s:
         rows = s.query(MasModels).all()
-        return [{"id": m.id, "name": m.name, "type": m.model_type, "file_path": m.file_path,
-                 "n_steps_in": m.n_steps_in, "n_steps_out": m.n_steps_out, "is_active": m.is_active} for m in rows]
+        return [{"id": m.id, "code": m.model_code, "name": m.name, "type": m.model_type, 
+                 "file_path": m.file_path, "is_active": m.is_active} for m in rows]
 
 @bp.get("/sensors")
 def list_sensors():
@@ -19,7 +19,8 @@ def list_sensors():
     with Session() as s:
         rows = s.query(MasSensors).all()
         return [{"id": x.id, "code": x.sensor_code, "parameter": x.parameter.value,
-                 "model_id": x.mas_model_id, "status": x.status.value} for x in rows]
+                 "model_code": x.mas_model_code, "device_code": x.mas_device_code,
+                 "status": x.status.value} for x in rows]
 
 @bp.get("/river-basins")
 def list_river_basins():
@@ -33,19 +34,19 @@ def run_forecast_single():
     """
     Jalankan forecast untuk 1 sensor.
     Body:
-    { "sensor_id": 101, "model_id": 5 (opsional) }
+    { "sensor_code": "DHOMPO_WL_01", "model_code": "DHOMPO_LSTM" (opsional) }
     """
     payload = request.get_json(force=True, silent=True) or {}
-    sensor_id = payload.get("sensor_id")
-    model_id = payload.get("model_id")
-    if not sensor_id:
-        return {"error": "sensor_id is required"}, 400
+    sensor_code = payload.get("sensor_code")
+    model_code = payload.get("model_code")
+    if not sensor_code:
+        return {"error": "sensor_code is required"}, 400
 
     Session = current_app.config["DB_SESSION"]
     settings = current_app.config["SETTINGS"]
     try:
         with Session() as s:
-            out = predict_for_sensor(s, settings, int(sensor_id), int(model_id) if model_id else None)
+            out = predict_for_sensor(s, settings, sensor_code, model_code)
         return out
     except ForecastError as e:
         return {"error": str(e)}, 400
@@ -57,19 +58,19 @@ def run_forecast_basin():
     """
     Jalankan forecast untuk SEMUA sensor dalam 1 river basin.
     Body:
-    { "river_basin_id": 1, "only_active": true }  // only_active default true
+    { "river_basin_code": "DHOMPO", "only_active": true }  // only_active default true
     """
     payload = request.get_json(force=True, silent=True) or {}
-    rbid = payload.get("river_basin_id")
+    rbcode = payload.get("river_basin_code")
     only_active = bool(payload.get("only_active", True))
-    if not rbid:
-        return {"error": "river_basin_id is required"}, 400
+    if not rbcode:
+        return {"error": "river_basin_code is required"}, 400
 
     Session = current_app.config["DB_SESSION"]
     settings = current_app.config["SETTINGS"]
     try:
         with Session() as s:
-            out = predict_for_basin(s, settings, int(rbid), only_active=only_active)
+            out = predict_for_basin(s, settings, rbcode, only_active=only_active)
         return out
     except Exception as e:
         return {"error": "internal_error", "detail": str(e)}, 500

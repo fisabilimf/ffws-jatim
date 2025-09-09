@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('data_actuals', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('mas_sensor_id')->constrained('mas_sensors')->onUpdate('restrict')->onDelete('restrict');
             $table->string('mas_sensor_code');
+            $table->foreign('mas_sensor_code')->references('sensor_code')->on('mas_sensors')->onUpdate('restrict')->onDelete('restrict');
             $table->double('value');
             $table->dateTime('received_at');
             $table->enum('threshold_status', ['safe', 'warning', 'danger'])->nullable();
@@ -22,6 +22,8 @@ return new class extends Migration
 
             // Indexes
             $table->index('received_at');
+            $table->index('mas_sensor_code'); // For faster sensor queries
+            $table->index(['mas_sensor_code', 'received_at']); // Compound index for time-series queries
         });
     }
 

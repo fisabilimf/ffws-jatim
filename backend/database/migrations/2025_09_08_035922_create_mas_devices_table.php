@@ -13,9 +13,10 @@ return new class extends Migration
     {
         Schema::create('mas_devices', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('mas_river_basin_id')->constrained('mas_river_basins')->onUpdate('restrict')->onDelete('restrict');
+            $table->string('mas_river_basin_code');
+            $table->foreign('mas_river_basin_code')->references('code')->on('mas_river_basins')->onUpdate('restrict')->onDelete('restrict');
             $table->string('name');
-            $table->string('code');
+            $table->string('device_code')->unique();
             $table->double('latitude');
             $table->double('longitude');
             $table->double('elevation_m');
