@@ -13,9 +13,10 @@ return new class extends Migration
     {
         Schema::create('data_predictions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('mas_sensor_id')->constrained('mas_sensors')->onUpdate('restrict')->onDelete('restrict');
             $table->string('mas_sensor_code');
-            $table->foreignId('mas_model_id')->constrained('mas_models')->onUpdate('restrict')->onDelete('restrict');
+            $table->foreign('mas_sensor_code')->references('sensor_code')->on('mas_sensors')->onUpdate('restrict')->onDelete('restrict');
+            $table->string('mas_model_code');
+            $table->foreign('mas_model_code')->references('model_code')->on('mas_models')->onUpdate('restrict')->onDelete('restrict');
             $table->dateTime('prediction_run_at');
             $table->dateTime('prediction_for_ts');
             $table->double('predicted_value');
@@ -25,6 +26,9 @@ return new class extends Migration
 
             // Indexes
             $table->index('prediction_run_at');
+            $table->index('prediction_for_ts'); // For future time queries
+            $table->index('mas_sensor_code'); // For sensor-based queries
+            $table->index(['mas_sensor_code', 'prediction_for_ts']); // Compound index for time-series predictions
         });
     }
 

@@ -7,10 +7,10 @@ class Settings:
     DB_PORT: int = int(os.getenv("DB_PORT", "3306"))
     DB_USER: str = os.getenv("DB_USER", "root")
     DB_PASS: str = os.getenv("DB_PASS", "")
-    DB_NAME: str = os.getenv("DB_NAME", "hydrodb")
+    DB_NAME: str = os.getenv("DB_NAME", "ffws_jatim")  # Changed default
     DB_POOL_SIZE: int = int(os.getenv("DB_POOL_SIZE", "10"))
     DB_POOL_RECYCLE: int = int(os.getenv("DB_POOL_RECYCLE", "1800"))
-    MODELS_BASE_DIR: str = os.getenv("MODELS_BASE_DIR", "")
+    MODELS_BASE_DIR: str = os.getenv("MODELS_BASE_DIR", ".")
 
     @property
     def sqlalchemy_url(self) -> str:

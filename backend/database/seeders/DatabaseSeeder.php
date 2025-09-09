@@ -18,9 +18,13 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AdminSeeder::class,
             MasRiverBasinSeeder::class,
+            ModelDataSeeder::class,  // Models need to exist before devices can reference them
             MasDeviceSeeder::class,
             MasSensorSeeder::class,
             DataActualSeeder::class,
+            DataPredictionSeeder::class,  // Added prediction seeder
+            ScalerDataSeeder::class,
+            MasWhatsappNumberSeeder::class,  // Added whatsapp number seeder
         ]);
     }
 }
