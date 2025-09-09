@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from .models import MasSensors, MasModels, DataActual, DataPrediction, MasDevices
 from .utils import ensure_3d_batch
-from .loaders import load_keras_model
+from .loaders import load_keras_model_with_settings
 from .scalers import load_scalers
 from .thresholds import classify_threshold
 from .config import Settings
@@ -14,18 +14,78 @@ from .preprocess import preprocess_series, PreprocessOptions
 
 class ForecastError(Exception): pass
 
-def _fetch_series(session: Session, sensor_code: str, min_multiple: int) -> pd.DataFrame:
-    # ambil lebih panjang (×4) untuk jaga-jaga preprocess (resample/trim)
+def get_model_feature_requirements():
+    """Get the feature requirements for each model type."""
+    return {
+        'DHOMPO_GRU': {'x_features': 4, 'y_features': 5},
+        'DHOMPO_LSTM': {'x_features': 4, 'y_features': 5}, 
+        'DHOMPO_TCN': {'x_features': 4, 'y_features': 5},
+        'PURWODADI_GRU': {'x_features': 3, 'y_features': 3},
+        'PURWODADI_LSTM': {'x_features': 3, 'y_features': 3},
+        'PURWODADI_TCN': {'x_features': 3, 'y_features': 3}
+    }
+
+def create_sequence_input(values, n_time_steps, n_features):
+    """
+    Create sequence input that matches the model's expected shape.
+    Models expect: (batch_size, time_steps, features)
+    
+    Args:
+        values: List of sensor values in chronological order
+        n_time_steps: Number of time steps expected by model (e.g., 5)
+        n_features: Number of features expected by model (e.g., 4)
+    
+    Returns:
+        numpy array with shape (1, n_time_steps, n_features)
+    """
+    if len(values) < n_time_steps:
+        raise ValueError(f"Need at least {n_time_steps} data points for sequence, got {len(values)}")
+    
+    # Take the last n_time_steps values
+    sequence_values = values[-n_time_steps:]
+    
+    # Create features for each time step
+    sequence_input = []
+    for i in range(n_time_steps):
+        # For each time step, create n_features by using lag values
+        time_step_features = []
+        
+        # Use current and previous values as features
+        for j in range(n_features):
+            if i - j >= 0:
+                time_step_features.append(sequence_values[i - j])
+            else:
+                # Pad with the first available value if we don't have enough history
+                time_step_features.append(sequence_values[0])
+        
+        sequence_input.append(time_step_features)
+    
+    return np.array(sequence_input).reshape(1, n_time_steps, n_features)
+
+def _fetch_series_multi_feature(session: Session, sensor_code: str, n_features: int, min_extra: int = 50) -> list:
+    """
+    Fetch historical data for multi-feature input creation.
+    Returns chronologically ordered values (oldest first).
+    """
+    # Fetch more data than needed to ensure we have enough for feature creation
     q = (
         select(DataActual.value, DataActual.received_at)
         .where(DataActual.mas_sensor_code == sensor_code)
         .order_by(desc(DataActual.received_at))
-        .limit(min_multiple)
+        .limit(n_features + min_extra)
     )
     rows = session.execute(q).all()
     if not rows:
         raise ForecastError("No data points found")
-    return pd.DataFrame(rows, columns=["value", "received_at"])
+    
+    # Reverse to get chronological order (oldest first)
+    rows = list(reversed(rows))
+    values = [row.value for row in rows]
+    
+    if len(values) < n_features:
+        raise ForecastError(f"Not enough data: need {n_features}, got {len(values)}")
+    
+    return values
 
 def _get_sensor_and_model(session: Session, sensor_code: str, model_code: str | None):
     # Get sensor by sensor_code
@@ -50,54 +110,138 @@ def _get_sensor_and_model(session: Session, sensor_code: str, model_code: str | 
     return sensor, model
 
 def predict_for_sensor(session: Session, settings: Settings, sensor_code: str, model_code: str | None = None) -> dict:
+    """Improved prediction function with multi-feature support."""
     sensor, model = _get_sensor_and_model(session, sensor_code, model_code)
     
-    # For now, assume 48 as min steps in (we'll need to get this from model configuration)
-    min_steps = 48
-    df = _fetch_series(session, sensor_code, min_steps * 4)
-
-    # === PREPROCESS ===
-    pp_opts = PreprocessOptions(
-        resample_rule=None,   # set ke "60T" jika ingin seragam 1 jam
-        limit_ffill=3,
-        clip_iqr=True,
-        iqr_k=3.0,
-        use_external_pipeline=False,
-    )
+    # Get model feature requirements
+    requirements = get_model_feature_requirements()
+    model_req = requirements.get(model.model_code)
+    
+    if not model_req:
+        raise ForecastError(f"Unknown model requirements for {model.model_code}")
+    
+    n_features = model_req['x_features']
+    
+    # Fetch historical data for multi-feature input
     try:
-        x, step_minutes, idx = preprocess_series(df, min_steps, pp_opts)
+        values = _fetch_series_multi_feature(session, sensor_code, n_features)
+    except ForecastError:
+        raise
+    
+    # Create sequence input that matches model's expected shape
+    # Models expect: (batch_size, time_steps, features) = (1, 5, 4) for DHOMPO
+    try:
+        # From model analysis: DHOMPO expects (1, 5, 4), PURWODADI expects (1, 5, 3)
+        n_time_steps = 5  # All models use 5 time steps
+        X = create_sequence_input(values, n_time_steps, n_features)
+        print(f"   ✅ Created sequence input: {X.shape}")
     except ValueError as e:
         raise ForecastError(str(e))
-
-    # Scalers
+    
+    # Load scalers
     x_scaler, y_scaler = load_scalers(session, settings, model.model_code, sensor.sensor_code)
-    if x_scaler is not None:
-        x = x_scaler.transform(x.reshape(-1, 1)).reshape(-1)
-
-    X = ensure_3d_batch(x)
-    mdl = load_keras_model(settings, model.file_path)
-    yhat = mdl.predict(X, verbose=0)
-    yhat = np.asarray(yhat).astype(np.float32)
-
-    # normalisasi shape ke (n_steps_out,)
-    if yhat.ndim == 2 and yhat.shape[0] == 1:
-        yhat = yhat[0]
-    if yhat.ndim == 2 and yhat.shape[1] == 1:
-        yhat = yhat[:, 0]
-    if yhat.ndim > 1:
-        yhat = yhat.reshape(-1)
-
+    
+    if x_scaler is None:
+        raise ForecastError(f"No X scaler found for model {model.model_code}")
+    
+    # Scale input features
+    try:
+        # X is now shape (1, 5, n_features), but scaler expects (n_samples, n_features)
+        # We need to reshape for scaling, then reshape back
+        X_reshaped = X.reshape(-1, n_features)  # (5, n_features)
+        X_scaled_reshaped = x_scaler.transform(X_reshaped)  # (5, n_features)
+        X_scaled = X_scaled_reshaped.reshape(1, 5, n_features)  # (1, 5, n_features)
+        print(f"   ✅ Scaled input: {X_scaled.shape}")
+    except Exception as e:
+        raise ForecastError(f"Input scaling failed: {e}")
+    
+    # Load and run model
+    try:
+        if not model.file_path:
+            raise ForecastError("Model file_path is None")
+        mdl = load_keras_model_with_settings(settings, model.file_path)
+    except Exception as e:
+        raise ForecastError(f"Model loading failed: {e}")
+    
+    # Prepare input for neural network
+    try:
+        # Models expect: (batch_size, time_steps, features)
+        # X_scaled is already in the correct shape: (1, 5, n_features)
+        X_input = X_scaled
+        
+        print(f"   🔧 Final input shape for model: {X_input.shape}")
+        
+        # Make prediction
+        yhat = mdl.predict(X_input, verbose=0)
+        yhat = np.asarray(yhat).astype(np.float32)
+        print(f"   ✅ Model prediction shape: {yhat.shape}")
+    except Exception as e:
+        raise ForecastError(f"Model prediction failed: {e}")
+    
+    # Normalize prediction shape and handle sequence outputs
+    print(f"   🔧 Raw prediction shape: {yhat.shape}")
+    
+    # Handle different output shapes from sequence models
+    if yhat.ndim == 3:  # (1, time_steps, features) - sequence-to-sequence output
+        yhat = yhat[0]  # Remove batch dimension -> (time_steps, features)
+        
+        # For y-scaler compatibility, we need to reshape correctly
+        # DHOMPO models expect (1, 5), PURWODADI models expect (1, 3)
+        if yhat.shape[1] == 1:  # (time_steps, 1) -> (1, time_steps)
+            yhat = yhat.T  # Transpose to (1, time_steps)
+        
+    elif yhat.ndim == 2:
+        if yhat.shape[0] == 1:  # (1, n) - keep as is for scaler
+            pass  
+        elif yhat.shape[1] == 1:  # (n, 1) - transpose for scaler
+            yhat = yhat.T
+            
+    print(f"   🔧 Normalized prediction shape: {yhat.shape}")
+    
+    # Inverse transform predictions
     if y_scaler is not None:
-        yhat = y_scaler.inverse_transform(yhat.reshape(-1, 1)).reshape(-1)
-
+        try:
+            # The scaler expects specific shapes:
+            # DHOMPO: (n_samples, 5_features)
+            # PURWODADI: (n_samples, 3_features)
+            print(f"   🔧 Y-scaler expects {y_scaler.n_features_in_} features")
+            
+            if yhat.shape[1] != y_scaler.n_features_in_:
+                raise ValueError(f"Prediction shape {yhat.shape} doesn't match y_scaler expected features {y_scaler.n_features_in_}")
+            
+            print(f"   🔧 Scaling input shape: {yhat.shape}")
+            yhat_scaled = y_scaler.inverse_transform(yhat)
+            print(f"   ✅ Scaled output shape: {yhat_scaled.shape}")
+            
+            # Convert back to 1D array for final processing
+            yhat = yhat_scaled.reshape(-1)
+            print(f"   ✅ Final prediction shape: {yhat.shape}")
+            
+        except Exception as e:
+            raise ForecastError(f"Output scaling failed: {e}")
+    
+    # Create prediction records
     now = datetime.utcnow()
-    base_ts = idx[-1].to_pydatetime()
-    # For now, assume 24 steps out (we'll need to get this from model configuration)
-    n_steps_out = min(24, len(yhat))
+    
+    # Use the last timestamp from our data as base
+    latest_data = session.execute(
+        select(DataActual.received_at)
+        .where(DataActual.mas_sensor_code == sensor_code)
+        .order_by(desc(DataActual.received_at))
+        .limit(1)
+    ).scalar_one()
+    
+    base_ts = latest_data
+    step_minutes = 15  # Default step (can be made configurable)
+    
+    # Create prediction records (limit to reasonable number)
+    n_steps_out = min(len(yhat), 24)  # Max 24 predictions (6 hours at 15min intervals)
     rows_out = []
+    
     for i in range(n_steps_out):
         pred_ts = base_ts + timedelta(minutes=step_minutes * (i + 1))
         val = float(yhat[i] if i < len(yhat) else yhat[-1])
+        
         status = classify_threshold(val, sensor.threshold_safe, sensor.threshold_warning, sensor.threshold_danger)
         rows_out.append(DataPrediction(
             mas_sensor_code=sensor.sensor_code,
@@ -106,8 +250,11 @@ def predict_for_sensor(session: Session, settings: Settings, sensor_code: str, m
             prediction_for_ts=pred_ts,
             predicted_value=val,
             confidence_score=None,
-            threshold_prediction_status=status
+            threshold_prediction_status=status,
+            created_at=now,
+            updated_at=now
         ))
+    
     session.add_all(rows_out)
     session.commit()
 
@@ -115,8 +262,18 @@ def predict_for_sensor(session: Session, settings: Settings, sensor_code: str, m
         "sensor_code": sensor.sensor_code,
         "model_code": model.model_code,
         "model_type": model.model_type,
+        "model_algorithm": model.model_type,
         "step_minutes": step_minutes,
         "rows_inserted": len(rows_out),
+        "input_features_used": n_features,
+        "predictions": [
+            {
+                "forecast_time": row.prediction_for_ts.isoformat(),
+                "forecast_value": row.predicted_value,
+                "threshold_status": row.threshold_prediction_status
+            }
+            for row in rows_out[:5]  # Return first 5 predictions as sample
+        ]
     }
 
 def predict_for_basin(session: Session, settings: Settings, river_basin_code: str, only_active: bool = True) -> dict:

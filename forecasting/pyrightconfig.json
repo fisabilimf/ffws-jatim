@@ -1,0 +1,19 @@
+{
+    "include": [
+        "app"
+    ],
+    "exclude": [
+        "**/__pycache__",
+        "**/.pytest_cache"
+    ],
+    "pythonVersion": "3.12",
+    "pythonPlatform": "Windows",
+    "typeCheckingMode": "basic",
+    "useLibraryCodeForTypes": true,
+    "autoSearchPaths": true,
+    "extraPaths": [
+        "."
+    ],
+    "reportMissingImports": "warning",
+    "reportMissingTypeStubs": false
+}
