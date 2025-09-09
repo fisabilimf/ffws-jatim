@@ -23,7 +23,7 @@
     </div>
 
     <!-- Users Table -->
-    <x-datatable
+    <x-table
         title="Daftar Users"
         :headers="$tableHeaders"
         :rows="$users"
@@ -37,7 +37,7 @@
                 Tambah User
             </a>
         </x-slot:actions>
-    </x-datatable>
+    </x-table>
 </div>
 @endsection
 

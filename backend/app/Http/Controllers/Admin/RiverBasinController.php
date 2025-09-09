@@ -25,37 +25,38 @@ class RiverBasinController extends Controller
 
         $tableHeaders = [
             ['key' => 'id', 'label' => 'ID', 'sortable' => true],
-            ['key' => 'name', 'label' => 'Nama DAS', 'sortable' => true],
+            ['key' => 'name', 'label' => 'Nama Aliran Sungai', 'sortable' => true],
             ['key' => 'code', 'label' => 'Kode', 'sortable' => true],
             ['key' => 'created_at', 'label' => 'Dibuat', 'sortable' => true, 'format' => 'date'],
             ['key' => 'actions', 'label' => 'Aksi', 'sortable' => false, 'format' => 'actions'],
         ];
 
-        // Tambahkan actions untuk setiap baris (Detail, Edit, Hapus) dengan ikon
+        // Tambahkan actions untuk setiap baris (Edit, Hapus)
         $riverBasins->getCollection()->transform(function ($rb) {
+            $detailData = [
+                'id' => $rb->id,
+                'name' => addslashes($rb->name),
+                'code' => addslashes($rb->code),
+            ];
+            $detailJson = json_encode($detailData);
+
             $rb->actions = [
                 [
-                    'label' => 'Detail',
-                    'title' => 'Detail',
-                    'url' => route('admin.master.river-basins.edit', $rb->id), // ganti ke show jika tersedia
-                    'onclick' => "window.dispatchEvent(new CustomEvent('open-edit-river-basin', { detail: { id: {$rb->id}, name: '{$rb->name}', code: '{$rb->code}' } }))",
-                    'icon' => 'eye',
-                ],
-                [
                     'label' => 'Edit',
-                    'title' => 'Edit',
-                    'url' => route('admin.master.river-basins.edit', $rb->id),
-                    'onclick' => "window.dispatchEvent(new CustomEvent('open-edit-river-basin', { detail: { id: {$rb->id}, name: '{$rb->name}', code: '{$rb->code}' } }))",
+                    'title' => 'Edit Aliran Sungai',
+                    'url' => '#',
+                    'onclick' => "window.dispatchEvent(new CustomEvent('open-edit-river-basin', { detail: {$detailJson} }))",
                     'icon' => 'pen',
+                    'color' => 'blue'
                 ],
                 [
                     'label' => 'Hapus',
-                    'title' => 'Hapus',
-                    'url' => route('admin.master.river-basins.destroy', $rb->id),
+                    'title' => 'Hapus Aliran Sungai',
+                    'url' => route('admin.wilayah.river-basins.destroy', $rb->id),
                     'color' => 'red',
                     'method' => 'DELETE',
                     'icon' => 'trash',
-                    'confirm' => 'Apakah Anda yakin ingin menghapus DAS ini?'
+                    'confirm' => 'Apakah Anda yakin ingin menghapus Aliran Sungai ini?'
                 ],
             ];
             return $rb;
@@ -64,51 +65,69 @@ class RiverBasinController extends Controller
         return view('admin.river_basins.index', compact('riverBasins', 'tableHeaders'));
     }
 
-    public function create(): View
-    {
-        return view('admin.river_basins.create');
-    }
-
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255', 'unique:mas_river_basins,name'],
             'code' => ['required', 'string', 'max:255', 'unique:mas_river_basins,code'],
+        ], [
+            'name.required' => 'Nama DAS wajib diisi.',
+            'name.string' => 'Nama DAS harus berupa teks.',
+            'name.max' => 'Nama DAS maksimal 255 karakter.',
+            'name.unique' => 'Nama DAS sudah digunakan. Silakan gunakan nama yang berbeda.',
+            'code.required' => 'Kode DAS wajib diisi.',
+            'code.string' => 'Kode DAS harus berupa teks.',
+            'code.max' => 'Kode DAS maksimal 255 karakter.',
+            'code.unique' => 'Kode DAS sudah digunakan. Silakan gunakan kode yang berbeda.',
         ]);
 
-        MasRiverBasin::create($validated);
-
-        return redirect()->route('admin.river-basins.index')
-            ->with('success', 'DAS berhasil ditambahkan.');
-    }
-
-    public function edit(MasRiverBasin $river_basin): View
-    {
-        return view('admin.river_basins.edit', [
-            'riverBasin' => $river_basin,
-        ]);
+        try {
+            MasRiverBasin::create($validated);
+            return redirect()->route('admin.wilayah.river-basins.index')
+                ->with('success', 'Daerah Aliran Sungai berhasil ditambahkan.');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan saat menyimpan data: ' . $e->getMessage());
+        }
     }
 
     public function update(Request $request, MasRiverBasin $river_basin): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255', 'unique:mas_river_basins,name,' . $river_basin->id],
             'code' => ['required', 'string', 'max:255', 'unique:mas_river_basins,code,' . $river_basin->id],
+        ], [
+            'name.required' => 'Nama DAS wajib diisi.',
+            'name.string' => 'Nama DAS harus berupa teks.',
+            'name.max' => 'Nama DAS maksimal 255 karakter.',
+            'name.unique' => 'Nama DAS sudah digunakan. Silakan gunakan nama yang berbeda.',
+            'code.required' => 'Kode DAS wajib diisi.',
+            'code.string' => 'Kode DAS harus berupa teks.',
+            'code.max' => 'Kode DAS maksimal 255 karakter.',
+            'code.unique' => 'Kode DAS sudah digunakan. Silakan gunakan kode yang berbeda.',
         ]);
 
-        $river_basin->update($validated);
-
-        return redirect()->route('admin.river-basins.index')
-            ->with('success', 'DAS berhasil diperbarui.');
+        try {
+            $river_basin->update($validated);
+            return redirect()->route('admin.wilayah.river-basins.index')
+                ->with('success', 'DAS berhasil diperbarui.');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan saat memperbarui data: ' . $e->getMessage());
+        }
     }
 
     public function destroy(MasRiverBasin $river_basin): RedirectResponse
     {
-        $river_basin->delete();
-
-        return redirect()->route('admin.river-basins.index')
-            ->with('success', 'DAS berhasil dihapus.');
+        try {
+            $river_basin->delete();
+            return redirect()->route('admin.wilayah.river-basins.index')
+                ->with('success', 'DAS berhasil dihapus.');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Terjadi kesalahan saat menghapus data: ' . $e->getMessage());
+        }
     }
 }
-
-

@@ -40,19 +40,17 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         Route::post('/clear-config', [SettingController::class, 'clearConfig'])->name('config.clear');
     });
 
-    // Master Data
-    Route::prefix('master')->name('master.')->group(function () {
+    // Data Wilayah
+    Route::prefix('wilayah')->name('wilayah.')->group(function () {
         // Halaman data wilayah
-        Route::view('/kabupaten', 'admin.master.kabupaten')->name('kabupaten');
-        Route::view('/kecamatan', 'admin.master.kecamatan')->name('kecamatan');
-        Route::view('/desa', 'admin.master.desa')->name('desa');
+        Route::view('/kabupaten', 'admin.wilayah.kabupaten')->name('kabupaten');
+        Route::view('/kecamatan', 'admin.wilayah.kecamatan')->name('kecamatan');
+        Route::view('/desa', 'admin.wilayah.desa')->name('desa');
 
-        // CRUD DAS (River Basins)
+        // CRUD DAS (River Basins) - Menggunakan modal
         Route::prefix('river-basins')->name('river-basins.')->group(function () {
             Route::get('/', [RiverBasinController::class, 'index'])->name('index');
-            Route::get('/create', [RiverBasinController::class, 'create'])->name('create');
             Route::post('/', [RiverBasinController::class, 'store'])->name('store');
-            Route::get('/{river_basin}/edit', [RiverBasinController::class, 'edit'])->name('edit');
             Route::put('/{river_basin}', [RiverBasinController::class, 'update'])->name('update');
             Route::delete('/{river_basin}', [RiverBasinController::class, 'destroy'])->name('destroy');
         });
