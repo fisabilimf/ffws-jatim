@@ -143,8 +143,8 @@ const MapboxMap = ({ tickerData, onStationSelect }) => {
   };
 
   return (
-    <div className="w-full h-screen overflow-hidden relative">
-      <div ref={mapContainer} className="w-full h-full" />
+    <div className="w-full h-screen overflow-hidden relative z-0">
+      <div ref={mapContainer} className="w-full h-full relative z-0" />
       
       {/* Sidecard - Google Maps Style */}
       {isSidecardOpen && selectedStation && (
