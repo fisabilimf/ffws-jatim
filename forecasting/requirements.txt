@@ -1,4 +1,3 @@
-mysqlclient
 Flask
 keras
 keras_tcn
@@ -11,4 +10,5 @@ python-dotenv
 scikit-learn
 pytest
 joblib
-# tensorflow-gpu
+mysqlclient==1.4.6
+tensorflow-gpu==2.4.0
