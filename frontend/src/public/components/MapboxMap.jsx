@@ -23,14 +23,35 @@ const MapboxMap = ({ tickerData, onStationSelect }) => {
       zoom: 8
     });
 
-    // Add navigation controls
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    // Add navigation controls (zoom and compass)
+    const navControl = new mapboxgl.NavigationControl({
+      showCompass: true,
+      showZoom: true,
+      visualizePitch: true
+    });
+    map.current.addControl(navControl, 'top-right');
 
     // Add fullscreen control
-    map.current.addControl(new mapboxgl.FullscreenControl(), 'top-right');
+    const fullscreenControl = new mapboxgl.FullscreenControl();
+    map.current.addControl(fullscreenControl, 'top-right');
 
     // Add scale control
-    map.current.addControl(new mapboxgl.ScaleControl(), 'bottom-left');
+    const scaleControl = new mapboxgl.ScaleControl({
+      maxWidth: 100,
+      unit: 'metric'
+    });
+    map.current.addControl(scaleControl, 'bottom-left');
+
+    // Wait for map to load before adding event listeners
+    map.current.on('load', () => {
+      // Map is fully loaded, controls should be functional now
+      console.log('Map loaded successfully');
+    });
+
+    // Add error handling
+    map.current.on('error', (e) => {
+      console.error('Map error:', e);
+    });
 
     // Cleanup function
     return () => {
@@ -45,43 +66,55 @@ const MapboxMap = ({ tickerData, onStationSelect }) => {
   useEffect(() => {
     if (!map.current || !tickerData) return;
 
-    // Clear existing markers
-    const existingMarkers = document.querySelectorAll('.custom-marker');
-    existingMarkers.forEach(marker => marker.remove());
+    // Wait for map to be loaded before adding markers
+    if (!map.current.loaded()) {
+      map.current.on('load', () => {
+        addMarkers();
+      });
+    } else {
+      addMarkers();
+    }
 
-    // Add new markers
-    tickerData.forEach((station) => {
-      const coordinates = getStationCoordinates(station.name);
-      
-      if (coordinates) {
-        // Create custom marker element
-        const markerEl = document.createElement('div');
-        markerEl.className = 'custom-marker';
-        markerEl.style.width = '20px';
-        markerEl.style.height = '20px';
-        markerEl.style.borderRadius = '50%';
-        markerEl.style.backgroundColor = getStatusColor(station.status);
-        markerEl.style.border = '2px solid white';
-        markerEl.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
-        markerEl.style.cursor = 'pointer';
+    function addMarkers() {
+      // Clear existing markers
+      const existingMarkers = document.querySelectorAll('.custom-marker');
+      existingMarkers.forEach(marker => marker.remove());
 
-        // Add marker to map
-        const marker = new mapboxgl.Marker(markerEl)
-          .setLngLat(coordinates)
-          .addTo(map.current);
+      // Add new markers
+      tickerData.forEach((station) => {
+        const coordinates = getStationCoordinates(station.name);
+        
+        if (coordinates) {
+          // Create custom marker element
+          const markerEl = document.createElement('div');
+          markerEl.className = 'custom-marker';
+          markerEl.style.width = '20px';
+          markerEl.style.height = '20px';
+          markerEl.style.borderRadius = '50%';
+          markerEl.style.backgroundColor = getStatusColor(station.status);
+          markerEl.style.border = '2px solid white';
+          markerEl.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
+          markerEl.style.cursor = 'pointer';
+          markerEl.style.zIndex = '1';
 
-        // Add click event to marker
-        markerEl.addEventListener('click', () => {
-          if (onStationSelect) {
-            onStationSelect(station);
-          } else {
-            setSelectedStation(station);
-            setIsSidecardOpen(true);
-          }
-        });
-      }
-    });
-  }, [tickerData]); // Only update markers when tickerData changes
+          // Add marker to map
+          const marker = new mapboxgl.Marker(markerEl)
+            .setLngLat(coordinates)
+            .addTo(map.current);
+
+          // Add click event to marker
+          markerEl.addEventListener('click', () => {
+            if (onStationSelect) {
+              onStationSelect(station);
+            } else {
+              setSelectedStation(station);
+              setIsSidecardOpen(true);
+            }
+          });
+        }
+      });
+    }
+  }, [tickerData, onStationSelect]); // Dependencies include onStationSelect
 
   // Function to get station coordinates (you can replace with actual coordinates)
   const getStationCoordinates = (stationName) => {
@@ -143,12 +176,76 @@ const MapboxMap = ({ tickerData, onStationSelect }) => {
   };
 
   return (
-    <div className="w-full h-screen overflow-hidden relative z-0">
-      <div ref={mapContainer} className="w-full h-full relative z-0" />
+    <div className="w-full h-screen overflow-hidden relative">
+      {/* Map Container */}
+      <div 
+        ref={mapContainer} 
+        className="w-full h-full relative"
+        style={{ position: 'relative', zIndex: 0 }}
+      />
+      
+      {/* Custom CSS to ensure controls are properly styled and clickable */}
+      <style jsx>{`
+        .mapboxgl-ctrl-top-right {
+          z-index: 2 !important;
+        }
+        
+        .mapboxgl-ctrl-bottom-left {
+          z-index: 2 !important;
+        }
+        
+        .mapboxgl-ctrl {
+          pointer-events: auto !important;
+        }
+        
+        .mapboxgl-ctrl-group {
+          background: white !important;
+          border-radius: 4px !important;
+          box-shadow: 0 0 10px 2px rgba(0,0,0,.1) !important;
+        }
+        
+        .mapboxgl-ctrl-group button {
+          background-color: white !important;
+          border: 0 !important;
+          cursor: pointer !important;
+          display: block !important;
+          height: 29px !important;
+          width: 29px !important;
+          padding: 0 !important;
+          outline: none !important;
+        }
+        
+        .mapboxgl-ctrl-group button:hover {
+          background-color: rgba(0,0,0,.05) !important;
+        }
+        
+        .mapboxgl-ctrl-zoom-in,
+        .mapboxgl-ctrl-zoom-out {
+          font: bold 18px/27px monospace !important;
+          text-align: center !important;
+        }
+        
+        .mapboxgl-ctrl-compass {
+          background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23404040' d='M10 0C4.5 0 0 4.5 0 10s4.5 10 10 10 10-4.5 10-10S15.5 0 10 0zM9 17l1-8 1 8-1 1-1-1zm2-8L9 1l1-1 1 1-2 8z'/%3E%3C/svg%3E") !important;
+          background-repeat: no-repeat !important;
+          background-position: center !important;
+          background-size: 16px 16px !important;
+        }
+        
+        .mapboxgl-ctrl-fullscreen {
+          background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23404040' d='M2 2v5h2V4h3V2H2zm13 0h-3v2h3v3h2V2h-2zm0 13v-3h2v5h-5v-2h3zM4 15v-3H2v5h5v-2H4z'/%3E%3C/svg%3E") !important;
+          background-repeat: no-repeat !important;
+          background-position: center !important;
+          background-size: 16px 16px !important;
+        }
+      `}</style>
       
       {/* Sidecard - Google Maps Style */}
       {isSidecardOpen && selectedStation && (
-        <div className="absolute top-0 left-0 w-80 h-full bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-10">
+        <div 
+          className="absolute top-0 left-0 w-80 h-full bg-white shadow-2xl transform transition-transform duration-300 ease-in-out"
+          style={{ zIndex: 10 }}
+        >
           {/* Header */}
           <div className="bg-white p-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
