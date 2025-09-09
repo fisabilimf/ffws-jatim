@@ -1,42 +1,30 @@
 import React, { useState, useEffect } from 'react';
+import Chart from './Chart';
 
-const StationDetail = ({ selectedStation, onClose }) => {
+const StationDetail = ({ selectedStation, onClose, tickerData }) => {
   const [stationData, setStationData] = useState(null);
   const [chartHistory, setChartHistory] = useState([]);
   const [isVisible, setIsVisible] = useState(false);
 
-  // Function to generate detailed history data
-  const generateDetailedHistory = (currentValue) => {
-    const history = [];
-    let baseValue = currentValue - (Math.random() * 0.5 + 0.2);
-    
-    for (let i = 0; i < 50; i++) {
-      const change = (Math.random() - 0.5) * 0.15;
-      baseValue = Math.max(0.5, Math.min(5, baseValue + change));
-      history.push(parseFloat(baseValue.toFixed(2)));
-    }
-    return history;
-  };
-
   // Initialize station data when selected
   useEffect(() => {
-    if (selectedStation) {
-      const history = generateDetailedHistory(selectedStation.value);
-      setStationData({
-        ...selectedStation,
-        history: history
-      });
-      setChartHistory(history);
-      
-      // Small delay to ensure smooth slide-in animation
-      setTimeout(() => {
-        console.log('Setting isVisible to true for slide-in animation');
-        setIsVisible(true);
-      }, 10);
+    if (selectedStation && tickerData) {
+      // Find the station data from tickerData
+      const foundStation = tickerData.find(station => station.id === selectedStation.id);
+      if (foundStation) {
+        setStationData(foundStation);
+        setChartHistory(foundStation.history);
+        
+        // Small delay to ensure smooth slide-in animation
+        setTimeout(() => {
+          console.log('Setting isVisible to true for slide-in animation');
+          setIsVisible(true);
+        }, 10);
+      }
     } else {
       setIsVisible(false);
     }
-  }, [selectedStation]);
+  }, [selectedStation, tickerData]);
 
   // Handle close with animation
   const handleClose = () => {
@@ -48,131 +36,18 @@ const StationDetail = ({ selectedStation, onClose }) => {
     }, 300); // Wait for animation to complete
   };
 
-  // Update chart data in real-time
+  // Update chart data in real-time from tickerData
   useEffect(() => {
-    if (!stationData) return;
+    if (!stationData || !tickerData) return;
 
-    const updateInterval = setInterval(() => {
-      setChartHistory(prev => {
-        const newValue = Math.max(0.5, Math.min(5, 
-          prev[prev.length - 1] + (Math.random() - 0.5) * 0.2
-        ));
-        const newHistory = [...prev.slice(1), newValue];
-        
-        setStationData(prevData => ({
-          ...prevData,
-          value: newValue,
-          status: newValue > 4 ? 'alert' : newValue > 2.5 ? 'warning' : 'safe'
-        }));
-        
-        return newHistory;
-      });
-    }, 2000);
-
-    return () => clearInterval(updateInterval);
-  }, [stationData]);
-
-  // Draw detailed chart
-  useEffect(() => {
-    if (chartHistory.length === 0) return;
-
-    const canvas = document.getElementById('station-detail-chart');
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    const width = canvas.width;
-    const height = canvas.height;
-
-    // Clear canvas
-    ctx.clearRect(0, 0, width, height);
-
-    if (chartHistory.length < 2) return;
-
-    // Find min and max values
-    const minValue = Math.min(...chartHistory);
-    const maxValue = Math.max(...chartHistory);
-    const range = maxValue - minValue || 1;
-
-    // Set colors based on status
-    let lineColor, bgColor;
-    switch (stationData?.status) {
-      case 'safe': 
-        lineColor = '#10B981'; 
-        bgColor = 'rgba(16, 185, 129, 0.1)';
-        break;
-      case 'warning': 
-        lineColor = '#F59E0B'; 
-        bgColor = 'rgba(245, 158, 11, 0.1)';
-        break;
-      case 'alert': 
-        lineColor = '#EF4444'; 
-        bgColor = 'rgba(239, 68, 68, 0.1)';
-        break;
-      default: 
-        lineColor = '#6B7280'; 
-        bgColor = 'rgba(107, 114, 128, 0.1)';
+    // Find the current station data from tickerData
+    const currentStationData = tickerData.find(station => station.id === stationData.id);
+    if (currentStationData) {
+      setStationData(currentStationData);
+      setChartHistory(currentStationData.history);
     }
+  }, [tickerData, stationData]);
 
-    // Draw grid lines
-    ctx.strokeStyle = '#E5E7EB';
-    ctx.lineWidth = 1;
-    for (let i = 0; i <= 4; i++) {
-      const y = (i / 4) * height;
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(width, y);
-      ctx.stroke();
-    }
-
-    // Draw area fill
-    ctx.beginPath();
-    ctx.fillStyle = bgColor;
-    ctx.moveTo(0, height);
-    
-    chartHistory.forEach((value, index) => {
-      const x = (index / (chartHistory.length - 1)) * width;
-      const y = height - ((value - minValue) / range) * height;
-      ctx.lineTo(x, y);
-    });
-    
-    ctx.lineTo(width, height);
-    ctx.closePath();
-    ctx.fill();
-
-    // Draw main line
-    ctx.beginPath();
-    ctx.strokeStyle = lineColor;
-    ctx.lineWidth = 3;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-
-    chartHistory.forEach((value, index) => {
-      const x = (index / (chartHistory.length - 1)) * width;
-      const y = height - ((value - minValue) / range) * height;
-      
-      if (index === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
-    });
-
-    ctx.stroke();
-
-    // Draw data points
-    ctx.fillStyle = lineColor;
-    chartHistory.forEach((value, index) => {
-      if (index % 5 === 0) { // Show every 5th point
-        const x = (index / (chartHistory.length - 1)) * width;
-        const y = height - ((value - minValue) / range) * height;
-        
-        ctx.beginPath();
-        ctx.arc(x, y, 4, 0, 2 * Math.PI);
-        ctx.fill();
-      }
-    });
-
-  }, [chartHistory, stationData]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -220,7 +95,7 @@ const StationDetail = ({ selectedStation, onClose }) => {
     <>
       {/* Slide-in Panel - No backdrop to avoid covering map */}
       <div 
-        className={`fixed top-0 left-0 h-full w-96 bg-white shadow-2xl z-[60] transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 h-full w-96 bg-white shadow-2xl z-[60] transform transition-transform duration-300 ease-in-out flex flex-col ${
           isVisible ? 'translate-x-0' : '-translate-x-full'
         }`}
         style={{
@@ -228,7 +103,7 @@ const StationDetail = ({ selectedStation, onClose }) => {
         }}
       >
         {/* Header */}
-        <div className="bg-white border-b border-gray-200 p-4">
+        <div className="bg-white border-b border-gray-200 p-4 flex-shrink-0">
           <div className="flex items-center space-x-3">
             <button
               onClick={handleClose}
@@ -246,9 +121,9 @@ const StationDetail = ({ selectedStation, onClose }) => {
           </div>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-4 space-y-6">
+        {/* Content - Scrollable Area */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden">
+          <div className="p-4 space-y-6 pb-6">
             {/* Status Card */}
             <div className={`p-4 rounded-lg border-2 ${getStatusBgColor(stationData.status)}`}>
               <div className="flex items-center justify-between">
@@ -275,11 +150,12 @@ const StationDetail = ({ selectedStation, onClose }) => {
               <h4 className="text-base font-medium text-gray-900 mb-2">Grafik Level Air</h4>
               <p className="text-sm text-gray-500 mb-4">Data 10 menit terakhir</p>
               <div className="bg-gray-50 rounded-lg p-4">
-                <canvas
-                  id="station-detail-chart"
-                  width="320"
-                  height="160"
-                  className="w-full h-40 rounded bg-white"
+                <Chart 
+                  data={chartHistory}
+                  width={320}
+                  height={160}
+                  showTooltip={true}
+                  className="h-40"
                 />
               </div>
             </div>
