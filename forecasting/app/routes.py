@@ -32,21 +32,81 @@ def list_river_basins():
 @bp.post("/forecast/run")
 def run_forecast_single():
     """
-    Jalankan forecast untuk 1 sensor.
+    Jalankan forecast untuk 1 sensor dengan opsi konfigurasi waktu.
     Body:
-    { "sensor_code": "DHOMPO_WL_01", "model_code": "DHOMPO_LSTM" (opsional) }
+    { 
+        "sensor_code": "DHOMPO_WL_01", 
+        "model_code": "DHOMPO_LSTM" (opsional),
+        "prediction_hours": 5 (opsional, default 5),
+        "step_hours": 1.0 (opsional, default 1.0)
+    }
     """
     payload = request.get_json(force=True, silent=True) or {}
     sensor_code = payload.get("sensor_code")
     model_code = payload.get("model_code")
+    prediction_hours = payload.get("prediction_hours", 5)
+    step_hours = payload.get("step_hours", 1.0)
+    
     if not sensor_code:
         return {"error": "sensor_code is required"}, 400
+
+    # Validate parameters
+    try:
+        prediction_hours = int(prediction_hours)
+        step_hours = float(step_hours)
+        
+        if prediction_hours < 1 or prediction_hours > 24:
+            return {"error": "prediction_hours must be between 1 and 24"}, 400
+        
+        if step_hours <= 0 or step_hours > 6:
+            return {"error": "step_hours must be between 0.1 and 6.0"}, 400
+            
+    except (ValueError, TypeError):
+        return {"error": "Invalid prediction_hours or step_hours format"}, 400
 
     Session = current_app.config["DB_SESSION"]
     settings = current_app.config["SETTINGS"]
     try:
         with Session() as s:
-            out = predict_for_sensor(s, settings, sensor_code, model_code)
+            out = predict_for_sensor(s, settings, sensor_code, model_code, 
+                                   prediction_hours, step_hours)
+        return out
+    except ForecastError as e:
+        return {"error": str(e)}, 400
+    except Exception as e:
+        return {"error": "internal_error", "detail": str(e)}, 500
+
+@bp.post("/forecast/hourly")
+def run_forecast_hourly():
+    """
+    Jalankan forecast hourly untuk 1-5 jam ke depan (khusus untuk data hourly).
+    Body:
+    { 
+        "sensor_code": "DHOMPO_WL_01",
+        "hours": 5 (opsional, default 5, max 24)
+    }
+    """
+    payload = request.get_json(force=True, silent=True) or {}
+    sensor_code = payload.get("sensor_code")
+    hours = payload.get("hours", 5)
+    
+    if not sensor_code:
+        return {"error": "sensor_code is required"}, 400
+
+    # Validate hours parameter
+    try:
+        hours = int(hours)
+        if hours < 1 or hours > 24:
+            return {"error": "hours must be between 1 and 24"}, 400
+    except (ValueError, TypeError):
+        return {"error": "Invalid hours format"}, 400
+
+    Session = current_app.config["DB_SESSION"]
+    settings = current_app.config["SETTINGS"]
+    try:
+        with Session() as s:
+            # Use 1-hour steps for hourly predictions
+            out = predict_for_sensor(s, settings, sensor_code, None, hours, 1.0)
         return out
     except ForecastError as e:
         return {"error": str(e)}, 400
