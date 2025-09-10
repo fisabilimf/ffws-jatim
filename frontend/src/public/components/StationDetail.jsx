@@ -1,10 +1,81 @@
 import React, { useState, useEffect } from 'react';
 import Chart from './Chart';
 
+// Reusable Sidebar Template Component
+const SidebarTemplate = ({ 
+  isOpen, 
+  onClose, 
+  title, 
+  subtitle, 
+  width = "w-96", 
+  position = "fixed", 
+  zIndex = "z-[60]",
+  children,
+  headerContent,
+  statusDot
+}) => {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => {
+        setIsVisible(true);
+      }, 10);
+    } else {
+      setIsVisible(false);
+    }
+  }, [isOpen]);
+
+  const handleClose = () => {
+    setIsVisible(false);
+    setTimeout(() => {
+      onClose();
+    }, 300);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div 
+      className={`${position} top-0 left-0 h-full ${width} bg-white shadow-2xl ${zIndex} transform transition-transform duration-300 ease-in-out flex flex-col ${
+        isVisible ? 'translate-x-0' : '-translate-x-full'
+      }`}
+      style={{ willChange: 'transform' }}
+    >
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 p-4 flex-shrink-0">
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={handleClose}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <div className="flex-1">
+            {headerContent || (
+              <>
+                <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+                {subtitle && <p className="text-gray-500 text-sm">{subtitle}</p>}
+              </>
+            )}
+          </div>
+          {statusDot && <div className={`w-3 h-3 rounded-full ${statusDot}`}></div>}
+        </div>
+      </div>
+
+      {/* Content - Scrollable Area */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        {children}
+      </div>
+    </div>
+  );
+};
+
 const StationDetail = ({ selectedStation, onClose, tickerData }) => {
   const [stationData, setStationData] = useState(null);
   const [chartHistory, setChartHistory] = useState([]);
-  const [isVisible, setIsVisible] = useState(false);
 
   // Initialize station data when selected
   useEffect(() => {
@@ -14,27 +85,9 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
       if (foundStation) {
         setStationData(foundStation);
         setChartHistory(foundStation.history);
-        
-        // Small delay to ensure smooth slide-in animation
-        setTimeout(() => {
-          console.log('Setting isVisible to true for slide-in animation');
-          setIsVisible(true);
-        }, 10);
       }
-    } else {
-      setIsVisible(false);
     }
   }, [selectedStation, tickerData]);
-
-  // Handle close with animation
-  const handleClose = () => {
-    console.log('Starting slide-out animation');
-    setIsVisible(false);
-    setTimeout(() => {
-      console.log('Slide-out animation complete, closing panel');
-      onClose();
-    }, 300); // Wait for animation to complete
-  };
 
   // Update chart data in real-time from tickerData
   useEffect(() => {
@@ -89,40 +142,14 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
     return null;
   }
 
-  console.log('StationDetail render - isVisible:', isVisible, 'selectedStation:', selectedStation?.name);
-
   return (
-    <>
-      {/* Slide-in Panel - No backdrop to avoid covering map */}
-      <div 
-        className={`fixed top-0 left-0 h-full w-96 bg-white shadow-2xl z-[60] transform transition-transform duration-300 ease-in-out flex flex-col ${
-          isVisible ? 'translate-x-0' : '-translate-x-full'
-        }`}
-        style={{
-          willChange: 'transform'
-        }}
-      >
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200 p-4 flex-shrink-0">
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={handleClose}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            >
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900">{stationData.name}</h3>
-              <p className="text-gray-500 text-sm">{stationData.location}</p>
-            </div>
-            <div className={`w-3 h-3 rounded-full ${getStatusDotColor(stationData.status)}`}></div>
-          </div>
-        </div>
-
-        {/* Content - Scrollable Area */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden">
+    <SidebarTemplate
+      isOpen={!!selectedStation}
+      onClose={onClose}
+      title={stationData.name}
+      subtitle={stationData.location}
+      statusDot={getStatusDotColor(stationData.status)}
+    >
           <div className="p-4 space-y-6 pb-6">
             {/* Status Card */}
             <div className={`p-4 rounded-lg border-2 ${getStatusBgColor(stationData.status)}`}>
@@ -204,10 +231,9 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
               </div>
             </div>
           </div>
-        </div>
-      </div>
-    </>
+    </SidebarTemplate>
   );
 };
 
 export default StationDetail;
+export { SidebarTemplate };

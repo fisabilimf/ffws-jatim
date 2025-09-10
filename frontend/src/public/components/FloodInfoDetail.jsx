@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { determineStatus, getThresholdInfo } from '../config/stationThresholds';
 
-const FloodInfoDetail = ({ onDataUpdate, onStationSelect }) => {
+const FloodInfoDetail = ({ onDataUpdate, onStationSelect, isSidebarOpen = false }) => {
   // Function to generate detailed history data (20 data points representing 10 minutes)
   const generateDetailedHistory = (currentValue) => {
     const history = [];
@@ -15,32 +16,44 @@ const FloodInfoDetail = ({ onDataUpdate, onStationSelect }) => {
     return history;
   };
 
-  const [tickerData, setTickerData] = useState([
-    { id: 1, name: 'Stasiun Surabaya', value: 2.45, unit: 'm', status: 'warning', location: 'Surabaya River', history: generateDetailedHistory(2.45) },
-    { id: 2, name: 'Stasiun Malang', value: 1.85, unit: 'm', status: 'alert', location: 'Malang City', history: generateDetailedHistory(1.85) },
-    { id: 3, name: 'Stasiun Sidoarjo', value: 3.20, unit: 'm', status: 'safe', location: 'Sidoarjo', history: generateDetailedHistory(3.20) },
-    { id: 4, name: 'Stasiun Probolinggo', value: 1.65, unit: 'm', status: 'warning', location: 'Probolinggo', history: generateDetailedHistory(1.65) },
-    { id: 5, name: 'Stasiun Pasuruan', value: 2.10, unit: 'm', status: 'safe', location: 'Pasuruan', history: generateDetailedHistory(2.10) },
-    { id: 6, name: 'Stasiun Mojokerto', value: 2.75, unit: 'm', status: 'safe', location: 'Mojokerto', history: generateDetailedHistory(2.75) },
-    { id: 7, name: 'Stasiun Lamongan', value: 1.95, unit: 'm', status: 'safe', location: 'Lamongan', history: generateDetailedHistory(1.95) },
-    { id: 8, name: 'Stasiun Gresik', value: 3.45, unit: 'm', status: 'alert', location: 'Gresik', history: generateDetailedHistory(3.45) },
-    { id: 9, name: 'Stasiun Tuban', value: 2.30, unit: 'm', status: 'warning', location: 'Tuban', history: generateDetailedHistory(2.30) },
-    { id: 10, name: 'Stasiun Bojonegoro', value: 1.80, unit: 'm', status: 'safe', location: 'Bojonegoro', history: generateDetailedHistory(1.80) }
-  ]);
+  // Initialize station data with correct thresholds
+  const initializeStationData = () => {
+    const stations = [
+      { id: 1, name: 'Stasiun Surabaya', value: 2.45, unit: 'm', location: 'Surabaya River' },
+      { id: 2, name: 'Stasiun Malang', value: 1.85, unit: 'm', location: 'Malang City' },
+      { id: 3, name: 'Stasiun Sidoarjo', value: 3.20, unit: 'm', location: 'Sidoarjo' },
+      { id: 4, name: 'Stasiun Probolinggo', value: 1.65, unit: 'm', location: 'Probolinggo' },
+      { id: 5, name: 'Stasiun Pasuruan', value: 2.10, unit: 'm', location: 'Pasuruan' },
+      { id: 6, name: 'Stasiun Mojokerto', value: 2.75, unit: 'm', location: 'Mojokerto' },
+      { id: 7, name: 'Stasiun Lamongan', value: 1.95, unit: 'm', location: 'Lamongan' },
+      { id: 8, name: 'Stasiun Gresik', value: 3.45, unit: 'm', location: 'Gresik' },
+      { id: 9, name: 'Stasiun Tuban', value: 2.30, unit: 'm', location: 'Tuban' },
+      { id: 10, name: 'Stasiun Bojonegoro', value: 1.80, unit: 'm', location: 'Bojonegoro' }
+    ];
+
+    return stations.map(station => ({
+      ...station,
+      status: determineStatus(station.value, station.name),
+      history: generateDetailedHistory(station.value)
+    }));
+  };
+
+  const [tickerData, setTickerData] = useState(initializeStationData());
 
   const tickerRef = useRef(null);
   const [scrollPosition, setScrollPosition] = useState(0);
 
-  // Update data secara real-time
+  // Update data secara real-time dengan threshold per stasiun
   useEffect(() => {
     const updateTickerData = () => {
       setTickerData(prev => prev.map(item => {
         let newValue = item.value;
-        let newStatus = item.status;
         
         // Generate random changes untuk water level
         newValue = Math.max(0.5, Math.min(5, item.value + (Math.random() - 0.5) * 0.2));
-        newStatus = newValue > 4 ? 'alert' : newValue > 2.5 ? 'warning' : 'safe';
+        
+        // Gunakan threshold per stasiun untuk menentukan status
+        const newStatus = determineStatus(newValue, item.name);
 
         // Update history - add new value and remove oldest
         const newHistory = [...item.history.slice(1), newValue];
@@ -209,7 +222,9 @@ const FloodInfoDetail = ({ onDataUpdate, onStationSelect }) => {
   }, []);
 
   return (
-    <div className="absolute top-16 sm:top-20 left-2 right-2 sm:left-4 sm:right-4 z-10">
+    <div className={`absolute top-16 sm:top-20 left-2 right-2 sm:left-4 sm:right-4 z-10 transition-all duration-300 ease-in-out ${
+      isSidebarOpen ? 'transform translate-x-80' : 'transform translate-x-0'
+    }`}>
       <div className="max-w-2xl mx-auto">
         <div 
           ref={tickerRef}

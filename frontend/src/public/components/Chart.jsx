@@ -8,7 +8,13 @@ const Chart = ({
   className = "",
   onDataPointHover = null 
 }) => {
-  const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, data: null });
+  const [tooltip, setTooltip] = useState({ 
+    visible: false, 
+    x: 0, 
+    y: 0, 
+    data: null, 
+    position: 'top' // 'top' or 'bottom'
+  });
 
   // Function to generate timestamps for chart data points
   const generateTimestamps = (dataLength) => {
@@ -22,6 +28,41 @@ const Chart = ({
     }
     
     return timestamps;
+  };
+
+  // Function to calculate optimal tooltip position
+  const calculateTooltipPosition = (pointX, pointY, canvasRect) => {
+    const tooltipHeight = 60; // Smaller tooltip height
+    const tooltipWidth = 100; // Smaller tooltip width
+    const margin = 8; // Smaller margin from edges
+    
+    // Calculate if tooltip should be above or below the point
+    const spaceAbove = pointY;
+    const spaceBelow = canvasRect.height - pointY;
+    
+    // If there's not enough space above, position below
+    const shouldPositionBelow = spaceAbove < tooltipHeight + margin;
+    
+    // Calculate X position (center on point, but keep within bounds)
+    let tooltipX = pointX;
+    const halfWidth = tooltipWidth / 2;
+    
+    if (pointX - halfWidth < margin) {
+      tooltipX = margin + halfWidth;
+    } else if (pointX + halfWidth > canvasRect.width - margin) {
+      tooltipX = canvasRect.width - margin - halfWidth;
+    }
+    
+    // Calculate Y position with smaller offset
+    let tooltipY = shouldPositionBelow 
+      ? pointY + 10 // Below the point
+      : pointY - 10; // Above the point
+    
+    return {
+      x: tooltipX,
+      y: tooltipY,
+      position: shouldPositionBelow ? 'bottom' : 'top'
+    };
   };
 
   // Draw chart
@@ -99,34 +140,40 @@ const Chart = ({
     // Draw hover indicator if tooltip is visible
     if (tooltip.visible && tooltip.data) {
       const pointIndex = tooltip.data.index;
-      const x = (pointIndex / (data.length - 1)) * canvasWidth;
-      const y = canvasHeight - ((tooltip.data.value - minValue) / range) * canvasHeight;
       
-      // Draw circle at hovered point
-      ctx.beginPath();
-      ctx.fillStyle = lineColor;
-      ctx.arc(x, y, 6, 0, 2 * Math.PI);
-      ctx.fill();
-      
-      // Draw white border
-      ctx.beginPath();
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 2;
-      ctx.arc(x, y, 6, 0, 2 * Math.PI);
-      ctx.stroke();
-      
-      // Draw vertical line
-      ctx.beginPath();
-      ctx.strokeStyle = lineColor;
-      ctx.lineWidth = 1;
-      ctx.setLineDash([5, 5]);
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, canvasHeight);
-      ctx.stroke();
-      ctx.setLineDash([]); // Reset dash
+      // Ensure pointIndex is within bounds
+      if (pointIndex >= 0 && pointIndex < data.length) {
+        const x = (pointIndex / (data.length - 1)) * canvasWidth;
+        // Use actual data value from the array to ensure marker is on the line
+        const actualValue = data[pointIndex];
+        const y = canvasHeight - ((actualValue - minValue) / range) * canvasHeight;
+        
+        // Draw circle at hovered point with better visibility
+        ctx.beginPath();
+        ctx.fillStyle = lineColor;
+        ctx.arc(x, y, 6, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        // Draw white border for better contrast
+        ctx.beginPath();
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 2;
+        ctx.arc(x, y, 6, 0, 2 * Math.PI);
+        ctx.stroke();
+        
+        // Draw vertical line with better styling
+        ctx.beginPath();
+        ctx.strokeStyle = lineColor;
+        ctx.lineWidth = 1;
+        ctx.setLineDash([5, 5]);
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvasHeight);
+        ctx.stroke();
+        ctx.setLineDash([]); // Reset dash
+      }
     }
 
-  }, [data, tooltip]);
+  }, [data, tooltip, showTooltip]);
 
   // Handle mouse events for tooltip
   const handleChartMouseMove = (event) => {
@@ -138,6 +185,12 @@ const Chart = ({
     const rect = canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
+
+    // Only show tooltip if mouse is within chart bounds
+    if (x < 0 || x > rect.width || y < 0 || y > rect.height) {
+      setTooltip({ visible: false, x: 0, y: 0, data: null });
+      return;
+    }
 
     // Calculate which data point is closest to mouse position
     const canvasWidth = canvas.width;
@@ -157,21 +210,23 @@ const Chart = ({
       const pointX = (pointIndex / (data.length - 1)) * canvasWidth;
       const pointY = canvasHeight - ((value - minValue) / range) * canvasHeight;
       
-      // Convert canvas coordinates to screen coordinates
-      const screenX = rect.left + pointX;
-      const screenY = rect.top + pointY;
+      // Calculate optimal tooltip position
+      const canvasRect = { width: canvasWidth, height: canvasHeight };
+      const tooltipPos = calculateTooltipPosition(pointX, pointY, canvasRect);
       
+      // Use relative coordinates for smoother tooltip
       const tooltipData = {
-        value: value,
+        value: value, // Use actual data value from array
         timestamp: timestamp,
         index: pointIndex
       };
 
       setTooltip({
         visible: true,
-        x: screenX,
-        y: screenY,
-        data: tooltipData
+        x: tooltipPos.x,
+        y: tooltipPos.y,
+        data: tooltipData,
+        position: tooltipPos.position
       });
 
       // Call onDataPointHover callback if provided
@@ -199,15 +254,19 @@ const Chart = ({
       {/* Tooltip */}
       {showTooltip && tooltip.visible && tooltip.data && (
         <div
-          className="absolute bg-gray-900 text-white text-xs rounded-lg px-3 py-2 shadow-lg pointer-events-none z-10"
+          className="absolute bg-gray-900 text-white text-xs rounded-md px-2 py-1.5 shadow-lg pointer-events-none z-50 border border-gray-700 transition-all duration-150 ease-out"
           style={{
             left: `${tooltip.x}px`,
-            top: `${tooltip.y - 15}px`,
-            transform: 'translate(-50%, -100%)'
+            top: `${tooltip.y}px`,
+            transform: tooltip.position === 'top' 
+              ? 'translate(-50%, -100%)' 
+              : 'translate(-50%, 0%)',
+            minWidth: '80px',
+            maxWidth: '120px'
           }}
         >
-          <div className="text-center">
-            <div className="font-semibold text-white">
+          <div className="text-center space-y-0.5">
+            <div className="font-semibold text-white text-xs">
               {tooltip.data.value.toFixed(2)}m
             </div>
             <div className="text-gray-300 text-xs">
@@ -225,8 +284,6 @@ const Chart = ({
               })}
             </div>
           </div>
-          {/* Arrow pointing down */}
-          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
         </div>
       )}
     </div>
