@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
-import * as THREE from 'three';
 import 'mapbox-gl/dist/mapbox-gl.css';
 const MapboxMap = ({ tickerData, onStationSelect }) => {
   const mapContainer = useRef(null);
