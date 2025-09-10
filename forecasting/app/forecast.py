@@ -15,6 +15,37 @@ from .preprocess import preprocess_series, PreprocessOptions
 
 class ForecastError(Exception): pass
 
+def extend_predictions(predictions, target_count):
+    """
+    Extend predictions using trend extrapolation to reach target_count.
+    
+    Args:
+        predictions: numpy array of model predictions
+        target_count: desired number of predictions
+    
+    Returns:
+        list of extended predictions
+    """
+    predictions_list = predictions.tolist() if isinstance(predictions, np.ndarray) else list(predictions)
+    
+    if len(predictions_list) >= target_count:
+        return predictions_list[:target_count]
+    
+    if len(predictions_list) < 2:
+        # If we have less than 2 predictions, just repeat the last value
+        return predictions_list + [predictions_list[-1]] * (target_count - len(predictions_list))
+    
+    # Calculate trend from the last two predictions
+    trend = predictions_list[-1] - predictions_list[-2]
+    
+    # Extend predictions using the calculated trend
+    extended = predictions_list.copy()
+    for i in range(len(predictions_list), target_count):
+        next_prediction = extended[-1] + trend
+        extended.append(next_prediction)
+    
+    return extended
+
 def get_model_feature_requirements():
     """Get the feature requirements for each model type."""
     return {
@@ -273,12 +304,14 @@ def predict_for_sensor(session: Session, settings: Settings, sensor_code: str, m
     max_predictions = int(prediction_hours / step_hours)  # Calculate number of predictions needed
     
     # Create prediction records for specified time horizon
-    n_steps_out = min(len(yhat), max_predictions)  # Use available predictions or requested amount
+    # Extend predictions using trend extrapolation if needed
+    extended_predictions = extend_predictions(yhat, max_predictions)
+    n_steps_out = min(len(extended_predictions), max_predictions)
     rows_out = []
     
     for i in range(n_steps_out):
         pred_ts = base_ts + timedelta(minutes=step_minutes * (i + 1))
-        val = float(yhat[i] if i < len(yhat) else yhat[-1])
+        val = float(extended_predictions[i])
         
         status = classify_threshold(val, sensor.threshold_safe, sensor.threshold_warning, sensor.threshold_danger)
         rows_out.append(DataPrediction(
