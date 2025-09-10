@@ -3,13 +3,14 @@ import Dashboard from '../pages/Dashboard'
 import GoogleMapsSearchbar from '../components/GoogleMapsSearchbar'
 import MapboxMap from '../components/MapboxMap'
 import FloatingLegend from '../components/FloatingLegend'
-import FloodInfoDetail from '../components/FloodInfoDetail'
+import FloodRunningBar from '../components/FloodRunningBar'
 import StationDetail from '../components/StationDetail'
 
 const Layout = ({ children }) => {
   const [tickerData, setTickerData] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedStation, setSelectedStation] = useState(null)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   const handleSearch = (query) => {
     setSearchQuery(query)
@@ -19,10 +20,12 @@ const Layout = ({ children }) => {
 
   const handleStationSelect = (station) => {
     setSelectedStation(station)
+    setIsSidebarOpen(true)
   }
 
   const handleCloseStationDetail = () => {
     setSelectedStation(null)
+    setIsSidebarOpen(false)
   }
 
   return (
@@ -39,12 +42,14 @@ const Layout = ({ children }) => {
       <GoogleMapsSearchbar 
         onSearch={handleSearch}
         placeholder="Cari stasiun monitoring banjir..."
+        isSidebarOpen={isSidebarOpen}
       />
       
-      {/* Flood Ticker Categories */}
-      <FloodInfoDetail 
+      {/* Flood Running Bar */}
+      <FloodRunningBar 
         onDataUpdate={setTickerData}
         onStationSelect={handleStationSelect}
+        isSidebarOpen={isSidebarOpen}
       />
       
       {/* Floating Legend */}
@@ -54,6 +59,7 @@ const Layout = ({ children }) => {
       <StationDetail 
         selectedStation={selectedStation}
         onClose={handleCloseStationDetail}
+        tickerData={tickerData}
       />
       
       {/* Main content - hidden in full screen mode */}
