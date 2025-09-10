@@ -26,7 +26,7 @@
 
     <!-- Modal Create -->
     <x-admin.modal :show="false" name="river-basin-create" title="Tambah DAS" size="md" :close-on-backdrop="true">
-        <form id="rbCreateForm" x-ref="createForm" action="{{ route('admin.wilayah.river-basins.store') }}" method="POST" class="space-y-6">
+        <form id="rbCreateForm" x-ref="createForm" action="{{ route('admin.region.river-basins.store') }}" method="POST" class="space-y-6">
             @csrf
             <input type="hidden" name="context" value="create" />
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -111,7 +111,7 @@ function riverBasinsPage() {
         },
         openEdit(item) {
             this.editData = { id: item.id, name: item.name, code: item.code };
-            this.editAction = `${window.location.origin}/admin/wilayah/river-basins/${item.id}`;
+            this.editAction = `${window.location.origin}/admin/region/river-basins/${item.id}`;
             this.$dispatch('open-modal', 'river-basin-edit');
         }
     }

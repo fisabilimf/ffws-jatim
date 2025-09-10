@@ -159,11 +159,31 @@ aside.fixed {
     top: 0;
     left: 0;
     height: 100vh;
+    z-index: 30;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
 }
 
-aside.lg\:relative {
-    position: relative;
+aside.lg\:sticky {
+    position: sticky;
+    top: 0;
     height: 100vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+/* Ensure main content has proper margin when sidebar is fixed */
+@media (min-width: 1024px) {
+    .main-content-with-sidebar {
+        margin-left: 4rem; /* 16 when collapsed */
+        transition: margin-left 0.3s ease-in-out;
+    }
+    
+    .main-content-with-sidebar.sidebar-expanded {
+        margin-left: 16rem; /* 64 when expanded */
+    }
 }
 
 /* Mini sidebar - hide all text and center icons only */
