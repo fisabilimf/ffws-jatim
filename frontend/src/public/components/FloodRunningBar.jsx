@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { determineStatus, getThresholdInfo } from '../config/stationThresholds';
+import Chart from './Chart';
 
-const FloodInfoDetail = ({ onDataUpdate, onStationSelect, isSidebarOpen = false }) => {
+const FloodRunningBar = ({ onDataUpdate, onStationSelect, isSidebarOpen = false }) => {
   // Function to generate detailed history data (20 data points representing 10 minutes)
   const generateDetailedHistory = (currentValue) => {
     const history = [];
@@ -128,99 +129,6 @@ const FloodInfoDetail = ({ onDataUpdate, onStationSelect, isSidebarOpen = false 
     }).format(value);
   };
 
-  // Function to draw line chart
-  const drawLineChart = (history, status, canvasId) => {
-    const canvas = document.getElementById(canvasId);
-    if (!canvas) return;
-    
-    const ctx = canvas.getContext('2d');
-    const width = canvas.width;
-    const height = canvas.height;
-    
-    // Clear canvas
-    ctx.clearRect(0, 0, width, height);
-    
-    if (history.length < 2) return;
-    
-    // Find min and max values for scaling
-    const minValue = Math.min(...history);
-    const maxValue = Math.max(...history);
-    const range = maxValue - minValue || 1;
-    
-    // Set line color based on status
-    let lineColor;
-    switch (status) {
-      case 'safe': lineColor = '#10B981'; break; // green
-      case 'warning': lineColor = '#F59E0B'; break; // yellow
-      case 'alert': lineColor = '#EF4444'; break; // red
-      default: lineColor = '#6B7280'; break;
-    }
-    
-    // Create gradient for area fill
-    const gradient = ctx.createLinearGradient(0, 0, 0, height);
-    gradient.addColorStop(0, lineColor + '50'); // 50% opacity at top (near line)
-    gradient.addColorStop(0.3, lineColor + '40'); // 40% opacity near line
-    gradient.addColorStop(0.6, lineColor + '25'); // 25% opacity at middle
-    gradient.addColorStop(1, lineColor + '05'); // 5% opacity at bottom
-    
-    // Draw area fill below the line
-    ctx.beginPath();
-    ctx.fillStyle = gradient;
-    
-    // Start from bottom-left
-    ctx.moveTo(0, height);
-    
-    // Draw line to each data point
-    history.forEach((value, index) => {
-      const x = (index / (history.length - 1)) * width;
-      const y = height - ((value - minValue) / range) * height;
-      ctx.lineTo(x, y);
-    });
-    
-    // Complete the path to bottom-right and fill
-    ctx.lineTo(width, height);
-    ctx.closePath();
-    ctx.fill();
-    
-    // Draw the line chart on top
-    ctx.beginPath();
-    ctx.strokeStyle = lineColor;
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    
-    history.forEach((value, index) => {
-      const x = (index / (history.length - 1)) * width;
-      const y = height - ((value - minValue) / range) * height;
-      
-      if (index === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
-    });
-    
-    ctx.stroke();
-  };
-
-  // Draw line charts when data updates
-  useEffect(() => {
-    tickerData.forEach(item => {
-      drawLineChart(item.history, item.status, `chart-${item.id}`);
-    });
-  }, [tickerData]);
-
-  // Initial chart drawing
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      tickerData.forEach(item => {
-        drawLineChart(item.history, item.status, `chart-${item.id}`);
-      });
-    }, 500);
-    
-    return () => clearTimeout(timer);
-  }, []);
-
   return (
     <div className={`absolute top-16 sm:top-20 left-2 right-2 sm:left-4 sm:right-4 z-10 transition-all duration-300 ease-in-out ${
       isSidebarOpen ? 'transform translate-x-80' : 'transform translate-x-0'
@@ -243,11 +151,15 @@ const FloodInfoDetail = ({ onDataUpdate, onStationSelect, isSidebarOpen = false 
                 <span className="text-xs font-bold text-gray-900">{formatValue(item.value)}</span>
                 <span className="text-xs text-gray-500">{item.unit}</span>
               </div>
-              <canvas
-                id={`chart-${item.id}`}
-                width="48"
-                height="24"
-                className="w-12 h-6 rounded transition-all duration-300 hover:scale-105"
+              <Chart
+                data={item.history}
+                width={48}
+                height={24}
+                showTooltip={false}
+                miniMode={true}
+                status={item.status}
+                canvasId={`chart-${item.id}`}
+                className="w-12 h-6 rounded"
               />
             </div>
           ))}
@@ -257,4 +169,4 @@ const FloodInfoDetail = ({ onDataUpdate, onStationSelect, isSidebarOpen = false 
   );
 };
 
-export default FloodInfoDetail;
+export default FloodRunningBar;

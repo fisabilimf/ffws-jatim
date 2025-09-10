@@ -6,7 +6,10 @@ const Chart = ({
   height = 160, 
   showTooltip = true,
   className = "",
-  onDataPointHover = null 
+  onDataPointHover = null,
+  miniMode = false,
+  status = 'safe',
+  canvasId = 'chart-canvas'
 }) => {
   const [tooltip, setTooltip] = useState({ 
     visible: false, 
@@ -69,7 +72,7 @@ const Chart = ({
   useEffect(() => {
     if (data.length === 0) return;
 
-    const canvas = document.getElementById('chart-canvas');
+    const canvas = document.getElementById(canvasId);
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
@@ -86,10 +89,21 @@ const Chart = ({
     const maxValue = Math.max(...data);
     const range = maxValue - minValue || 1;
 
-    // Set line color based on data range (you can customize this)
+    // Set line color based on status - Chart.jsx is the single source of truth for colors
     let lineColor = '#10B981'; // Default green
-    if (maxValue > 4) lineColor = '#EF4444'; // Red for high values
-    else if (maxValue > 2.5) lineColor = '#F59E0B'; // Yellow for medium values
+    if (status) {
+      // Use status-based coloring for all charts (centralized color management)
+      switch (status) {
+        case 'safe': lineColor = '#10B981'; break; // green
+        case 'warning': lineColor = '#F59E0B'; break; // yellow
+        case 'alert': lineColor = '#EF4444'; break; // red
+        default: lineColor = '#6B7280'; break;
+      }
+    } else {
+      // Fallback to data-based coloring only if no status provided
+      if (maxValue > 4) lineColor = '#EF4444'; // Red for high values
+      else if (maxValue > 2.5) lineColor = '#F59E0B'; // Yellow for medium values
+    }
 
     // Create gradient for area fill
     const gradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
@@ -137,8 +151,8 @@ const Chart = ({
 
     ctx.stroke();
 
-    // Draw hover indicator if tooltip is visible
-    if (tooltip.visible && tooltip.data) {
+    // Draw hover indicator if tooltip is visible (only for non-mini mode)
+    if (!miniMode && tooltip.visible && tooltip.data) {
       const pointIndex = tooltip.data.index;
       
       // Ensure pointIndex is within bounds
@@ -173,13 +187,13 @@ const Chart = ({
       }
     }
 
-  }, [data, tooltip, showTooltip]);
+  }, [data, tooltip, showTooltip, miniMode, status, canvasId]);
 
-  // Handle mouse events for tooltip
+  // Handle mouse events for tooltip (disabled in mini mode)
   const handleChartMouseMove = (event) => {
-    if (!showTooltip || data.length === 0) return;
+    if (!showTooltip || data.length === 0 || miniMode) return;
 
-    const canvas = document.getElementById('chart-canvas');
+    const canvas = document.getElementById(canvasId);
     if (!canvas) return;
 
     const rect = canvas.getBoundingClientRect();
@@ -237,22 +251,23 @@ const Chart = ({
   };
 
   const handleChartMouseLeave = () => {
+    if (miniMode) return;
     setTooltip({ visible: false, x: 0, y: 0, data: null });
   };
 
   return (
     <div className={`relative ${className}`}>
       <canvas
-        id="chart-canvas"
+        id={canvasId}
         width={width}
         height={height}
-        className={`w-full rounded bg-white ${showTooltip ? 'cursor-crosshair' : ''}`}
+        className={`w-full rounded bg-white ${showTooltip && !miniMode ? 'cursor-crosshair' : ''} ${miniMode ? 'transition-all duration-300 hover:scale-105' : ''}`}
         onMouseMove={handleChartMouseMove}
         onMouseLeave={handleChartMouseLeave}
       />
       
-      {/* Tooltip */}
-      {showTooltip && tooltip.visible && tooltip.data && (
+      {/* Tooltip (only for non-mini mode) */}
+      {!miniMode && showTooltip && tooltip.visible && tooltip.data && (
         <div
           className="absolute bg-gray-900 text-white text-xs rounded-md px-2 py-1.5 shadow-lg pointer-events-none z-50 border border-gray-700 transition-all duration-150 ease-out"
           style={{

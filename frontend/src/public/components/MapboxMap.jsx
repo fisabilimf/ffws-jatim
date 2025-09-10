@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import SideCard from './SideCard';
+import StationDetail from './StationDetail';
 
 const MapboxMap = ({ tickerData, onStationSelect }) => {
   const mapContainer = useRef(null);
@@ -121,11 +121,11 @@ const MapboxMap = ({ tickerData, onStationSelect }) => {
     <div className="w-full h-screen overflow-hidden relative z-0">
       <div ref={mapContainer} className="w-full h-full relative z-0" />
       
-      {/* SideCard Component */}
-      <SideCard 
-        isOpen={isSidecardOpen}
-        onClose={() => setIsSidecardOpen(false)}
+      {/* StationDetail Component */}
+      <StationDetail 
         selectedStation={selectedStation}
+        onClose={() => setIsSidecardOpen(false)}
+        tickerData={tickerData}
       />
     </div>
   );
