@@ -46,7 +46,9 @@ def load_scalers(session, settings: Settings, model_code: str, sensor_code: str 
     
     # Fallback to direct file system loading
     try:
-        scalers_dir = os.path.join(settings.MODELS_BASE_DIR, "..", "scalers")
+        # Use absolute path for scalers directory
+        forecasting_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        scalers_dir = os.path.join(forecasting_dir, "scalers")
         x_scaler = load_scaler_direct(scalers_dir, model_code, "x")
         y_scaler = load_scaler_direct(scalers_dir, model_code, "y")
         return x_scaler, y_scaler

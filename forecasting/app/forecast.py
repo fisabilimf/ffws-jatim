@@ -9,6 +9,7 @@ from .utils import ensure_3d_batch
 from .loaders import load_keras_model_with_settings
 from .scalers import load_scalers
 from .thresholds import classify_threshold
+from .confidence import calculate_confidence_score
 from .config import Settings
 from .preprocess import preprocess_series, PreprocessOptions
 
@@ -109,8 +110,22 @@ def _get_sensor_and_model(session: Session, sensor_code: str, model_code: str | 
         raise ForecastError("Model file_path missing")
     return sensor, model
 
-def predict_for_sensor(session: Session, settings: Settings, sensor_code: str, model_code: str | None = None) -> dict:
-    """Improved prediction function with multi-feature support."""
+def predict_for_sensor(session: Session, settings: Settings, sensor_code: str, model_code: str | None = None, 
+                      prediction_hours: int = 5, step_hours: float = 1.0) -> dict:
+    """
+    Improved prediction function with multi-feature support and configurable time intervals.
+    
+    Args:
+        session: Database session
+        settings: Application settings
+        sensor_code: Sensor identifier
+        model_code: Model to use (optional, uses sensor's default if None)
+        prediction_hours: Number of hours to predict into the future (default: 5)
+        step_hours: Time step between predictions in hours (default: 1.0)
+    
+    Returns:
+        Dictionary with prediction results and confidence scores
+    """
     sensor, model = _get_sensor_and_model(session, sensor_code, model_code)
     
     # Get model feature requirements
@@ -220,6 +235,28 @@ def predict_for_sensor(session: Session, settings: Settings, sensor_code: str, m
         except Exception as e:
             raise ForecastError(f"Output scaling failed: {e}")
     
+    # Calculate confidence score for the predictions
+    try:
+        # Get feature names for confidence calculation
+        feature_names = None
+        if model_req and 'features' in model_req:
+            # Create generic feature names based on requirements
+            n_features = model_req.get('x_features', 4)
+            feature_names = [f'feature_{i+1}' for i in range(n_features)]
+        
+        confidence = calculate_confidence_score(
+            session=session,
+            sensor_code=sensor_code,
+            model_code=model.model_code,
+            input_data=X,  # Original input data before scaling
+            predictions=yhat,
+            feature_names=feature_names
+        )
+        print(f"   📊 Confidence score: {confidence:.3f}")
+    except Exception as e:
+        print(f"   ⚠️  Confidence calculation failed: {e}")
+        confidence = 0.5  # Default neutral confidence
+    
     # Create prediction records
     now = datetime.utcnow()
     
@@ -232,10 +269,11 @@ def predict_for_sensor(session: Session, settings: Settings, sensor_code: str, m
     ).scalar_one()
     
     base_ts = latest_data
-    step_minutes = 15  # Default step (can be made configurable)
+    step_minutes = int(step_hours * 60)  # Convert hours to minutes
+    max_predictions = int(prediction_hours / step_hours)  # Calculate number of predictions needed
     
-    # Create prediction records (limit to reasonable number)
-    n_steps_out = min(len(yhat), 24)  # Max 24 predictions (6 hours at 15min intervals)
+    # Create prediction records for specified time horizon
+    n_steps_out = min(len(yhat), max_predictions)  # Use available predictions or requested amount
     rows_out = []
     
     for i in range(n_steps_out):
@@ -249,7 +287,7 @@ def predict_for_sensor(session: Session, settings: Settings, sensor_code: str, m
             prediction_run_at=now,
             prediction_for_ts=pred_ts,
             predicted_value=val,
-            confidence_score=None,
+            confidence_score=confidence,
             threshold_prediction_status=status,
             created_at=now,
             updated_at=now
@@ -264,15 +302,20 @@ def predict_for_sensor(session: Session, settings: Settings, sensor_code: str, m
         "model_type": model.model_type,
         "model_algorithm": model.model_type,
         "step_minutes": step_minutes,
+        "step_hours": step_hours,
+        "prediction_horizon_hours": prediction_hours,
         "rows_inserted": len(rows_out),
         "input_features_used": n_features,
+        "confidence_score": confidence,
         "predictions": [
             {
                 "forecast_time": row.prediction_for_ts.isoformat(),
                 "forecast_value": row.predicted_value,
-                "threshold_status": row.threshold_prediction_status
+                "confidence_score": row.confidence_score,
+                "threshold_status": row.threshold_prediction_status,
+                "hours_ahead": step_hours * (i + 1)
             }
-            for row in rows_out[:5]  # Return first 5 predictions as sample
+            for i, row in enumerate(rows_out[:5])  # Return first 5 predictions as sample
         ]
     }
 
