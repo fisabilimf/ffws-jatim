@@ -52,7 +52,7 @@ class RiverBasinController extends Controller
                 [
                     'label' => 'Hapus',
                     'title' => 'Hapus Aliran Sungai',
-                    'url' => route('admin.wilayah.river-basins.destroy', $rb->id),
+                    'url' => route('admin.region.river-basins.destroy', $rb->id),
                     'color' => 'red',
                     'method' => 'DELETE',
                     'icon' => 'trash',
@@ -83,7 +83,7 @@ class RiverBasinController extends Controller
 
         try {
             MasRiverBasin::create($validated);
-            return redirect()->route('admin.wilayah.river-basins.index')
+            return redirect()->route('admin.region.river-basins.index')
                 ->with('success', 'Daerah Aliran Sungai berhasil ditambahkan.');
         } catch (\Exception $e) {
             return redirect()->back()
@@ -110,7 +110,7 @@ class RiverBasinController extends Controller
 
         try {
             $river_basin->update($validated);
-            return redirect()->route('admin.wilayah.river-basins.index')
+            return redirect()->route('admin.region.river-basins.index')
                 ->with('success', 'DAS berhasil diperbarui.');
         } catch (\Exception $e) {
             return redirect()->back()
@@ -123,7 +123,7 @@ class RiverBasinController extends Controller
     {
         try {
             $river_basin->delete();
-            return redirect()->route('admin.wilayah.river-basins.index')
+            return redirect()->route('admin.region.river-basins.index')
                 ->with('success', 'DAS berhasil dihapus.');
         } catch (\Exception $e) {
             return redirect()->back()

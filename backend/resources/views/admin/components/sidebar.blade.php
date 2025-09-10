@@ -1,6 +1,6 @@
 <!-- Sidebar -->
 <aside
-   class="bg-white min-h-screen flex-shrink-0 transition-transform duration-200 ease-out fixed lg:relative z-30 border-r border-gray-200"
+   class="bg-white min-h-screen flex-shrink-0 transition-transform duration-200 ease-out fixed top-0 left-0 lg:sticky lg:top-0 z-30 border-r border-gray-200 overflow-y-auto"
    x-cloak :class="{ 
            '-translate-x-full': !$store.sidebar.open && window.innerWidth < 1024,
            'translate-x-0': $store.sidebar.open || window.innerWidth >= 1024,
@@ -32,9 +32,8 @@
                       {{ request()->routeIs('admin.dashboard')
    ? 'active'
    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}"
-            :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-3 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }"
-            :title="$store.sidebar.open ? '' : 'Dashboard'">
-            <i class="fas fa-tachometer-alt"
+            :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
+            <i class="fas fa-tachometer-alt text-base"
                :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
             <span
                :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Dashboard</span>
@@ -45,9 +44,8 @@
                       {{ request()->routeIs('admin.users.*')
    ? 'active'
    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}"
-            :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-3 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }"
-            :title="$store.sidebar.open ? '' : 'Manajemen User'">
-            <i class="fas fa-users"
+            :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
+            <i class="fas fa-users text-base"
                :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
             <span
                :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Manajemen
@@ -59,9 +57,8 @@
                       {{ request()->routeIs('admin.settings.*')
    ? 'active'
    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}"
-            :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-3 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }"
-            :title="$store.sidebar.open ? '' : 'Pengaturan'">
-            <i class="fas fa-cog"
+            :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
+            <i class="fas fa-cog text-base"
                :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
             <span
                :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Pengaturan</span>
@@ -74,20 +71,31 @@
             <!-- Device Heading -->
             <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider"
                :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0 h-0 py-0 overflow-hidden': !$store.sidebar.open && window.innerWidth >= 1024 }">
-               Device</div>
-               <!-- Wilayah Heading -->
+               Master</div>
+
+               <a href="{{ route('admin.devices.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative
+                                           {{ request()->routeIs('admin.devices.*')
+   ? 'active'
+   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}"
+                  :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
+                  <i class="fas fa-screwdriver-wrench text-base"
+                     :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
+                  <span
+                     :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Devices</span>
+               </a>
+
+               <!-- Region Heading -->
                <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider"
                :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0 h-0 py-0 overflow-hidden': !$store.sidebar.open && window.innerWidth >= 1024 }">
-               Wilayah</div>
+               Region</div>
                
-               <!-- Wilayah: DAS -->
-               <a href="{{ route('admin.wilayah.river-basins.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative
-                            {{ request()->routeIs('admin.wilayah.river-basins.*')
-      ? 'active'
-      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}"
-                  :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-3 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }"
-                  :title="$store.sidebar.open ? '' : 'Daerah Aliran Sungai'">
-                  <i class="fas fa-water"
+               <!-- Region: Data Aliran Sungai -->
+               <a href="{{ route('admin.region.river-basins.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative
+                            {{ request()->routeIs('admin.region.river-basins.*')
+   ? 'active'
+   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}"
+                  :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
+                  <i class="fas fa-water text-base"
                      :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
                   <span
                      :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Daerah
@@ -95,40 +103,37 @@
                </a>
 
 
-            <!-- Wilayah: Kabupaten -->
-            <a href="{{ route('admin.wilayah.kabupaten') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative
-                          {{ request()->routeIs('admin.wilayah.kabupaten')
+            <!-- Region: Kabupaten -->
+            <a href="{{ route('admin.region.kabupaten') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative
+                          {{ request()->routeIs('admin.region.kabupaten')
    ? 'active'
    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}"
-               :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-3 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }"
-               :title="$store.sidebar.open ? '' : 'Kabupaten'">
-               <i class="fas fa-city"
+               :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
+               <i class="fas fa-city text-base"
                   :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
                <span
                   :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Kabupaten</span>
             </a>
 
-            <!-- Wilayah: Kecamatan -->
-            <a href="{{ route('admin.wilayah.kecamatan') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative
-                          {{ request()->routeIs('admin.wilayah.kecamatan')
+            <!-- Region: Kecamatan -->
+            <a href="{{ route('admin.region.kecamatan') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative
+                          {{ request()->routeIs('admin.region.kecamatan')
    ? 'active'
    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}"
-               :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-3 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }"
-               :title="$store.sidebar.open ? '' : 'Kecamatan'">
-               <i class="fas fa-layer-group"
+               :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
+               <i class="fas fa-layer-group text-base"
                   :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
                <span
                   :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Kecamatan</span>
             </a>
 
-            <!-- Wilayah: Desa -->
-            <a href="{{ route('admin.wilayah.desa') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative
-                          {{ request()->routeIs('admin.wilayah.desa')
+            <!-- Region: Desa -->
+            <a href="{{ route('admin.region.desa') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative
+                          {{ request()->routeIs('admin.region.desa')
    ? 'active'
    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}"
-               :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-3 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }"
-               :title="$store.sidebar.open ? '' : 'Desa'">
-               <i class="fas fa-home"
+               :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
+               <i class="fas fa-home text-base"
                   :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
                <span
                   :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Desa</span>

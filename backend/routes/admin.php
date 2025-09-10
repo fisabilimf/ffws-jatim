@@ -5,6 +5,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\RiverBasinController;
+use App\Http\Controllers\Admin\MasDeviceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,12 +41,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         Route::post('/clear-config', [SettingController::class, 'clearConfig'])->name('config.clear');
     });
 
-    // Data Wilayah
-    Route::prefix('wilayah')->name('wilayah.')->group(function () {
-        // Halaman data wilayah
-        Route::view('/kabupaten', 'admin.wilayah.kabupaten')->name('kabupaten');
-        Route::view('/kecamatan', 'admin.wilayah.kecamatan')->name('kecamatan');
-        Route::view('/desa', 'admin.wilayah.desa')->name('desa');
+    // Data Region
+    Route::prefix('region')->name('region.')->group(function () {
+        // Halaman data region
+        Route::view('/kabupaten', 'admin.region.kabupaten')->name('kabupaten');
+        Route::view('/kecamatan', 'admin.region.kecamatan')->name('kecamatan');
+        Route::view('/desa', 'admin.region.desa')->name('desa');
 
         // CRUD DAS (River Basins) - Menggunakan modal
         Route::prefix('river-basins')->name('river-basins.')->group(function () {
@@ -55,7 +56,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
             Route::delete('/{river_basin}', [RiverBasinController::class, 'destroy'])->name('destroy');
         });
     });
-    
+
+    // Data Master (Devices)
+    Route::prefix('devices')->name('devices.')->group(function () {
+        Route::get('/', [MasDeviceController::class, 'index'])->name('index');
+        Route::post('/', [MasDeviceController::class, 'store'])->name('store');
+        Route::put('/{id}', [MasDeviceController::class, 'update'])->name('update');
+        Route::delete('/{id}', [MasDeviceController::class, 'destroy'])->name('destroy');
+    });
+
     // Profile & Account
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [AdminController::class, 'profile'])->name('index');

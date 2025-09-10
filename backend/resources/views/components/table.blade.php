@@ -1,4 +1,4 @@
-@props([
+   @props([
     'title' => null,
     'headers' => [],
     'rows' => [],
@@ -12,6 +12,16 @@
     'searchPlaceholder' => 'Cari...',
     'class' => ''
 ])
+
+@php
+    // Auto detect if rows is a paginator instance
+    $isPaginated = $rows instanceof \Illuminate\Pagination\LengthAwarePaginator || 
+                   $rows instanceof \Illuminate\Pagination\Paginator ||
+                   method_exists($rows, 'hasPages');
+    
+    // Extract data from paginator
+    $tableRows = $isPaginated ? $rows->items() : $rows;
+@endphp
 
 <div class="bg-white shadow-sm rounded-lg border border-gray-200 {{ $class }}">
     @if($title || $searchable || isset($filters) || isset($actions))
@@ -29,15 +39,28 @@
                 </div>
                 <div class="flex items-center gap-2">
                     @if($searchable)
-                        <label for="search" class="sr-only">Cari</label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-                                <i class="fa-solid fa-magnifying-glass h-5 w-5"></i>
-                            </span>
-                            <input id="search" type="text" placeholder="{{ $searchPlaceholder }}" 
-                                   value="{{ $searchQuery }}"
-                                   class="pl-10 pr-3 py-2 border rounded w-64 focus:outline-none focus:ring focus:border-blue-300" />
-                        </div>
+                        <form method="GET" action="{{ request()->url() }}" class="flex items-center gap-2">
+                            @foreach(request()->except(['search', 'page']) as $key => $value)
+                                <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                            @endforeach
+                            <label for="search" class="sr-only">Cari</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                                    <i class="fa-solid fa-magnifying-glass h-5 w-5"></i>
+                                </span>
+                                <input id="search" name="search" type="text" placeholder="{{ $searchPlaceholder }}" 
+                                       value="{{ request('search', $searchQuery) }}"
+                                       class="pl-10 pr-3 py-2 border rounded w-64 focus:outline-none focus:ring focus:border-blue-300" />
+                            </div>
+                            <button type="submit" class="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <i class="fa-solid fa-search"></i>
+                            </button>
+                            @if(request('search'))
+                                <a href="{{ request()->url() }}" class="px-3 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                                    <i class="fa-solid fa-times"></i>
+                                </a>
+                            @endif
+                        </form>
                     @endif
                     @isset($actions)
                         <div class="flex items-center gap-2">
@@ -79,7 +102,7 @@
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-                @forelse($rows as $row)
+                @forelse($tableRows as $row)
                     <tr class="hover:bg-gray-50">
                         @foreach($headers as $header)
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -93,6 +116,7 @@
                                                 $statusClasses = [
                                                     'active' => 'bg-green-100 text-green-800',
                                                     'inactive' => 'bg-red-100 text-red-800',
+                                                    'maintenance' => 'bg-yellow-100 text-yellow-800',
                                                     'pending' => 'bg-yellow-100 text-yellow-800',
                                                     'draft' => 'bg-gray-100 text-gray-800'
                                                 ];
@@ -191,14 +215,94 @@
         </table>
     </div>
     
-    <div class="px-6 py-3 border-t border-gray-200 flex items-center justify-between">
-        @if($paginationText)
-            <p class="text-sm text-gray-600">{{ $paginationText }}</p>
-        @else
-            <span></span>
-        @endif
-        <div>
-            {{ $pagination ?? '' }}
+    <!-- Auto Pagination Section -->
+    @if($isPaginated && $rows->hasPages())
+        <div class="px-6 py-3 border-t border-gray-200">
+            <div class="flex items-center justify-between">
+                <div class="text-sm text-gray-700">
+                    Menampilkan {{ $rows->firstItem() }} sampai {{ $rows->lastItem() }} dari {{ $rows->total() }} data
+                </div>
+                <div class="flex items-center space-x-1">
+                    {{-- Previous Page Link --}}
+                    @if ($rows->onFirstPage())
+                        <span class="px-3 py-2 text-sm text-gray-400 bg-gray-100 rounded-lg cursor-not-allowed">
+                            <i class="fas fa-chevron-left"></i>
+                        </span>
+                    @else
+                        <a href="{{ $rows->previousPageUrl() }}" class="px-3 py-2 text-sm text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    @endif
+
+                    {{-- Pagination Elements --}}
+                    @php
+                        $currentPage = $rows->currentPage();
+                        $lastPage = $rows->lastPage();
+                        $startPage = max(1, $currentPage - 2);
+                        $endPage = min($lastPage, $currentPage + 2);
+                        
+                        // Adjust range if we're near the beginning or end
+                        if ($currentPage <= 3) {
+                            $endPage = min(5, $lastPage);
+                        }
+                        if ($currentPage >= $lastPage - 2) {
+                            $startPage = max(1, $lastPage - 4);
+                        }
+                    @endphp
+
+                    {{-- First page if not in range --}}
+                    @if ($startPage > 1)
+                        <a href="{{ $rows->url(1) }}" class="px-3 py-2 text-sm text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">1</a>
+                        @if ($startPage > 2)
+                            <span class="px-2 text-gray-400">...</span>
+                        @endif
+                    @endif
+
+                    {{-- Page Numbers --}}
+                    @for ($i = $startPage; $i <= $endPage; $i++)
+                        @if ($i == $currentPage)
+                            <span class="px-3 py-2 text-sm text-white bg-blue-600 rounded-lg">{{ $i }}</span>
+                        @else
+                            <a href="{{ $rows->url($i) }}" class="px-3 py-2 text-sm text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">{{ $i }}</a>
+                        @endif
+                    @endfor
+
+                    {{-- Last page if not in range --}}
+                    @if ($endPage < $lastPage)
+                        @if ($endPage < $lastPage - 1)
+                            <span class="px-2 text-gray-400">...</span>
+                        @endif
+                        <a href="{{ $rows->url($lastPage) }}" class="px-3 py-2 text-sm text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">{{ $lastPage }}</a>
+                    @endif
+
+                    {{-- Next Page Link --}}
+                    @if ($rows->hasMorePages())
+                        <a href="{{ $rows->nextPageUrl() }}" class="px-3 py-2 text-sm text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    @else
+                        <span class="px-3 py-2 text-sm text-gray-400 bg-gray-100 rounded-lg cursor-not-allowed">
+                            <i class="fas fa-chevron-right"></i>
+                        </span>
+                    @endif
+                </div>
+            </div>
         </div>
-    </div>
+    @elseif($pagination || $paginationText)
+        <!-- Manual Pagination Section -->
+        <div class="px-6 py-3 border-t border-gray-200 flex items-center justify-between">
+            @if($paginationText)
+                <p class="text-sm text-gray-600">{{ $paginationText }}</p>
+            @else
+                <span></span>
+            @endif
+            <div>
+                @if($pagination && is_string($pagination))
+                    {!! $pagination !!}
+                @else
+                    {{ $pagination ?? '' }}
+                @endif
+            </div>
+        </div>
+    @endif
 </div>

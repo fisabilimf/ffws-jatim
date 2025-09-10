@@ -60,12 +60,11 @@
         </div>
         
         <!-- Main Content -->
-        <div class="flex-1 flex flex-col transition-all duration-300 ease-in-out" x-cloak
+        <div class="flex-1 flex flex-col transition-all duration-300 ease-in-out lg:ml-16" x-cloak
              :class="{ 
-                 'ml-0': !$store.sidebar.open && window.innerWidth < 1024,
-                 'ml-64': $store.sidebar.open && window.innerWidth < 1024,
-                 'lg:ml-16': !$store.sidebar.open && window.innerWidth >= 1024,
-                 'lg:ml-64': $store.sidebar.open && window.innerWidth >= 1024
+                 'ml-0': window.innerWidth < 1024,
+                 'lg:ml-64': $store.sidebar.open && window.innerWidth >= 1024,
+                 'lg:ml-16': !$store.sidebar.open && window.innerWidth >= 1024
              }"
              style="min-height: 100vh;">
             <!-- Top Navigation -->
