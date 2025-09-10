@@ -183,6 +183,8 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
                   height={160}
                   showTooltip={true}
                   className="h-40"
+                  canvasId="station-detail-chart"
+                  status={stationData.status}
                 />
               </div>
             </div>

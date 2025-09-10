@@ -3,7 +3,7 @@ import Dashboard from '../pages/Dashboard'
 import GoogleMapsSearchbar from '../components/GoogleMapsSearchbar'
 import MapboxMap from '../components/MapboxMap'
 import FloatingLegend from '../components/FloatingLegend'
-import FloodInfoDetail from '../components/FloodInfoDetail'
+import FloodRunningBar from '../components/FloodRunningBar'
 import StationDetail from '../components/StationDetail'
 
 const Layout = ({ children }) => {
@@ -45,8 +45,8 @@ const Layout = ({ children }) => {
         isSidebarOpen={isSidebarOpen}
       />
       
-      {/* Flood Ticker Categories */}
-      <FloodInfoDetail 
+      {/* Flood Running Bar */}
+      <FloodRunningBar 
         onDataUpdate={setTickerData}
         onStationSelect={handleStationSelect}
         isSidebarOpen={isSidebarOpen}
