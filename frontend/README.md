@@ -1,93 +1,171 @@
-# FFWS Jatim - Frontend
+# FFWS JATIM - Flood Forecasting & Weather System
 
-Flood Forecasting and Weather System Jawa Timur - Frontend React Application
+Sistem monitoring dan prediksi banjir cerdas untuk wilayah Jawa Timur yang dikembangkan dengan teknologi modern dan user-friendly.
 
-## 🚀 Fitur
+## 🚀 Fitur Utama
 
-- Dashboard monitoring cuaca dan banjir
-- Prakiraan cuaca real-time
-- Sistem peringatan dini banjir
-- Analisis data meteorologi
-- Laporan dan visualisasi data
-- Responsive design dengan Tailwind CSS
+### 📊 Dashboard Monitoring
+- **Monitoring Real-time**: Pemantauan kondisi air sungai secara real-time dengan update setiap jam
+- **Prediksi Cerdas**: Sistem prediksi banjir menggunakan teknologi AI dan machine learning
+- **Visualisasi Data**: Grafik dan chart yang mudah dipahami untuk monitoring level air
+- **Status Monitoring**: Indikator status kondisi air (Aman, Siaga, Waspada, Bahaya)
 
-## 🛠️ Teknologi
+### 📈 Riwayat Data
+- **Data Historis**: Akses ke data historis monitoring air sungai
+- **Filter & Pencarian**: Filter berdasarkan periode waktu dan lokasi
+- **Export Data**: Kemampuan untuk export data dalam berbagai format
+- **Statistik**: Analisis statistik data monitoring
 
-- **React 19** - Library JavaScript untuk UI
-- **Vite** - Build tool yang cepat
-- **Tailwind CSS** - Framework CSS utility-first
-- **PostCSS** - Tool untuk memproses CSS
+### 🎨 UI/UX Modern
+- **Responsive Design**: Tampilan yang responsif untuk desktop dan mobile
+- **Modern Interface**: Desain yang clean, modern dan mudah dipahami
+- **User-Friendly**: Interface yang intuitif untuk pengguna umum
+- **Color Coding**: Sistem warna yang konsisten untuk status dan informasi
 
-## 📦 Instalasi
+## 🛠️ Teknologi yang Digunakan
 
-1. Clone repository:
+- **Frontend**: React.js dengan Vite
+- **Styling**: Tailwind CSS
+- **Routing**: React Router DOM
+- **Charts**: SVG-based charts untuk visualisasi data
+- **Responsive**: Mobile-first design approach
+
+## 📱 Halaman yang Tersedia
+
+### 1. Home (/)
+- Landing page dengan informasi lengkap tentang FFWS JATIM
+- Fitur unggulan dan statistik sistem
+- Peringatan terbaru dan status sungai
+- Informasi tentang pemerintah provinsi
+
+### 2. Dashboard (/dashboard)
+- Monitoring real-time kondisi air sungai Dhompo
+- Grafik perkembangan air aktual dan prediksi
+- Konfigurasi model prediksi (LSTM)
+- Tabel data prediksi dengan update per jam
+
+### 3. History (/history)
+- Riwayat lengkap data monitoring
+- Filter berdasarkan periode dan lokasi
+- Statistik data historis
+- Export dan generate report
+
+## 🎯 Fitur Khusus
+
+### Monitoring Air Sungai
+- **Tinggi Muka Air**: Monitoring level air sungai dalam meter
+- **Status Kondisi**: Indikator status dengan color coding
+- **Prediksi**: Sistem prediksi menggunakan model LSTM
+- **Update Real-time**: Data terupdate setiap jam
+
+### Konfigurasi Prediksi
+- **Model AI**: LSTM (Long Short-Term Memory)
+- **Periode Prediksi**: 1 jam ke depan
+- **Parameter**: Dapat dikonfigurasi sesuai kebutuhan
+
+### Notifikasi & Alert
+- **Sistem Peringatan**: Alert otomatis untuk kondisi berbahaya
+- **Request Notifikasi**: Form untuk meminta notifikasi
+- **Status Monitoring**: Real-time status update
+
+## 🚀 Cara Menjalankan
+
+### Prerequisites
+- Node.js 20.19+ atau 22.12+
+- npm atau yarn
+
+### Installation
 ```bash
+# Clone repository
 git clone https://github.com/fisabilimf/ffws-jatim.git
+
+# Masuk ke direktori frontend
 cd ffws-jatim/frontend
-```
 
-2. Install dependencies:
-```bash
+# Install dependencies
 npm install
-```
 
-3. Jalankan development server:
-```bash
+# Jalankan development server
 npm run dev
 ```
 
-4. Build untuk production:
+### Build Production
 ```bash
+# Build untuk production
 npm run build
+
+# Preview build
+npm run preview
 ```
 
-## 🏗️ Struktur Proyek
+## 📁 Struktur Project
 
 ```
-src/
-├── components/
-│   ├── common/          # Komponen yang dapat digunakan kembali
-│   │   ├── Button.jsx
-│   │   └── Card.jsx
-│   └── layout/          # Komponen layout utama
-│       ├── Layout.jsx
-│       ├── Header.jsx
-│       ├── Sidebar.jsx
-│       └── Footer.jsx
-├── App.jsx              # Komponen utama aplikasi
-├── main.jsx             # Entry point React
-├── App.css              # Styling komponen utama
-└── index.css            # Styling global dengan Tailwind
+frontend/
+├── src/
+│   ├── components/
+│   │   ├── common/
+│   │   │   ├── Button.jsx
+│   │   │   ├── Card.jsx
+│   │   │   └── StockTicker.jsx
+│   │   ├── dashboard/
+│   │   │   ├── Dashboard.jsx
+│   │   │   └── History.jsx
+│   │   ├── layout/
+│   │   │   ├── Footer.jsx
+│   │   │   ├── Header.jsx
+│   │   │   └── Layout.jsx
+│   │   └── Home.jsx
+│   ├── App.jsx
+│   ├── App.css
+│   ├── index.css
+│   └── main.jsx
+├── package.json
+├── tailwind.config.js
+├── vite.config.js
+└── README.md
 ```
 
-## 🎨 Komponen
+## 🎨 Design System
 
-### Layout Components
-- **Layout**: Struktur utama aplikasi
-- **Header**: Navigasi atas dengan menu utama
-- **Sidebar**: Menu samping dengan navigasi
-- **Footer**: Informasi copyright dan link
+### Color Palette
+- **Primary**: Blue (#3B82F6, #1D4ED8)
+- **Success**: Green (#10B981, #059669)
+- **Warning**: Yellow (#F59E0B, #D97706)
+- **Danger**: Red (#EF4444, #DC2626)
+- **Neutral**: Gray (#6B7280, #374151)
 
-### Common Components
-- **Button**: Komponen tombol dengan berbagai variant
-- **Card**: Komponen card untuk konten
+### Typography
+- **Headings**: Font-bold dengan ukuran yang bervariasi
+- **Body**: Font-medium untuk teks utama
+- **Captions**: Font-normal untuk informasi tambahan
 
-## 🔧 Scripts
+### Components
+- **Cards**: Shadow dan border radius yang konsisten
+- **Buttons**: Hover effects dan transitions
+- **Tables**: Responsive design dengan hover effects
+- **Charts**: SVG-based dengan color coding yang jelas
 
-- `npm run dev` - Development server dengan hot reload
-- `npm run build` - Build production
-- `npm run test` - Jalankan test (belum dikonfigurasi)
+## 🔧 Konfigurasi
 
-## 🌐 Development Server
+### Environment Variables
+```bash
+# .env
+VITE_API_URL=http://localhost:8000/api
+VITE_APP_NAME=FFWS JATIM
+```
 
-Aplikasi akan berjalan di `http://localhost:3000` dengan fitur:
-- Hot reload
-- CORS enabled
-- Source maps untuk debugging
+### Tailwind Configuration
+- Custom color palette
+- Responsive breakpoints
+- Component variants
 
-## 📱 Responsive Design
+## 📊 Data Sources
 
-Aplikasi sudah dioptimalkan untuk berbagai ukuran layar menggunakan Tailwind CSS responsive utilities.
+- **Sensor IoT**: Data real-time dari sensor air sungai
+- **Weather API**: Data cuaca dan curah hujan
+- **Historical Data**: Database historis monitoring
+- **AI Model**: Prediksi menggunakan machine learning
 
 ## 🤝 Kontribusi
 
@@ -103,8 +181,20 @@ Distributed under the ISC License. See `LICENSE` for more information.
 
 ## 📞 Kontak
 
-- Repository: [https://github.com/fisabilimf/ffws-jatim](https://github.com/fisabilimf/ffws-jatim)
-- Issues: [https://github.com/fisabilimf/ffws-jatim/issues](https://github.com/fisabilimf/ffws-jatim/issues)
+- **Tim FFWS JATIM** - [@ffws_jatim](https://twitter.com/ffws_jatim)
+- **Email** - info@ffws-jatim.go.id
+- **Website** - [https://ffws-jatim.go.id](https://ffws-jatim.go.id)
+
+## 🙏 Ucapan Terima Kasih
+
+- Pemerintah Provinsi Jawa Timur
+- Dinas PUPR Jawa Timur
+- Tim Pengembang FFWS JATIM
+- Masyarakat Jawa Timur
+
+---
+
+**FFWS JATIM** - Melindungi Jawa Timur dari ancaman banjir dengan teknologi cerdas 🚀
 
 
 
