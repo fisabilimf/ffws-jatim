@@ -169,13 +169,16 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
 
   return (
     <div className={`absolute top-4 z-[70] transition-all duration-300 ease-in-out ${
-      isSidebarOpen ? 'transform translate-x-80' : 'transform translate-x-0'
+      isSidebarOpen ? 'transform translate-x-0' : 'transform translate-x-0'
     }`}
-    style={{ left: 'calc(320px + 2rem)', right: '1rem' }}>
+      style={{ 
+        left: '400px', 
+        right: '5rem'
+      }}>
       <div className="w-full">
         <div 
           ref={tickerRef}
-          className="flex space-x-2 sm:space-x-3 overflow-hidden whitespace-nowrap bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-1.5 sm:p-2"
+          className="flex space-x-2 sm:space-x-2 overflow-hidden whitespace-nowrap bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-1.5 sm:p-2"
           style={{ scrollBehavior: 'smooth' }}
         >
           {tickerData.map((item) => (
@@ -202,7 +205,7 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
               <Chart
                 data={item.history}
                 width={48}
-                height={24}
+                height={22}
                 showTooltip={false}
                 miniMode={true}
                 status={item.status}
