@@ -240,14 +240,6 @@
                         $lastPage = $rows->lastPage();
                         $startPage = max(1, $currentPage - 2);
                         $endPage = min($lastPage, $currentPage + 2);
-                        
-                        // Adjust range if we're near the beginning or end
-                        if ($currentPage <= 3) {
-                            $endPage = min(5, $lastPage);
-                        }
-                        if ($currentPage >= $lastPage - 2) {
-                            $startPage = max(1, $lastPage - 4);
-                        }
                     @endphp
 
                     {{-- First page if not in range --}}

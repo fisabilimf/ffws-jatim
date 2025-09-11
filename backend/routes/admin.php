@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\RiverBasinController;
 use App\Http\Controllers\Admin\MasDeviceController;
+use App\Http\Controllers\Admin\MasSensorController;
 
 /*
 |--------------------------------------------------------------------------
@@ -63,6 +64,17 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         Route::post('/', [MasDeviceController::class, 'store'])->name('store');
         Route::put('/{id}', [MasDeviceController::class, 'update'])->name('update');
         Route::delete('/{id}', [MasDeviceController::class, 'destroy'])->name('destroy');
+    });
+
+    // Data Master (Sensors)
+    Route::prefix('sensors')->name('sensors.')->group(function () {
+        Route::get('/', [MasSensorController::class, 'index'])->name('index');
+        Route::get('/create', [MasSensorController::class, 'create'])->name('create');
+        Route::post('/', [MasSensorController::class, 'store'])->name('store');
+        Route::get('/{sensor}', [MasSensorController::class, 'show'])->name('show');
+        Route::get('/{sensor}/edit', [MasSensorController::class, 'edit'])->name('edit');
+        Route::put('/{sensor}', [MasSensorController::class, 'update'])->name('update');
+        Route::delete('/{sensor}', [MasSensorController::class, 'destroy'])->name('destroy');
     });
 
     // Profile & Account
