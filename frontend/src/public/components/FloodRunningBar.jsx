@@ -168,10 +168,11 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
   };
 
   return (
-    <div className={`absolute top-16 sm:top-20 left-2 right-2 sm:left-4 sm:right-4 z-10 transition-all duration-300 ease-in-out ${
+    <div className={`absolute top-4 z-[70] transition-all duration-300 ease-in-out ${
       isSidebarOpen ? 'transform translate-x-80' : 'transform translate-x-0'
-    }`}>
-      <div className="max-w-2xl mx-auto">
+    }`}
+    style={{ left: 'calc(320px + 2rem)', right: '1rem' }}>
+      <div className="w-full">
         <div 
           ref={tickerRef}
           className="flex space-x-2 sm:space-x-3 overflow-hidden whitespace-nowrap bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-1.5 sm:p-2"
