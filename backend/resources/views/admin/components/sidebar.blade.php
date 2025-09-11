@@ -73,6 +73,7 @@
                :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0 h-0 py-0 overflow-hidden': !$store.sidebar.open && window.innerWidth >= 1024 }">
                Master</div>
 
+               <!-- Devices -->
                <a href="{{ route('admin.devices.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative
                                            {{ request()->routeIs('admin.devices.*')
    ? 'active'
@@ -82,6 +83,18 @@
                      :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
                   <span
                      :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Devices</span>
+               </a>
+
+               <!-- Sensors -->
+               <a href="{{ route('admin.sensors.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative
+                                           {{ request()->routeIs('admin.sensors.*')
+   ? 'active'
+   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}"
+                  :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
+                  <i class="fa-solid fa-microchip text-base"
+                     :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
+                  <span
+                     :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Sensors</span>
                </a>
 
                <!-- Region Heading -->
