@@ -44,7 +44,7 @@ def run_forecast_single():
     payload = request.get_json(force=True, silent=True) or {}
     sensor_code = payload.get("sensor_code")
     model_code = payload.get("model_code")
-    prediction_hours = payload.get("prediction_hours", 5)
+    prediction_hours = payload.get("prediction_hours", 24)
     step_hours = payload.get("step_hours", 1.0)
     
     if not sensor_code:
@@ -88,7 +88,7 @@ def run_forecast_hourly():
     """
     payload = request.get_json(force=True, silent=True) or {}
     sensor_code = payload.get("sensor_code")
-    hours = payload.get("hours", 5)
+    hours = payload.get("hours", 24)
     
     if not sensor_code:
         return {"error": "sensor_code is required"}, 400

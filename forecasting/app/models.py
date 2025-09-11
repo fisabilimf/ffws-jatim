@@ -46,6 +46,9 @@ class MasModels(Base):
     file_path: Mapped[str | None] = mapped_column(String(255))
     n_steps_in: Mapped[int | None] = mapped_column(Integer)
     n_steps_out: Mapped[int | None] = mapped_column(Integer)
+    # Feature specifications for dynamic model handling
+    x_features: Mapped[int | None] = mapped_column(Integer, comment="Number of input features expected by model")
+    y_features: Mapped[int | None] = mapped_column(Integer, comment="Number of output features produced by model")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime)
     updated_at: Mapped[datetime] = mapped_column(DateTime)

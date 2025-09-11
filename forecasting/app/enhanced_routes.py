@@ -37,7 +37,7 @@ def forecast_multi_parameter():
     try:
         data = request.get_json()
         sensor_code = data.get('sensor_code')
-        prediction_hours = data.get('prediction_hours', 5)
+        prediction_hours = data.get('prediction_hours', 24)
         step_hours = data.get('step_hours', 1.0)
         include_rainfall = data.get('include_rainfall', True)
         
@@ -92,7 +92,7 @@ def analyze_rainfall_impact():
     try:
         data = request.get_json()
         sensor_code = data.get('sensor_code')
-        hours_ahead = data.get('hours_ahead', 5)
+        hours_ahead = data.get('hours_ahead', 24)
         
         if not sensor_code:
             return jsonify({'error': 'sensor_code is required'}), 400
