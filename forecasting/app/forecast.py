@@ -46,15 +46,41 @@ def extend_predictions(predictions, target_count):
     
     return extended
 
-def get_model_feature_requirements():
-    """Get the feature requirements for each model type."""
+def get_model_feature_requirements(session: Session, model_code: str | None = None) -> dict[str, int]:
+    """Get the feature requirements for a specific model from database."""
+    if model_code:
+        # Get requirements for specific model from database
+        q_model = select(MasModels).where(MasModels.model_code == model_code)
+        model = session.execute(q_model).scalar_one_or_none()
+        
+        if model and model.x_features and model.y_features:
+            return {
+                'x_features': model.x_features,
+                'y_features': model.y_features,
+                'n_steps_in': model.n_steps_in or 5,  # Default to 5 if not specified
+                'n_steps_out': model.n_steps_out or 1  # Default to 1 if not specified
+            }
+    
+    # Fallback to hardcoded values for backward compatibility
+    # TODO: Remove this once all models have feature specs in database
+    fallback_requirements = {
+        'DHOMPO_GRU': {'x_features': 4, 'y_features': 5, 'n_steps_in': 5, 'n_steps_out': 1},
+        'DHOMPO_LSTM': {'x_features': 4, 'y_features': 5, 'n_steps_in': 5, 'n_steps_out': 1}, 
+        'DHOMPO_TCN': {'x_features': 4, 'y_features': 5, 'n_steps_in': 5, 'n_steps_out': 1},
+        'PURWODADI_GRU': {'x_features': 3, 'y_features': 3, 'n_steps_in': 5, 'n_steps_out': 1},
+        'PURWODADI_LSTM': {'x_features': 3, 'y_features': 3, 'n_steps_in': 5, 'n_steps_out': 1},
+        'PURWODADI_TCN': {'x_features': 3, 'y_features': 3, 'n_steps_in': 5, 'n_steps_out': 1}
+    }
+    
+    if model_code and model_code in fallback_requirements:
+        return fallback_requirements[model_code]
+    
+    # Default fallback
     return {
-        'DHOMPO_GRU': {'x_features': 4, 'y_features': 5},
-        'DHOMPO_LSTM': {'x_features': 4, 'y_features': 5}, 
-        'DHOMPO_TCN': {'x_features': 4, 'y_features': 5},
-        'PURWODADI_GRU': {'x_features': 3, 'y_features': 3},
-        'PURWODADI_LSTM': {'x_features': 3, 'y_features': 3},
-        'PURWODADI_TCN': {'x_features': 3, 'y_features': 3}
+        'x_features': 4, 
+        'y_features': 5, 
+        'n_steps_in': 5, 
+        'n_steps_out': 1
     }
 
 def create_sequence_input(values, n_time_steps, n_features):
@@ -142,7 +168,7 @@ def _get_sensor_and_model(session: Session, sensor_code: str, model_code: str | 
     return sensor, model
 
 def predict_for_sensor(session: Session, settings: Settings, sensor_code: str, model_code: str | None = None, 
-                      prediction_hours: int = 5, step_hours: float = 1.0) -> dict:
+                      prediction_hours: int = 24, step_hours: float = 1.0) -> dict:
     """
     Improved prediction function with multi-feature support and configurable time intervals.
     
@@ -159,14 +185,14 @@ def predict_for_sensor(session: Session, settings: Settings, sensor_code: str, m
     """
     sensor, model = _get_sensor_and_model(session, sensor_code, model_code)
     
-    # Get model feature requirements
-    requirements = get_model_feature_requirements()
-    model_req = requirements.get(model.model_code)
+    # Get model feature requirements from database
+    model_req = get_model_feature_requirements(session, model.model_code)
     
     if not model_req:
         raise ForecastError(f"Unknown model requirements for {model.model_code}")
     
-    n_features = model_req['x_features']
+    n_features: int = model_req['x_features']
+    n_time_steps: int = model_req.get('n_steps_in', 5)  # Use database value or default to 5
     
     # Fetch historical data for multi-feature input
     try:
@@ -175,10 +201,9 @@ def predict_for_sensor(session: Session, settings: Settings, sensor_code: str, m
         raise
     
     # Create sequence input that matches model's expected shape
-    # Models expect: (batch_size, time_steps, features) = (1, 5, 4) for DHOMPO
+    # Models expect: (batch_size, time_steps, features)
     try:
-        # From model analysis: DHOMPO expects (1, 5, 4), PURWODADI expects (1, 5, 3)
-        n_time_steps = 5  # All models use 5 time steps
+        # Use dynamic time steps from database or fallback
         X = create_sequence_input(values, n_time_steps, n_features)
         print(f"   ✅ Created sequence input: {X.shape}")
     except ValueError as e:
