@@ -12,19 +12,19 @@ const GoogleMapsSearchbar = ({ onSearch, placeholder = "Cari di Maps", isSidebar
   };
 
   return (
-    <div className={`absolute top-4 left-4 right-4 z-10 transition-all duration-300 ease-in-out ${
+    <div className={`fixed top-4 left-4 z-[70] transition-all duration-300 ease-in-out ${
       isSidebarOpen ? 'transform translate-x-80' : 'transform translate-x-0'
     }`}>
-      <div className="max-w-2xl mx-auto">
+      <div className="w-80">
         <form onSubmit={handleSearch} className="relative">
-          <div className={`bg-white rounded-lg shadow-lg transition-all duration-200 ${
+          <div className={`bg-white rounded-lg shadow-lg transition-all duration-200 p-1.5 sm:p-2 ${
             isFocused ? 'shadow-xl ring-2 ring-blue-500' : ''
           }`}>
-            <div className="flex items-center px-3 py-2.5 sm:px-4 sm:py-3">
+            <div className="flex items-center py-1 sm:py-1.5">
               {/* Search Icon */}
-              <div className="flex-shrink-0 mr-3">
+              <div className="flex-shrink-0 mr-2">
                 <svg 
-                  className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" 
+                  className="w-4 h-4 text-gray-400" 
                   fill="none" 
                   stroke="currentColor" 
                   viewBox="0 0 24 24"
@@ -46,18 +46,18 @@ const GoogleMapsSearchbar = ({ onSearch, placeholder = "Cari di Maps", isSidebar
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
                 placeholder={placeholder}
-                className="flex-1 text-gray-900 placeholder-gray-500 bg-transparent border-none outline-none text-sm sm:text-base"
+                className="flex-1 text-gray-900 placeholder-gray-500 bg-transparent border-none outline-none text-sm leading-none"
               />
               
               {/* Direction Icon */}
-              <div className="flex-shrink-0 ml-3 sm:ml-3">
+              <div className="flex-shrink-0 ml-2">
                 <button
                   type="button"
                   className="p-1 hover:bg-gray-100 rounded-full transition-colors"
                   title="Petunjuk arah"
                 >
                   <svg 
-                    className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" 
+                    className="w-4 h-4 text-blue-600" 
                     fill="none" 
                     stroke="currentColor" 
                     viewBox="0 0 24 24"
