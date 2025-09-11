@@ -1,12 +1,13 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-const MapboxMap = ({ tickerData, onStationSelect }) => {
+const MapboxMap = forwardRef(({ tickerData, onStationSelect, onAutoSwitch }, ref) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [selectedStation, setSelectedStation] = useState(null);
   const [isSidecardOpen, setIsSidecardOpen] = useState(false);
+  const [currentStationIndex, setCurrentStationIndex] = useState(0);
 
   // Initialize map only once
   useEffect(() => {
@@ -50,7 +51,7 @@ const MapboxMap = ({ tickerData, onStationSelect }) => {
     existingMarkers.forEach(marker => marker.remove());
 
     // Add new markers
-    tickerData.forEach((station) => {
+    tickerData.forEach((station, index) => {
       const coordinates = getStationCoordinates(station.name);
       
       if (coordinates) {
@@ -64,6 +65,13 @@ const MapboxMap = ({ tickerData, onStationSelect }) => {
         markerEl.style.border = '2px solid white';
         markerEl.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
         markerEl.style.cursor = 'pointer';
+        
+        // Highlight current station
+        if (index === currentStationIndex) {
+          markerEl.style.transform = 'scale(1.5)';
+          markerEl.style.border = '3px solid #3B82F6';
+          markerEl.style.boxShadow = '0 4px 8px rgba(59, 130, 246, 0.4)';
+        }
 
         // Add marker to map
         const marker = new mapboxgl.Marker(markerEl)
@@ -72,6 +80,7 @@ const MapboxMap = ({ tickerData, onStationSelect }) => {
 
         // Add click event to marker
         markerEl.addEventListener('click', () => {
+          setCurrentStationIndex(index);
           if (onStationSelect) {
             onStationSelect(station);
           } else {
@@ -81,7 +90,7 @@ const MapboxMap = ({ tickerData, onStationSelect }) => {
         });
       }
     });
-  }, [tickerData]); // Only update markers when tickerData changes
+  }, [tickerData, currentStationIndex]); // Update markers when tickerData or currentStationIndex changes
 
   // Function to get station coordinates (you can replace with actual coordinates)
   const getStationCoordinates = (stationName) => {
@@ -141,6 +150,36 @@ const MapboxMap = ({ tickerData, onStationSelect }) => {
       default: return 'bg-gray-100';
     }
   };
+
+  // Function to move map to station
+  const moveToStation = (station, index) => {
+    if (!map.current || !station) return;
+    
+    const coordinates = getStationCoordinates(station.name);
+    if (coordinates) {
+      setCurrentStationIndex(index);
+      
+      // Smooth fly to animation
+      map.current.flyTo({
+        center: coordinates,
+        zoom: 12,
+        duration: 2000,
+        essential: true
+      });
+      
+      // Trigger callback for parent component
+      if (onAutoSwitch) {
+        onAutoSwitch(station, index);
+      }
+    }
+  };
+
+  // Expose functions to parent component
+  useImperativeHandle(ref, () => ({
+    moveToStation,
+    getCurrentStationIndex: () => currentStationIndex,
+    setCurrentStationIndex: (index) => setCurrentStationIndex(index)
+  }), [currentStationIndex]);
 
   return (
     <div className="w-full h-screen overflow-hidden relative z-0">
@@ -232,6 +271,8 @@ const MapboxMap = ({ tickerData, onStationSelect }) => {
       )}
     </div>
   );
-};
+});
+
+MapboxMap.displayName = 'MapboxMap';
 
 export default MapboxMap;
