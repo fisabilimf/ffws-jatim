@@ -3,7 +3,7 @@ import Dashboard from '../pages/Dashboard'
 import GoogleMapsSearchbar from '../components/GoogleMapsSearchbar'
 import MapboxMap from '../components/MapboxMap'
 import FloatingLegend from '../components/FloatingLegend'
-import FloodInfoDetail from '../components/FloodInfoDetail'
+import FloodRunningBar from '../components/FloodRunningBar'
 import StationDetail from '../components/StationDetail'
 import AutoSwitchToggle from '../components/AutoSwitchToggle'
 
@@ -40,8 +40,9 @@ const Layout = ({ children }) => {
 
   const handleStationChange = (station, index) => {
     setCurrentStationIndex(index)
-    if (mapRef.current && mapRef.current.moveToStation) {
-      mapRef.current.moveToStation(station, index)
+    // Trigger map auto switch
+    if (window.mapboxAutoSwitch) {
+      window.mapboxAutoSwitch(station, index)
     }
   }
 
@@ -57,38 +58,31 @@ const Layout = ({ children }) => {
         />
       </div>
       
-      {/* Google Maps Style Searchbar with Auto Switch Toggle */}
-      <div className={`absolute top-4 left-4 right-4 z-10 transition-all duration-300 ease-in-out ${
-        isSidebarOpen ? 'transform translate-x-80' : 'transform translate-x-0'
-      }`}>
+      {/* Google Maps Style Searchbar - fixed position */}
+      <div className="absolute top-4 left-4 right-4 z-20">
         <div className="max-w-2xl mx-auto">
-          <div className="flex items-center space-x-4">
-            {/* Search Bar */}
-            <div className="flex-1">
-              <GoogleMapsSearchbar 
-                onSearch={handleSearch}
-                placeholder="Cari stasiun monitoring banjir..."
-              />
-            </div>
-            
-            {/* Auto Switch Toggle */}
-            <div className="flex-shrink-0">
-              <AutoSwitchToggle
-                tickerData={tickerData}
-                onStationChange={handleStationChange}
-                currentStationIndex={currentStationIndex}
-              />
-            </div>
-          </div>
+          <GoogleMapsSearchbar 
+            onSearch={handleSearch}
+            placeholder="Cari stasiun monitoring banjir..."
+          />
         </div>
       </div>
       
-      {/* Flood Ticker Categories */}
-      <FloodInfoDetail 
+      {/* Flood Running Bar */}
+      <FloodRunningBar 
         onDataUpdate={setTickerData}
         onStationSelect={handleStationSelect}
         isSidebarOpen={isSidebarOpen}
       />
+      
+      {/* Auto Switch Toggle - positioned above Floating Legend */}
+      <div className="absolute bottom-24 right-2 sm:bottom-28 sm:right-4 z-10">
+        <AutoSwitchToggle
+          tickerData={tickerData}
+          onStationChange={handleStationChange}
+          currentStationIndex={currentStationIndex}
+        />
+      </div>
       
       {/* Floating Legend */}
       <FloatingLegend />
