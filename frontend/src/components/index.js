@@ -1,5 +1,0 @@
-export { default as Card } from './common/Card'
-export { default as Button } from './common/Button'
-export { default as Layout } from './layout/Layout'
-export { default as Header } from './layout/Header'
-export { default as Footer } from './layout/Footer'

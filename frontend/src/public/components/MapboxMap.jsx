@@ -1,98 +1,115 @@
-import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import MapTooltip from './maptooltip'; // Import komponen tooltip
 
-const MapboxMap = forwardRef(({ tickerData, onStationSelect, onAutoSwitch }, ref) => {
+const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const [selectedStation, setSelectedStation] = useState(null);
-  const [isSidecardOpen, setIsSidecardOpen] = useState(false);
-  const [currentStationIndex, setCurrentStationIndex] = useState(0);
+  const [waterAnimationActive, setWaterAnimationActive] = useState(false);
+  const [selectedStationCoords, setSelectedStationCoords] = useState(null);
+  
+  // State untuk tooltip
+  const [tooltip, setTooltip] = useState({
+    visible: false,
+    station: null,
+    coordinates: null
+  });
 
-  // Initialize map only once
-  useEffect(() => {
-    // Set your Mapbox access token here
-    // You need to get this from https://account.mapbox.com/
-    mapboxgl.accessToken = 'pk.eyJ1IjoiZGl0b2ZhdGFoaWxsYWgxIiwiYSI6ImNtZjNveGloczAwNncya3E1YzdjcTRtM3MifQ.kIf5rscGYOzvvBcZJ41u8g';
-
-    if (map.current) return; // initialize map only once
-
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: [112.5, -7.5], // Jawa Timur coordinates
-      zoom: 8
+  // Handler untuk auto focus dari running bar
+  const handleMapFocus = (focusData) => {
+    if (!map.current) return;
+    
+    const { lat, lng, zoom, stationId, stationName } = focusData;
+    setWaterAnimationActive(true);
+    setSelectedStationCoords([lng, lat]);
+    
+    map.current.flyTo({
+      center: [lng, lat],
+      zoom: zoom || 14,
+      pitch: 45,
+      bearing: -17.6,
+      speed: 1.2,
+      curve: 1.4,
+      easing: (t) => t,
+      essential: true
     });
-
-    // Add navigation controls
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-
-    // Add fullscreen control
-    map.current.addControl(new mapboxgl.FullscreenControl(), 'top-right');
-
-    // Add scale control
-    map.current.addControl(new mapboxgl.ScaleControl(), 'bottom-left');
-
-    // Cleanup function
-    return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
-    };
-  }, []); // Empty dependency array - only run once
-
-  // Update markers when tickerData changes
-  useEffect(() => {
-    if (!map.current || !tickerData) return;
-
-    // Clear existing markers
-    const existingMarkers = document.querySelectorAll('.custom-marker');
-    existingMarkers.forEach(marker => marker.remove());
-
-    // Add new markers
-    tickerData.forEach((station, index) => {
-      const coordinates = getStationCoordinates(station.name);
-      
-      if (coordinates) {
-        // Create custom marker element
-        const markerEl = document.createElement('div');
-        markerEl.className = 'custom-marker';
-        markerEl.style.width = '20px';
-        markerEl.style.height = '20px';
-        markerEl.style.borderRadius = '50%';
-        markerEl.style.backgroundColor = getStatusColor(station.status);
-        markerEl.style.border = '2px solid white';
-        markerEl.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
-        markerEl.style.cursor = 'pointer';
-        
-        // Highlight current station
-        if (index === currentStationIndex) {
-          markerEl.style.transform = 'scale(1.5)';
-          markerEl.style.border = '3px solid #3B82F6';
-          markerEl.style.boxShadow = '0 4px 8px rgba(59, 130, 246, 0.4)';
-        }
-
-        // Add marker to map
-        const marker = new mapboxgl.Marker(markerEl)
-          .setLngLat(coordinates)
-          .addTo(map.current);
-
-        // Add click event to marker
-        markerEl.addEventListener('click', () => {
-          setCurrentStationIndex(index);
-          if (onStationSelect) {
-            onStationSelect(station);
-          } else {
-            setSelectedStation(station);
-            setIsSidecardOpen(true);
+    
+    setTimeout(() => {
+      if (tickerData) {
+        const station = tickerData.find(s => s.id === stationId);
+        if (station) {
+          const coordinates = getStationCoordinates(station.name);
+          if (coordinates) {
+            setTooltip({
+              visible: true,
+              station: station,
+              coordinates: coordinates
+            });
           }
-        });
+        }
       }
-    });
-  }, [tickerData, currentStationIndex]); // Update markers when tickerData or currentStationIndex changes
+    }, 800);
+  };
 
-  // Function to get station coordinates (you can replace with actual coordinates)
+  // Handler untuk auto switch dari toggle
+  const handleAutoSwitch = (station, index) => {
+    if (!map.current || !station) return;
+    
+    const coordinates = getStationCoordinates(station.name);
+    if (!coordinates) return;
+    
+    setWaterAnimationActive(true);
+    setSelectedStationCoords(coordinates);
+    
+    // Fly to station
+    map.current.flyTo({
+      center: coordinates,
+      zoom: 12,
+      pitch: 45,
+      bearing: -17.6,
+      speed: 1.2,
+      curve: 1.4,
+      easing: (t) => t,
+      essential: true
+    });
+    
+    // Show tooltip after animation
+    setTimeout(() => {
+      setTooltip({
+        visible: true,
+        station: station,
+        coordinates: coordinates
+      });
+    }, 800);
+  };
+  
+  // Handler untuk menampilkan detail sidebar dari tooltip
+  const handleShowDetail = (station) => {
+    // Tutup tooltip
+    setTooltip(prev => ({ ...prev, visible: false }));
+    
+    // Panggil onStationSelect untuk membuka sidebar
+    if (onStationSelect) {
+      onStationSelect(station);
+    }
+  };
+  
+  // Handler untuk menutup tooltip
+  const handleCloseTooltip = () => {
+    setTooltip(prev => ({ ...prev, visible: false }));
+  };
+
+  // Helper functions
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'safe': return '#10B981';
+      case 'warning': return '#F59E0B';
+      case 'alert': return '#EF4444';
+      default: return '#6B7280';
+    }
+  };
+  
   const getStationCoordinates = (stationName) => {
     const coordinates = {
       'Stasiun Surabaya': [112.7508, -7.2575],
@@ -111,168 +128,140 @@ const MapboxMap = forwardRef(({ tickerData, onStationSelect, onAutoSwitch }, ref
       'Stasiun Blitar': [112.1667, -8.1000],
       'Stasiun Tulungagung': [111.9000, -8.0667]
     };
-    
     return coordinates[stationName] || null;
   };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'safe': return '#10B981'; // green
-      case 'warning': return '#F59E0B'; // yellow
-      case 'alert': return '#EF4444'; // red
-      default: return '#6B7280'; // gray
-    }
-  };
-
-  const getStatusTextColor = (status) => {
-    switch (status) {
-      case 'safe': return 'text-green-600';
-      case 'warning': return 'text-yellow-600';
-      case 'alert': return 'text-red-600';
-      default: return 'text-gray-600';
-    }
-  };
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'safe': return 'Aman';
-      case 'warning': return 'Waspada';
-      case 'alert': return 'Bahaya';
-      default: return 'Tidak Diketahui';
-    }
-  };
-
-  const getStatusBgColor = (status) => {
-    switch (status) {
-      case 'safe': return 'bg-green-100';
-      case 'warning': return 'bg-yellow-100';
-      case 'alert': return 'bg-red-100';
-      default: return 'bg-gray-100';
-    }
-  };
-
-  // Function to move map to station
-  const moveToStation = (station, index) => {
-    if (!map.current || !station) return;
-    
-    const coordinates = getStationCoordinates(station.name);
-    if (coordinates) {
-      setCurrentStationIndex(index);
-      
-      // Smooth fly to animation
-      map.current.flyTo({
-        center: coordinates,
-        zoom: 12,
-        duration: 2000,
-        essential: true
-      });
-      
-      // Trigger callback for parent component
-      if (onAutoSwitch) {
-        onAutoSwitch(station, index);
+  
+  // Expose handleMapFocus ke window object
+  useEffect(() => {
+    window.mapboxAutoFocus = handleMapFocus;
+    return () => {
+      if (window.mapboxAutoFocus) {
+        delete window.mapboxAutoFocus;
       }
-    }
-  };
+    };
+  }, [tickerData]);
 
-  // Expose functions to parent component
-  useImperativeHandle(ref, () => ({
-    moveToStation,
-    getCurrentStationIndex: () => currentStationIndex,
-    setCurrentStationIndex: (index) => setCurrentStationIndex(index)
-  }), [currentStationIndex]);
-
+  // Expose handleAutoSwitch ke window object
+  useEffect(() => {
+    window.mapboxAutoSwitch = handleAutoSwitch;
+    return () => {
+      if (window.mapboxAutoSwitch) {
+        delete window.mapboxAutoSwitch;
+      }
+    };
+  }, [tickerData]);
+  
+  // Initialize map
+  useEffect(() => {
+    mapboxgl.accessToken = 'pk.eyJ1IjoiZGl0b2ZhdGFoaWxsYWgxIiwiYSI6ImNtZjNveGloczAwNncya3E1YzdjcTRtM3MifQ.kIf5rscGYOzvvBcZJ41u8g';
+    if (map.current) return;
+    
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: [112.5, -7.5],
+      zoom: 8,
+      pitch: 45,
+      bearing: -17.6,
+      antialias: true
+    });
+    
+    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    map.current.addControl(new mapboxgl.FullscreenControl(), 'top-right');
+    map.current.addControl(new mapboxgl.ScaleControl(), 'bottom-left');
+    
+    return () => {
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
+    };
+  }, []);
+  
+  // Update markers when tickerData changes
+  useEffect(() => {
+    if (!map.current || !tickerData) return;
+    
+    const existingMarkers = document.querySelectorAll('.custom-marker');
+    existingMarkers.forEach(marker => marker.remove());
+    
+    tickerData.forEach((station) => {
+      const coordinates = getStationCoordinates(station.name);
+      if (coordinates) {
+        const markerEl = document.createElement('div');
+        markerEl.className = 'custom-marker';
+        markerEl.style.width = '30px';
+        markerEl.style.height = '30px';
+        markerEl.style.borderRadius = '50%';
+        markerEl.style.backgroundColor = getStatusColor(station.status);
+        markerEl.style.border = '3px solid white';
+        markerEl.style.boxShadow = '0 4px 8px rgba(0,0,0,0.4)';
+        markerEl.style.cursor = 'pointer';
+        markerEl.style.zIndex = '10';
+        
+        if (station.status === 'alert') {
+          markerEl.innerHTML = `<div style="position: absolute; width: 100%; height: 100%; border-radius: 50%; background-color: ${getStatusColor(station.status)}; opacity: 0.7; animation: alert-pulse 2s infinite;"></div>`;
+        }
+        
+        const marker = new mapboxgl.Marker(markerEl).setLngLat(coordinates).addTo(map.current);
+        
+        // Event untuk klik marker
+        markerEl.addEventListener('click', (e) => {
+          e.stopPropagation(); // Mencegah event bubbling
+          
+          setWaterAnimationActive(true);
+          setSelectedStationCoords(coordinates);
+          
+          // Animasi flyTo
+          map.current.flyTo({
+            center: coordinates,
+            zoom: 12,
+            pitch: 45,
+            bearing: -17.6,
+            speed: 1.2,
+            curve: 1.4,
+            easing: (t) => t,
+            essential: true
+          });
+          
+          // Tampilkan tooltip
+          setTooltip({
+            visible: true,
+            station: station,
+            coordinates: coordinates
+          });
+        });
+      }
+    });
+  }, [tickerData]);
+  
+  // Event listener untuk klik di luar tooltip
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (tooltip.visible && !event.target.closest('.custom-marker') && !event.target.closest('.mapboxgl-popup-content')) {
+        setTooltip(prev => ({ ...prev, visible: false }));
+      }
+    };
+    
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [tooltip.visible]);
+  
   return (
     <div className="w-full h-screen overflow-hidden relative z-0">
       <div ref={mapContainer} className="w-full h-full relative z-0" />
-      
-      {/* Sidecard - Google Maps Style */}
-      {isSidecardOpen && selectedStation && (
-        <div className="absolute top-0 left-0 w-80 h-full bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-10">
-          {/* Header */}
-          <div className="bg-white p-4 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <button
-                onClick={() => setIsSidecardOpen(false)}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-              <h3 className="text-lg font-semibold text-gray-800">Detail Stasiun</h3>
-              <div className="w-5"></div>
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="p-4 space-y-4">
-            {/* Station Image Placeholder */}
-            <div className="w-full h-48 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-2">
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                </div>
-                <p className="text-blue-600 font-medium">Stasiun Monitoring</p>
-              </div>
-            </div>
-
-            {/* Station Info */}
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">{selectedStation.name}</h2>
-              <div className="flex items-center space-x-2 mb-3">
-                <div className={`w-3 h-3 rounded-full ${getStatusBgColor(selectedStation.status)}`}></div>
-                <span className={`text-sm font-medium ${getStatusTextColor(selectedStation.status)}`}>
-                  {getStatusText(selectedStation.status)}
-                </span>
-              </div>
-              <p className="text-gray-600 text-sm">{selectedStation.location}</p>
-            </div>
-
-            {/* Water Level Info */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-gray-800 mb-3">Informasi Level Air</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Level Saat Ini:</span>
-                  <span className="text-2xl font-bold text-blue-600">{selectedStation.value} {selectedStation.unit}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Status:</span>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusBgColor(selectedStation.status)} ${getStatusTextColor(selectedStation.status)}`}>
-                    {getStatusText(selectedStation.status)}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="space-y-2">
-              <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                Lihat Detail Lengkap
-              </button>
-              <button className="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium">
-                Simpan ke Favorit
-              </button>
-            </div>
-
-            {/* Additional Info */}
-            <div className="border-t pt-4">
-              <h4 className="font-medium text-gray-800 mb-2">Informasi Tambahan</h4>
-              <div className="space-y-2 text-sm text-gray-600">
-                <p>• Stasiun aktif 24/7</p>
-                <p>• Update data real-time</p>
-                <p>• Monitoring otomatis</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <MapTooltip 
+        map={map.current}
+        station={tooltip.station}
+        isVisible={tooltip.visible}
+        coordinates={tooltip.coordinates}
+        onShowDetail={handleShowDetail}
+        onClose={handleCloseTooltip}
+      />
     </div>
   );
-});
-
-MapboxMap.displayName = 'MapboxMap';
+};
 
 export default MapboxMap;
