@@ -68,7 +68,7 @@ const AutoSwitchToggle = ({
   if (!tickerData || tickerData.length === 0) return null;
 
   return (
-    <div className="flex items-center space-x-3">
+    <div className="flex items-center space-x-4">
       {/* Current Station Info */}
       {tickerData[currentIndex] && (
         <div className="flex items-center space-x-2 text-sm bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm">
@@ -85,26 +85,32 @@ const AutoSwitchToggle = ({
         </div>
       )}
 
-      {/* Toggle Button */}
-      <button
-        onClick={togglePlayPause}
-        className={`flex items-center justify-center w-12 h-12 rounded-full transition-all duration-200 shadow-lg ${
-          isPlaying 
-            ? 'bg-red-500 hover:bg-red-600 text-white' 
-            : 'bg-blue-500 hover:bg-blue-600 text-white'
-        }`}
-        title={isPlaying ? 'Pause Auto Switch' : 'Start Auto Switch'}
-      >
-        {isPlaying ? (
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
-          </svg>
-        ) : (
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-        )}
-      </button>
+      {/* Toggle Switch Container */}
+      <div className="flex items-center space-x-3">
+        {/* Toggle Switch */}
+        <div className="relative">
+          <button
+            onClick={togglePlayPause}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+              isPlaying ? 'bg-green-500' : 'bg-gray-300'
+            }`}
+            role="switch"
+            aria-checked={isPlaying}
+            title={isPlaying ? 'Pause Auto Switch' : 'Start Auto Switch'}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-200 ease-in-out ${
+                isPlaying ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
+        
+        {/* Text Label */}
+        <span className="text-sm font-medium text-gray-700">
+          Auto Switchd
+        </span>
+      </div>
     </div>
   );
 };
