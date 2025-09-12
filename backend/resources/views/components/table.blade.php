@@ -109,27 +109,58 @@
                                 @if(isset($header['format']))
                                     @switch($header['format'])
                                         @case('date')
-                                            {{ \Carbon\Carbon::parse($row[$header['key']])->format('d/m/Y H:i') }}
+                                            @if(isset($row->formatted_received_at))
+                                                {{ \Carbon\Carbon::parse($row->formatted_received_at)->format('d/m/Y H:i') }}
+                                            @else
+                                                {{ \Carbon\Carbon::parse($row[$header['key']])->format('d/m/Y H:i') }}
+                                            @endif
+                                            @break
+                                        @case('sensor')
+                                            <div class="text-sm font-medium text-gray-900">{{ $row->formatted_sensor ?? $row[$header['key']] }}</div>
+                                            @if(isset($row->formatted_sensor_device))
+                                                <div class="text-sm text-gray-500">{{ $row->formatted_sensor_device }}</div>
+                                            @endif
+                                            @break
+                                        @case('parameter')
+                                            <div class="text-sm text-gray-900">{{ $row->formatted_parameter ?? $row[$header['key']] }}</div>
+                                            @if(isset($row->formatted_parameter_unit) && $row->formatted_parameter_unit)
+                                                <div class="text-sm text-gray-500">{{ $row->formatted_parameter_unit }}</div>
+                                            @endif
+                                            @break
+                                        @case('value')
+                                            <span class="font-mono text-sm">{{ $row->formatted_value ?? $row[$header['key']] }}</span>
                                             @break
                                         @case('status')
                                             @php
+                                                $statusValue = $row->formatted_threshold_status ?? $row[$header['key']];
                                                 $statusClasses = [
                                                     'active' => 'bg-green-100 text-green-800',
                                                     'inactive' => 'bg-red-100 text-red-800',
                                                     'maintenance' => 'bg-yellow-100 text-yellow-800',
                                                     'pending' => 'bg-yellow-100 text-yellow-800',
-                                                    'draft' => 'bg-gray-100 text-gray-800'
+                                                    'draft' => 'bg-gray-100 text-gray-800',
+                                                    'safe' => 'bg-green-100 text-green-800',
+                                                    'warning' => 'bg-yellow-100 text-yellow-800',
+                                                    'danger' => 'bg-red-100 text-red-800'
                                                 ];
-                                                $statusClass = $statusClasses[$row[$header['key']] ?? 'draft'] ?? 'bg-gray-100 text-gray-800';
+                                                $statusClass = $statusClasses[$statusValue ?? 'draft'] ?? 'bg-gray-100 text-gray-800';
+                                                
+                                                // Custom labels for threshold status
+                                                $statusLabels = [
+                                                    'safe' => 'Aman',
+                                                    'warning' => 'Waspada',
+                                                    'danger' => 'Bahaya'
+                                                ];
+                                                $statusLabel = $statusLabels[$statusValue] ?? ucfirst($statusValue ?? 'Unknown');
                                             @endphp
                                             <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full {{ $statusClass }}">
-                                                {{ ucfirst($row[$header['key']] ?? 'Unknown') }}
+                                                {{ $statusLabel }}
                                             </span>
                                             @break
                                         @case('actions')
                                             <div class="flex items-center space-x-2">
-                                                @if(isset($row['actions']))
-                                                    @foreach($row['actions'] as $action)
+                                                @if(isset($row->formatted_actions))
+                                                    @foreach($row->formatted_actions as $action)
                                                         @php
                                                             $rawType = strtolower(trim($action['type'] ?? ($action['label'] ?? '')));
                                                             $isDeleteByType = str_contains($rawType, 'hapus') || str_contains($rawType, 'delete') || str_contains($rawType, 'destroy');
@@ -192,10 +223,18 @@
                                             </div>
                                             @break
                                         @default
-                                            {{ $row[$header['key']] ?? '' }}
+                                            @if(isset($row->{'formatted_' . $header['key']}))
+                                                {{ $row->{'formatted_' . $header['key']} }}
+                                            @else
+                                                {{ $row[$header['key']] ?? '' }}
+                                            @endif
                                     @endswitch
                                 @else
-                                    {{ $row[$header['key']] ?? '' }}
+                                    @if(isset($row->{'formatted_' . $header['key']}))
+                                        {{ $row->{'formatted_' . $header['key']} }}
+                                    @else
+                                        {{ $row[$header['key']] ?? '' }}
+                                    @endif
                                 @endif
                             </td>
                         @endforeach
