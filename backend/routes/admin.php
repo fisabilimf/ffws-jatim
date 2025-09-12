@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\RiverBasinController;
 use App\Http\Controllers\Admin\MasDeviceController;
 use App\Http\Controllers\Admin\MasSensorController;
+use App\Http\Controllers\Admin\DataActualController;
 
 /*
 |--------------------------------------------------------------------------
@@ -75,6 +76,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         Route::get('/{sensor}/edit', [MasSensorController::class, 'edit'])->name('edit');
         Route::put('/{sensor}', [MasSensorController::class, 'update'])->name('update');
         Route::delete('/{sensor}', [MasSensorController::class, 'destroy'])->name('destroy');
+    });
+
+    // Data Actuals
+    Route::prefix('data-actuals')->name('data-actuals.')->group(function () {
+        Route::get('/', [DataActualController::class, 'index'])->name('index');
+        Route::get('/{dataActual}', [DataActualController::class, 'show'])->name('show');
+        Route::get('/export/csv', [DataActualController::class, 'export'])->name('export');
+        Route::get('/chart/data', [DataActualController::class, 'chartData'])->name('chart.data');
     });
 
     // Profile & Account

@@ -14,7 +14,7 @@
                 <i class="fas fa-bars transition-all duration-300"></i>
             </button>
         <!-- Title -->
-         @yield('page-title')
+         @yield('title')
         </div>
         
         <!-- Right side -->
