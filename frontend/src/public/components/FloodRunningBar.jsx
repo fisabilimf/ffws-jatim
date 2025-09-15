@@ -172,8 +172,8 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
       isSidebarOpen ? 'transform translate-x-0' : 'transform translate-x-0'
     }`}
       style={{ 
-        left: '400px', 
-        right: '5rem'
+        left: '450px', 
+        right: '6rem'
       }}>
       <div className="w-full">
         <div 
