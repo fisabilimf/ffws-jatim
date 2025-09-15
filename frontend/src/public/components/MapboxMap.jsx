@@ -177,28 +177,19 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
     
     if (map.current) return;
     
-    try {
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/streets-v12',
-        center: [112.5, -7.5],
-        zoom: 8,
-        pitch: 45,
-        bearing: -17.6,
-        antialias: true
-      });
-      
-      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-      map.current.addControl(new mapboxgl.FullscreenControl(), 'top-right');
-      map.current.addControl(new mapboxgl.ScaleControl(), 'bottom-left');
-      
-      // Handle map errors
-      map.current.on('error', (e) => {
-        console.error('Mapbox error:', e.error);
-      });
-    } catch (error) {
-      console.error('Error initializing map:', error);
-    }
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: [112.5, -7.5],
+      zoom: 8,
+      pitch: 45,
+      bearing: -17.6,
+      antialias: true
+    });
+    
+    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    // map.current.addControl(new mapboxgl.FullscreenControl(), 'top-right');
+    map.current.addControl(new mapboxgl.ScaleControl(), 'bottom-left');
     
     return () => {
       if (map.current) {
