@@ -3,7 +3,7 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import MapTooltip from './maptooltip'; // Import komponen tooltip
 
-const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
+const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [waterAnimationActive, setWaterAnimationActive] = useState(false);
@@ -35,6 +35,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
       essential: true
     });
     
+    // Tampilkan tooltip setelah jeda singkat
     setTimeout(() => {
       if (tickerData) {
         const station = tickerData.find(s => s.id === stationId);
@@ -49,6 +50,38 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
           }
         }
       }
+    }, 800);
+  };
+
+  // Handler untuk auto switch dari toggle
+  const handleAutoSwitch = (station, index) => {
+    if (!map.current || !station) return;
+    
+    const coordinates = getStationCoordinates(station.name);
+    if (!coordinates) return;
+    
+    setWaterAnimationActive(true);
+    setSelectedStationCoords(coordinates);
+    
+    // Fly to station
+    map.current.flyTo({
+      center: coordinates,
+      zoom: 12,
+      pitch: 45,
+      bearing: -17.6,
+      speed: 1.2,
+      curve: 1.4,
+      easing: (t) => t,
+      essential: true
+    });
+    
+    // Munculkan tooltip dengan jeda kecil
+    setTimeout(() => {
+      setTooltip({
+        visible: true,
+        station: station,
+        coordinates: coordinates
+      });
     }, 800);
   };
   
@@ -105,6 +138,16 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     return () => {
       if (window.mapboxAutoFocus) {
         delete window.mapboxAutoFocus;
+      }
+    };
+  }, [tickerData]);
+
+  // Expose handleAutoSwitch ke window object
+  useEffect(() => {
+    window.mapboxAutoSwitch = handleAutoSwitch;
+    return () => {
+      if (window.mapboxAutoSwitch) {
+        delete window.mapboxAutoSwitch;
       }
     };
   }, [tickerData]);
