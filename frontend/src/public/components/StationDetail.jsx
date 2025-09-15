@@ -7,10 +7,10 @@ const SidebarTemplate = ({
   onClose, 
   title, 
   subtitle, 
-  width = "w-96", 
+  width = "w-[380px]", // Lebar sidebar disesuaikan
   position = "fixed", 
   zIndex = "z-[60]",
-  topPosition = "top-20", // Default top position diubah ke 5rem
+  topPosition = "top-20", 
   children,
   headerContent,
   statusDot
@@ -112,10 +112,10 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
   
   const getStatusBgColor = (status) => {
     switch (status) {
-      case 'safe': return 'bg-green-100 border-green-200';
-      case 'warning': return 'bg-yellow-100 border-yellow-200';
-      case 'alert': return 'bg-red-100 border-red-200';
-      default: return 'bg-gray-100 border-gray-200';
+      case 'safe': return 'bg-green-50 border-green-200';
+      case 'warning': return 'bg-yellow-50 border-yellow-200';
+      case 'alert': return 'bg-red-50 border-red-200';
+      default: return 'bg-gray-50 border-gray-200';
     }
   };
   
@@ -137,6 +137,15 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
     }
   };
   
+  const getChartColor = (status) => {
+    switch (status) {
+      case 'safe': return '#10B981'; // Green
+      case 'warning': return '#F59E0B'; // Yellow
+      case 'alert': return '#EF4444'; // Red
+      default: return '#6B7280'; // Gray
+    }
+  };
+  
   if (!selectedStation || !stationData) {
     return null;
   }
@@ -148,20 +157,20 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
       title={stationData.name}
       subtitle={stationData.location}
       statusDot={getStatusDotColor(stationData.status)}
-      topPosition="top-20" // Set top position ke 5rem dari atas
+      topPosition="top-20"
     >
-      <div className="p-4 space-y-6 pb-6">
+      <div className="p-5 space-y-6 pb-6">
         {/* Status Card */}
-        <div className={`p-4 rounded-lg border-2 ${getStatusBgColor(stationData.status)}`}>
+        <div className={`p-5 rounded-xl border-2 ${getStatusBgColor(stationData.status)} shadow-sm`}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 mb-1">Status Saat Ini</p>
-              <p className={`text-xl font-bold ${getStatusColor(stationData.status)}`}>
+              <p className={`text-2xl font-bold ${getStatusColor(stationData.status)}`}>
                 {getStatusText(stationData.status)}
               </p>
             </div>
             <div className="text-right">
-              <p className="text-3xl font-bold text-gray-900">
+              <p className="text-4xl font-bold text-gray-900">
                 {stationData.value.toFixed(1)}
               </p>
               <p className="text-sm text-gray-500">{stationData.unit}</p>
@@ -176,15 +185,16 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
         <div>
           <h4 className="text-base font-medium text-gray-900 mb-2">Grafik Level Air</h4>
           <p className="text-sm text-gray-500 mb-4">Data 10 menit terakhir</p>
-          <div className="bg-gray-50 rounded-lg p-4">
+          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
             <Chart 
               data={chartHistory}
-              width={320}
-              height={160}
+              width={380}
+              height={180}
               showTooltip={true}
-              className="h-40"
+              className="h-44"
               canvasId="station-detail-chart"
               status={stationData.status}
+              color={getChartColor(stationData.status)}
             />
           </div>
         </div>
@@ -196,13 +206,13 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
         <div>
           <h4 className="text-base font-medium text-gray-900 mb-4">Statistik</h4>
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
               <p className="text-sm text-gray-500 mb-1">Level Tertinggi</p>
               <p className="text-2xl font-bold text-gray-900">
                 {Math.max(...chartHistory).toFixed(1)}m
               </p>
             </div>
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
               <p className="text-sm text-gray-500 mb-1">Level Terendah</p>
               <p className="text-2xl font-bold text-gray-900">
                 {Math.min(...chartHistory).toFixed(1)}m
@@ -217,7 +227,7 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
         {/* Additional Info */}
         <div>
           <h4 className="text-base font-medium text-gray-900 mb-4">Informasi Stasiun</h4>
-          <div className="space-y-3">
+          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm space-y-3">
             <div className="flex justify-between items-center py-2">
               <span className="text-gray-600">ID Stasiun</span>
               <span className="text-gray-900 font-medium">#{stationData.id}</span>
