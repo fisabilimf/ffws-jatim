@@ -14,12 +14,37 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
     7: [112.3333, -7.1167],    // Lamongan
     8: [112.5729, -7.1554],    // Gresik
     9: [112.0483, -6.8976],    // Tuban
-    10:[111.8816, -7.1500],   // Bojonegoro
-    11:[112.2333, -7.5500],   // Jombang
-    12:[111.8833, -7.6000],   // Nganjuk
-    13:[112.0167, -7.8167],   // Kediri
-    14:[112.1667, -8.1000],   // Blitar
-    15:[111.9000, -8.0667]    // Tulungagung
+    10: [111.8816, -7.1500],   // Bojonegoro
+    11: [112.2333, -7.5500],   // Jombang
+    12: [111.8833, -7.6000],   // Nganjuk
+    13: [112.0167, -7.8167],   // Kediri
+    14: [112.1667, -8.1000],   // Blitar
+    15: [111.9000, -8.0667],   // Tulungagung
+    16: [112.7333, -7.6000],   // Bangil
+    17: [112.6833, -7.8333],   // Lawang
+    18: [112.6500, -7.9000],   // Singosari
+    19: [110.3569, -7.9133],   // Wates
+    20: [110.3739, -7.7884],   // Lempuyangan
+    21: [110.3633, -7.7956],   // Tugu
+    22: [111.4167, -7.6500],   // Magetan
+    23: [111.5167, -7.6333],   // Madiun
+    24: [111.6667, -7.5333],   // Caruban
+    25: [111.7167, -7.4667],   // Ngrowot
+    26: [111.9833, -7.4167],   // Kertosono
+    27: [112.4000, -7.0667],   // Babat
+    28: [112.4333, -7.0500],   // Sumari
+    29: [112.4667, -7.0333],   // Duduk
+    30: [112.5000, -7.0167],   // Plabuhan
+    31: [113.4000, -7.9333],   // Kalisat
+    32: [113.6833, -8.2333],   // Jember
+    33: [113.7167, -8.3000],   // Rambipuji
+    34: [113.7000, -7.8000],   // Probolinggo Baru
+    35: [113.4667, -8.2833],   // Tanggul
+    36: [113.3667, -8.0500],   // Klakah
+    37: [113.3333, -8.0167],   // Ranuyoso
+    38: [113.5333, -8.1500],   // Sukowono
+    39: [113.5833, -8.2167],   // Arjasa
+    40: [113.6333, -8.2667]    // Kalisetail
   };
 
   const generateDetailedHistory = (currentValue) => {
@@ -50,7 +75,31 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
       { id: 12, name: 'Stasiun Nganjuk', value: 1.90, unit: 'm', location: 'Nganjuk' },
       { id: 13, name: 'Stasiun Kediri', value: 2.25, unit: 'm', location: 'Kediri' },
       { id: 14, name: 'Stasiun Blitar', value: 1.75, unit: 'm', location: 'Blitar' },
-      { id: 15, name: 'Stasiun Tulungagung', value: 2.05, unit: 'm', location: 'Tulungagung' }
+      { id: 15, name: 'Stasiun Tulungagung', value: 2.05, unit: 'm', location: 'Tulungagung' },
+      { id: 16, name: 'Stasiun Bangil', value: 1.95, unit: 'm', location: 'Bangil' },
+      { id: 17, name: 'Stasiun Lawang', value: 2.15, unit: 'm', location: 'Lawang' },
+      { id: 18, name: 'Stasiun Singosari', value: 1.75, unit: 'm', location: 'Singosari' },
+      { id: 19, name: 'Stasiun Wates', value: 2.25, unit: 'm', location: 'Wates' },
+      { id: 20, name: 'Stasiun Lempuyangan', value: 1.85, unit: 'm', location: 'Lempuyangan' },
+      { id: 21, name: 'Stasiun Tugu', value: 2.35, unit: 'm', location: 'Tugu' },
+      { id: 22, name: 'Stasiun Magetan', value: 1.65, unit: 'm', location: 'Magetan' },
+      { id: 23, name: 'Stasiun Madiun', value: 2.45, unit: 'm', location: 'Madiun' },
+      { id: 24, name: 'Stasiun Caruban', value: 1.55, unit: 'm', location: 'Caruban' },
+      { id: 25, name: 'Stasiun Ngrowot', value: 2.05, unit: 'm', location: 'Ngrowot' },
+      { id: 26, name: 'Stasiun Kertosono', value: 1.95, unit: 'm', location: 'Kertosono' },
+      { id: 27, name: 'Stasiun Babat', value: 2.15, unit: 'm', location: 'Babat' },
+      { id: 28, name: 'Stasiun Sumari', value: 1.75, unit: 'm', location: 'Sumari' },
+      { id: 29, name: 'Stasiun Duduk', value: 2.25, unit: 'm', location: 'Duduk' },
+      { id: 30, name: 'Stasiun Plabuhan', value: 1.85, unit: 'm', location: 'Plabuhan' },
+      { id: 32, name: 'Stasiun Jember', value: 1.65, unit: 'm', location: 'Jember' },
+      { id: 33, name: 'Stasiun Rambipuji', value: 2.45, unit: 'm', location: 'Rambipuji' },
+      { id: 34, name: 'Stasiun Probolinggo Baru', value: 1.55, unit: 'm', location: 'Probolinggo Baru' },
+      { id: 35, name: 'Stasiun Tanggul', value: 2.05, unit: 'm', location: 'Tanggul' },
+      { id: 36, name: 'Stasiun Klakah', value: 1.95, unit: 'm', location: 'Klakah' },
+      { id: 37, name: 'Stasiun Ranuyoso', value: 2.15, unit: 'm', location: 'Ranuyoso' },
+      { id: 38, name: 'Stasiun Sukowono', value: 1.75, unit: 'm', location: 'Sukowono' },
+      { id: 39, name: 'Stasiun Arjasa', value: 2.25, unit: 'm', location: 'Arjasa' },
+      { id: 40, name: 'Stasiun Kalisetail', value: 1.85, unit: 'm', location: 'Kalisetail' }
     ];
     
     return stations.map(station => ({
@@ -71,11 +120,6 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
     
     setSelectedStationId(station.id);
     
-    // Fungsi untuk menampilkan Station Detail ketika FloodRunningBar diklik
-    // if (onStationSelect) {
-    //   onStationSelect(station);
-    // }
-    
     // Panggil langsung handleMapFocus via window.mapboxAutoFocus
     if (window.mapboxAutoFocus) {
       console.log('Directly calling mapboxAutoFocus');
@@ -89,6 +133,12 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
     } else {
       console.error('mapboxAutoFocus is not available');
     }
+    
+    // Trigger custom event to stop auto switch
+    const event = new CustomEvent('userInteraction', { 
+      detail: { source: 'runningBar', stationId: station.id }
+    });
+    document.dispatchEvent(event);
     
     setTimeout(() => {
       setSelectedStationId(null);
