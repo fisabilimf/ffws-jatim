@@ -16,7 +16,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
     station: null,
     coordinates: null
   });
-
+  
   // Tambahkan animasi CSS untuk pulse effect
   useEffect(() => {
     const style = document.createElement('style');
@@ -70,7 +70,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
       }
     }, 800);
   };
-
+  
   // Handler untuk auto switch dari toggle
   const handleAutoSwitch = (station, index) => {
     if (!map.current || !station) return;
@@ -118,6 +118,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
   const handleCloseTooltip = () => {
     setTooltip(prev => ({ ...prev, visible: false }));
   };
+  
   // Helper functions
   const getStatusColor = (status) => {
     switch (status) {
@@ -144,7 +145,44 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
       'Stasiun Nganjuk': [111.8833, -7.6000],
       'Stasiun Kediri': [112.0167, -7.8167],
       'Stasiun Blitar': [112.1667, -8.1000],
-      'Stasiun Tulungagung': [111.9000, -8.0667]
+      'Stasiun Tulungagung': [111.9000, -8.0667],
+      'Stasiun Bangil': [112.7333, -7.6000],
+      'Stasiun Lawang': [112.6833, -7.8333],
+      'Stasiun Singosari': [112.6500, -7.9000],
+      'Stasiun Wates': [110.3569, -7.9133],
+      'Stasiun Lempuyangan': [110.3739, -7.7884],
+      'Stasiun Tugu': [110.3633, -7.7956],
+      'Stasiun Magetan': [111.4167, -7.6500],
+      'Stasiun Madiun': [111.5167, -7.6333],
+      'Stasiun Caruban': [111.6667, -7.5333],
+      'Stasiun Ngrowot': [111.7167, -7.4667],
+      'Stasiun Kertosono': [111.9833, -7.4167],
+      'Stasiun Babat': [112.4000, -7.0667],
+      'Stasiun Sumari': [112.4333, -7.0500],
+      'Stasiun Duduk': [112.4667, -7.0333],
+      'Stasiun Plabuhan': [112.5000, -7.0167],
+      'Stasiun Kalisat': [113.4000, -7.9333],
+      'Stasiun Jember': [113.6833, -8.2333],
+      'Stasiun Rambipuji': [113.7167, -8.3000],
+      'Stasiun Probolinggo Baru': [113.7000, -7.8000],
+      'Stasiun Tanggul': [113.4667, -8.2833],
+      'Stasiun Klakah': [113.3667, -8.0500],
+      'Stasiun Ranuyoso': [113.3333, -8.0167],
+      'Stasiun Sukowono': [113.5333, -8.1500],
+      'Stasiun Arjasa': [113.5833, -8.2167],
+      'Stasiun Kalisetail': [113.6333, -8.2667],
+      'Stasiun Kencong': [113.4333, -8.3167],
+      'Stasiun Gumukmas': [113.3833, -8.3500],
+      'Stasiun Sumberbaru': [113.3167, -8.3833],
+      'Stasiun Tempurejo': [113.2500, -8.4167],
+      'Stasiun Ambulu': [113.2000, -8.4500],
+      'Stasiun Silo': [113.1500, -8.4833],
+      'Stasiun Mrawan': [113.1000, -8.5167],
+      'Stasiun Jajag': [113.9167, -8.3167],
+      'Stasiun Glenmore': [114.0500, -8.3000],
+      'Stasiun Kalibaru': [114.1333, -8.2833],
+      'Stasiun Banyuwangi Baru': [114.3667, -8.1500],
+      'Stasiun Ketapang': [114.3833, -8.1333]
     };
     return coordinates[stationName] || null;
   };
@@ -158,7 +196,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
       }
     };
   }, [tickerData]);
-
+  
   // Expose handleAutoSwitch ke window object
   useEffect(() => {
     window.mapboxAutoSwitch = handleAutoSwitch;
@@ -258,6 +296,12 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
               station: station,
               coordinates: coordinates
             });
+            
+            // Trigger custom event to stop auto switch
+            const event = new CustomEvent('userInteraction', { 
+              detail: { source: 'mapMarker', stationId: station.id }
+            });
+            document.dispatchEvent(event);
           });
         } catch (error) {
           console.error('Error creating marker for station:', station.name, error);
