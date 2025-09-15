@@ -168,7 +168,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange, i
     });
     
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-    // map.current.addControl(new mapboxgl.FullscreenControl(), 'top-right');
+    map.current.addControl(new mapboxgl.FullscreenControl(), 'top-right');
     map.current.addControl(new mapboxgl.ScaleControl(), 'bottom-left');
     
     return () => {
