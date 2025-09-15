@@ -175,8 +175,10 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
       if (tickerRef.current) {
         setScrollPosition(prev => {
           const newPosition = prev + 0.5;
-          if (newPosition >= tickerRef.current.scrollWidth - tickerRef.current.clientWidth) {
-            return 0;
+          const maxScroll = tickerRef.current.scrollWidth / 2; // Karena kita duplikasi konten
+          
+          if (newPosition >= maxScroll) {
+            return 0; // Reset ke awal tanpa terlihat karena konten terduplikasi
           }
           return newPosition;
         });
@@ -230,9 +232,10 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
           className="flex space-x-2 sm:space-x-2 overflow-hidden whitespace-nowrap bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-1.5 sm:p-2"
           style={{ scrollBehavior: 'smooth' }}
         >
+          {/* Konten pertama */}
           {tickerData.map((item) => (
             <div 
-              key={item.id} 
+              key={`first-${item.id}`} 
               className={`flex items-center space-x-1.5 sm:space-x-2 rounded-lg px-1.5 sm:px-2 py-1 sm:py-1.5 min-w-max transition-all duration-300 cursor-pointer border border-gray-200 ${
                 selectedStationId === item.id 
                   ? 'bg-blue-100 border-blue-400 scale-105 shadow-md' 
@@ -258,7 +261,42 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
                 showTooltip={false}
                 miniMode={true}
                 status={item.status}
-                canvasId={`chart-${item.id}`}
+                canvasId={`chart-first-${item.id}`}
+                className="w-12 h-6 rounded"
+              />
+            </div>
+          ))}
+          
+          {/* Konten duplikat untuk seamless scrolling */}
+          {tickerData.map((item) => (
+            <div 
+              key={`second-${item.id}`} 
+              className={`flex items-center space-x-1.5 sm:space-x-2 rounded-lg px-1.5 sm:px-2 py-1 sm:py-1.5 min-w-max transition-all duration-300 cursor-pointer border border-gray-200 ${
+                selectedStationId === item.id 
+                  ? 'bg-blue-100 border-blue-400 scale-105 shadow-md' 
+                  : 'hover:bg-gray-50 hover:scale-105'
+              }`}
+              onClick={() => handleStationClick(item)}
+              title={`Klik untuk pindah ke ${item.name.replace('Stasiun ', '')}`}
+            >
+              <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${getStatusBgColor(item.status)} ${
+                selectedStationId === item.id ? 'animate-pulse' : ''
+              }`}></div>
+              <span className="text-xs text-gray-700 font-medium truncate max-w-12 sm:max-w-16">
+                {item.name.replace('Stasiun ', '')}
+              </span>
+              <div className="flex items-center space-x-0.5 sm:space-x-1">
+                <span className="text-xs font-bold text-gray-900">{formatValue(item.value)}</span>
+                <span className="text-xs text-gray-500">{item.unit}</span>
+              </div>
+              <Chart
+                data={item.history}
+                width={48}
+                height={22}
+                showTooltip={false}
+                miniMode={true}
+                status={item.status}
+                canvasId={`chart-second-${item.id}`}
                 className="w-12 h-6 rounded"
               />
             </div>
