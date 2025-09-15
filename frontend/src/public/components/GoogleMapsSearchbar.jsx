@@ -1,10 +1,6 @@
 import React, { useState } from 'react';
 
-const GoogleMapsSearchbar = ({ 
-  onSearch, 
-  placeholder = "Cari di Maps", 
-  isSidebarOpen = false 
-}) => {
+const GoogleMapsSearchbar = ({ onSearch, placeholder = "Cari di Maps", isSidebarOpen = false }) => {
   const [searchValue, setSearchValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   

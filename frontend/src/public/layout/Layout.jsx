@@ -40,8 +40,12 @@ const Layout = ({ children }) => {
 
   const handleStationChange = (station, index) => {
     setCurrentStationIndex(index)
-    if (mapRef.current && mapRef.current.moveToStation) {
-      mapRef.current.moveToStation(station, index)
+    // Buka panel detail saat auto switch
+    setSelectedStation(station)
+    setIsSidebarOpen(true)
+    // Trigger map auto switch
+    if (window.mapboxAutoSwitch) {
+      window.mapboxAutoSwitch(station, index)
     }
   }
 
@@ -57,29 +61,13 @@ const Layout = ({ children }) => {
         />
       </div>
       
-      {/* Google Maps Style Searchbar with Auto Switch Toggle */}
-      <div className={`absolute top-4 left-4 right-4 z-10 transition-all duration-300 ease-in-out ${
-        isSidebarOpen ? 'transform translate-x-80' : 'transform translate-x-0'
-      }`}>
+      {/* Google Maps Style Searchbar - fixed position */}
+      <div className="absolute top-4 left-4 right-4 z-20">
         <div className="max-w-2xl mx-auto">
-          <div className="flex items-center space-x-4">
-            {/* Search Bar */}
-            <div className="flex-1">
-              <GoogleMapsSearchbar 
-                onSearch={handleSearch}
-                placeholder="Cari stasiun monitoring banjir..."
-              />
-            </div>
-            
-            {/* Auto Switch Toggle */}
-            <div className="flex-shrink-0">
-              <AutoSwitchToggle
-                tickerData={tickerData}
-                onStationChange={handleStationChange}
-                currentStationIndex={currentStationIndex}
-              />
-            </div>
-          </div>
+          <GoogleMapsSearchbar 
+            onSearch={handleSearch}
+            placeholder="Cari stasiun monitoring banjir..."
+          />
         </div>
       </div>
       
@@ -90,8 +78,20 @@ const Layout = ({ children }) => {
         isSidebarOpen={isSidebarOpen}
       />
       
-      {/* Floating Legend */}
-      <FloatingLegend />
+      {/* Bottom-right stack container for AutoSwitch and Legend */}
+      <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 z-10 space-y-2">
+        {/* Auto Switch Card */}
+        <div className="w-64 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-2 sm:p-4 border border-gray-200">
+          <AutoSwitchToggle
+            tickerData={tickerData}
+            onStationChange={handleStationChange}
+            currentStationIndex={currentStationIndex}
+          />
+        </div>
+
+        {/* Floating Legend */}
+        <FloatingLegend />
+      </div>
       
       {/* Station Detail Modal */}
       <StationDetail 
