@@ -229,6 +229,15 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
     // map.current.addControl(new mapboxgl.FullscreenControl(), 'top-right');
     map.current.addControl(new mapboxgl.ScaleControl(), 'bottom-left');
     
+    // Tambahkan event listener untuk drag
+    map.current.on('dragstart', () => {
+      // Trigger custom event to stop auto switch
+      const event = new CustomEvent('userInteraction', { 
+        detail: { source: 'mapDrag' }
+      });
+      document.dispatchEvent(event);
+    });
+    
     return () => {
       if (map.current) {
         map.current.remove();
