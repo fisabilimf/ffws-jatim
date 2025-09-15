@@ -71,9 +71,10 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
     
     setSelectedStationId(station.id);
     
-    if (onStationSelect) {
-      onStationSelect(station);
-    }
+    // Fungsi untuk menampilkan Station Detail ketika FloodRunningBar diklik
+    // if (onStationSelect) {
+    //   onStationSelect(station);
+    // }
     
     // Panggil langsung handleMapFocus via window.mapboxAutoFocus
     if (window.mapboxAutoFocus) {
@@ -168,12 +169,10 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
   };
 
   return (
-    <div className={`absolute top-4 z-[70] transition-all duration-300 ease-in-out ${
-      isSidebarOpen ? 'transform translate-x-0' : 'transform translate-x-0'
-    }`}
+    <div className={`absolute top-4 z-[70] transition-all duration-300 ease-in-out`}
       style={{ 
         left: '400px', 
-        right: '5rem'
+        right: '58px'
       }}>
       <div className="w-full">
         <div 
