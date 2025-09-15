@@ -14,12 +14,12 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
     7: [112.3333, -7.1167],    // Lamongan
     8: [112.5729, -7.1554],    // Gresik
     9: [112.0483, -6.8976],    // Tuban
-    10: [111.8816, -7.1500],   // Bojonegoro
-    11: [112.2333, -7.5500],   // Jombang
-    12: [111.8833, -7.6000],   // Nganjuk
-    13: [112.0167, -7.8167],   // Kediri
-    14: [112.1667, -8.1000],   // Blitar
-    15: [111.9000, -8.0667]    // Tulungagung
+    10:[111.8816, -7.1500],   // Bojonegoro
+    11:[112.2333, -7.5500],   // Jombang
+    12:[111.8833, -7.6000],   // Nganjuk
+    13:[112.0167, -7.8167],   // Kediri
+    14:[112.1667, -8.1000],   // Blitar
+    15:[111.9000, -8.0667]    // Tulungagung
   };
 
   const generateDetailedHistory = (currentValue) => {

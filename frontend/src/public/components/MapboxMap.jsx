@@ -35,6 +35,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
       essential: true
     });
     
+    // Tampilkan tooltip setelah jeda singkat
     setTimeout(() => {
       if (tickerData) {
         const station = tickerData.find(s => s.id === stationId);
@@ -74,7 +75,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
       essential: true
     });
     
-    // Show tooltip after animation
+    // Munculkan tooltip dengan jeda kecil
     setTimeout(() => {
       setTooltip({
         visible: true,

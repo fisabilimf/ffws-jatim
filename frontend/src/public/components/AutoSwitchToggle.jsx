@@ -64,46 +64,25 @@ const AutoSwitchToggle = ({
     }
   }, [currentStationIndex]);
 
-  // Don't render if no data
-  if (!tickerData || tickerData.length === 0) return null;
+  // Selalu render komponen; nonaktifkan toggle jika tidak ada data
+  const hasData = tickerData && tickerData.length > 0;
 
   return (
-    <div className="flex items-center space-x-3">
-      {/* Current Station Info */}
-      {tickerData[currentIndex] && (
-        <div className="flex items-center space-x-2 text-sm bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm">
-          <div className={`w-2 h-2 rounded-full ${
-            tickerData[currentIndex].status === 'safe' ? 'bg-green-500' :
-            tickerData[currentIndex].status === 'warning' ? 'bg-yellow-500' : 'bg-red-500'
-          }`}></div>
-          <span className="text-gray-700 font-medium">
-            {tickerData[currentIndex].name.replace('Stasiun ', '')}
-          </span>
-          <span className="text-gray-500 text-xs">
-            {currentIndex + 1}/{tickerData.length}
-          </span>
-        </div>
-      )}
-
-      {/* Toggle Button */}
+    <div className="flex items-center justify-between w-full">
+      <span className="text-xs sm:text-sm font-semibold text-gray-800">Auto Switch</span>
       <button
         onClick={togglePlayPause}
-        className={`flex items-center justify-center w-12 h-12 rounded-full transition-all duration-200 shadow-lg ${
-          isPlaying 
-            ? 'bg-red-500 hover:bg-red-600 text-white' 
-            : 'bg-blue-500 hover:bg-blue-600 text-white'
-        }`}
+        disabled={!hasData}
+        className={`relative inline-flex items-center transition-colors focus:outline-none select-none w-14 h-8 rounded-full shadow ${
+          isPlaying ? 'bg-green-500' : 'bg-gray-300'
+        } ${!hasData ? 'opacity-50 cursor-not-allowed' : ''}`}
         title={isPlaying ? 'Pause Auto Switch' : 'Start Auto Switch'}
       >
-        {isPlaying ? (
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
-          </svg>
-        ) : (
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-        )}
+        <span
+          className={`inline-block w-6 h-6 transform bg-white rounded-full shadow transition-transform ${
+            isPlaying ? 'translate-x-6' : 'translate-x-1'
+          }`}
+        />
       </button>
     </div>
   );

@@ -40,6 +40,9 @@ const Layout = ({ children }) => {
 
   const handleStationChange = (station, index) => {
     setCurrentStationIndex(index)
+    // Buka panel detail saat auto switch
+    setSelectedStation(station)
+    setIsSidebarOpen(true)
     // Trigger map auto switch
     if (window.mapboxAutoSwitch) {
       window.mapboxAutoSwitch(station, index)
@@ -75,17 +78,20 @@ const Layout = ({ children }) => {
         isSidebarOpen={isSidebarOpen}
       />
       
-      {/* Auto Switch Toggle - positioned above Floating Legend */}
-      <div className="absolute bottom-24 right-2 sm:bottom-28 sm:right-4 z-10">
-        <AutoSwitchToggle
-          tickerData={tickerData}
-          onStationChange={handleStationChange}
-          currentStationIndex={currentStationIndex}
-        />
+      {/* Bottom-right stack container for AutoSwitch and Legend */}
+      <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 z-10 space-y-2">
+        {/* Auto Switch Card */}
+        <div className="w-64 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-2 sm:p-4 border border-gray-200">
+          <AutoSwitchToggle
+            tickerData={tickerData}
+            onStationChange={handleStationChange}
+            currentStationIndex={currentStationIndex}
+          />
+        </div>
+
+        {/* Floating Legend */}
+        <FloatingLegend />
       </div>
-      
-      {/* Floating Legend */}
-      <FloatingLegend />
       
       {/* Station Detail Modal */}
       <StationDetail 
