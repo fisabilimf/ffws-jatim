@@ -142,10 +142,8 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
   const animationDuration = tickerData.length * 4; // 4 detik per item
 
   return (
-    <div className={`fixed top-4 z-[70] transition-all duration-300 ease-in-out ${
-      isSidebarOpen ? 'transform translate-x-80' : 'transform translate-x-0'
-    }`}
-      style={{ 
+    <div className={`fixed top-4 z-[70] transition-all duration-300 ease-in-out`}
+      style={{
         left: 'calc(368px + 2rem)',
         right: '58px'
       }}>
