@@ -3,7 +3,7 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import MapTooltip from './maptooltip'; // Import komponen tooltip
 
-const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange }) => {
+const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange, isAutoSwitchOn, onCloseSidebar }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [waterAnimationActive, setWaterAnimationActive] = useState(false);
@@ -231,6 +231,11 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
             station: station,
             coordinates: coordinates
           });
+          
+          // Hide sidebar if auto switch is off
+          if (!isAutoSwitchOn && onCloseSidebar) {
+            onCloseSidebar();
+          }
         });
       }
     });
@@ -249,6 +254,41 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
       document.removeEventListener('click', handleClickOutside);
     };
   }, [tooltip.visible]);
+
+  // Event listener untuk map movement (pan/zoom) - hide sidebar when auto switch is off
+  useEffect(() => {
+    if (!map.current) return;
+
+    let moveTimeout;
+    const handleMapMove = () => {
+      // Clear previous timeout
+      if (moveTimeout) {
+        clearTimeout(moveTimeout);
+      }
+      
+      // Add small delay to prevent sidebar from closing too quickly
+      moveTimeout = setTimeout(() => {
+        // Hide sidebar if auto switch is off and user moves the map
+        if (!isAutoSwitchOn && onCloseSidebar) {
+          onCloseSidebar();
+        }
+      }, 500); // 500ms delay
+    };
+
+    // Add event listeners for map movement
+    map.current.on('moveend', handleMapMove);
+    map.current.on('zoomend', handleMapMove);
+
+    return () => {
+      if (moveTimeout) {
+        clearTimeout(moveTimeout);
+      }
+      if (map.current) {
+        map.current.off('moveend', handleMapMove);
+        map.current.off('zoomend', handleMapMove);
+      }
+    };
+  }, [isAutoSwitchOn, onCloseSidebar]);
   
   return (
     <div className="w-full h-screen overflow-hidden relative z-0">

@@ -13,6 +13,7 @@ const Layout = ({ children }) => {
   const [selectedStation, setSelectedStation] = useState(null)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [currentStationIndex, setCurrentStationIndex] = useState(0)
+  const [isAutoSwitchOn, setIsAutoSwitchOn] = useState(false)
   const mapRef = useRef(null)
 
   const handleSearch = (query) => {
@@ -24,6 +25,15 @@ const Layout = ({ children }) => {
   const handleStationSelect = (station) => {
     setSelectedStation(station)
     setIsSidebarOpen(true)
+  }
+
+  const handleAutoSwitchToggle = (isOn) => {
+    setIsAutoSwitchOn(isOn)
+    // If auto switch is turned off, close sidebar
+    if (!isOn) {
+      setIsSidebarOpen(false)
+      setSelectedStation(null)
+    }
   }
 
   const handleCloseStationDetail = () => {
@@ -58,6 +68,13 @@ const Layout = ({ children }) => {
           tickerData={tickerData} 
           onStationSelect={handleStationSelect}
           onAutoSwitch={handleAutoSwitch}
+          isAutoSwitchOn={isAutoSwitchOn}
+          onCloseSidebar={() => {
+            if (!isAutoSwitchOn) {
+              setIsSidebarOpen(false)
+              setSelectedStation(null)
+            }
+          }}
         />
       </div>
       
@@ -86,6 +103,7 @@ const Layout = ({ children }) => {
             tickerData={tickerData}
             onStationChange={handleStationChange}
             currentStationIndex={currentStationIndex}
+            onAutoSwitchToggle={handleAutoSwitchToggle}
           />
         </div>
 
