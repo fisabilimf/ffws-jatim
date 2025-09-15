@@ -94,8 +94,7 @@
             <!-- Form Actions -->
             <div class="flex items-center justify-between pt-6 border-t border-gray-200">
                 <div class="flex items-center space-x-3">
-                    <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" class="inline" 
-                          onsubmit="return confirm('Apakah Anda yakin ingin menghapus user ini?')">
+                    <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" class="inline" data-confirm-delete="Apakah Anda yakin ingin menghapus user ini?">
                         @csrf
                         @method('DELETE')
                         <x-admin.button type="submit" variant="danger">
