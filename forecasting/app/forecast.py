@@ -12,6 +12,7 @@ from .thresholds import classify_threshold
 from .confidence import calculate_confidence_score
 from .config import Settings
 from .preprocess import preprocess_series, PreprocessOptions
+from .fallback import FallbackForecastingSystem
 
 class ForecastError(Exception): pass
 
@@ -155,22 +156,26 @@ def _get_sensor_and_model(session: Session, sensor_code: str, model_code: str | 
     # Get model by model_code
     if model_code is None:
         if sensor.mas_model_code is None:
-            raise ForecastError("Sensor has no default model assigned")
+            # Return sensor with None model to allow fallback handling
+            return sensor, None
         model_code = sensor.mas_model_code
     
     q_model = select(MasModels).where(MasModels.model_code == model_code)
     model = session.execute(q_model).scalar_one_or_none()
     if model is None:
-        raise ForecastError("Model not found")
+        # If model not found, allow fallback
+        return sensor, None
     
     if not model.file_path:
-        raise ForecastError("Model file_path missing")
+        # If model file path missing, allow fallback
+        return sensor, None
     return sensor, model
 
 def predict_for_sensor(session: Session, settings: Settings, sensor_code: str, model_code: str | None = None, 
                       prediction_hours: int = 24, step_hours: float = 1.0) -> dict:
     """
     Improved prediction function with multi-feature support and configurable time intervals.
+    Includes fallback system for sensors without models.
     
     Args:
         session: Database session
@@ -185,6 +190,75 @@ def predict_for_sensor(session: Session, settings: Settings, sensor_code: str, m
     """
     sensor, model = _get_sensor_and_model(session, sensor_code, model_code)
     
+    # If no model is available, use fallback system
+    if model is None:
+        print(f"   📢 No model available for sensor {sensor_code}, using fallback system")
+        fallback_system = FallbackForecastingSystem(session, settings)
+        
+        # Convert prediction_hours to compatible format for fallback
+        hours_ahead = int(prediction_hours / step_hours)
+        
+        fallback_result = fallback_system.run_fallback_forecast(sensor_code, hours_ahead)
+        
+        if not fallback_result['success']:
+            raise ForecastError(f"Fallback forecast failed: {fallback_result.get('error', 'Unknown error')}")
+        
+        # Convert fallback predictions to DataPrediction objects and save to database
+        now = datetime.utcnow()
+        rows_out = []
+        
+        for pred in fallback_result['predictions']:
+            val = float(pred['forecast_value'])
+            confidence = float(pred['confidence_score'])
+            pred_ts = pred['forecast_time']
+            
+            # Ensure pred_ts is datetime object
+            if isinstance(pred_ts, str):
+                pred_ts = datetime.fromisoformat(pred_ts.replace('Z', '+00:00'))
+            
+            status = classify_threshold(val, sensor.threshold_safe, sensor.threshold_warning, sensor.threshold_danger)
+            
+            rows_out.append(DataPrediction(
+                mas_sensor_code=sensor.sensor_code,
+                mas_model_code="FALLBACK",  # Use simple fallback model code
+                prediction_run_at=now,
+                prediction_for_ts=pred_ts,
+                predicted_value=val,
+                confidence_score=confidence,
+                threshold_prediction_status=status,
+                created_at=now,
+                updated_at=now
+            ))
+        
+        session.add_all(rows_out)
+        session.commit()
+        
+        return {
+            "sensor_code": sensor.sensor_code,
+            "model_code": fallback_result['method'],
+            "model_type": "fallback",
+            "model_algorithm": fallback_result['method'],
+            "step_minutes": int(step_hours * 60),
+            "step_hours": step_hours,
+            "prediction_horizon_hours": prediction_hours,
+            "rows_inserted": len(rows_out),
+            "input_features_used": "N/A (fallback)",
+            "confidence_score": np.mean([pred['confidence_score'] for pred in fallback_result['predictions']]),
+            "fallback_reason": fallback_result.get('fallback_reason', 'no_model'),
+            "confidence_note": fallback_result.get('confidence_note', 'Fallback predictions'),
+            "predictions": [
+                {
+                    "forecast_time": row.prediction_for_ts.isoformat(),
+                    "forecast_value": row.predicted_value,
+                    "confidence_score": row.confidence_score,
+                    "threshold_status": row.threshold_prediction_status,
+                    "hours_ahead": step_hours * (i + 1)
+                }
+                for i, row in enumerate(rows_out[:5])  # Return first 5 predictions as sample
+            ]
+        }
+    
+    # Continue with normal ML model prediction if model is available
     # Get model feature requirements from database
     model_req = get_model_feature_requirements(session, model.model_code)
     
@@ -380,36 +454,102 @@ def predict_for_sensor(session: Session, settings: Settings, sensor_code: str, m
 def predict_for_basin(session: Session, settings: Settings, river_basin_code: str, only_active: bool = True) -> dict:
     """
     Jalankan forecast berurutan untuk seluruh sensor yang berada di mas_river_basins.code = river_basin_code.
+    Sekarang menggunakan fallback system untuk sensor tanpa model.
     Mengembalikan ringkasan sukses/gagal per sensor.
     """
     # cari sensors lewat devices di basin tsb
-    # hanya sensor yang punya model (sensor.mas_model_code IS NOT NULL)
+    # Sekarang termasuk sensor TANPA model untuk fallback
     from sqlalchemy import text
     base_sql = """
-        SELECT s.sensor_code AS sensor_code
+        SELECT s.sensor_code AS sensor_code, s.mas_model_code AS mas_model_code
         FROM mas_devices d
         JOIN mas_sensors s ON s.mas_device_code = d.device_code
         WHERE d.mas_river_basin_code = :rbcode
     """
     if only_active:
         base_sql += " AND d.status = 'active' AND s.status = 'active'"
-    base_sql += " AND s.mas_model_code IS NOT NULL"
 
-    sensors = [row[0] for row in session.execute(text(base_sql), {"rbcode": river_basin_code}).all()]
+    # Get all sensors (both with and without models)
+    sensor_results = session.execute(text(base_sql), {"rbcode": river_basin_code}).all()
+    
+    # Separate sensors with models from those without
+    sensors_with_models = [row[0] for row in sensor_results if row[1] is not None]
+    sensors_without_models = [row[0] for row in sensor_results if row[1] is None]
+    
+    total_sensors = len(sensor_results)
 
-    summary = {"river_basin_code": river_basin_code, "total_sensors": len(sensors),
-               "ok": 0, "failed": 0, "details": []}
+    summary = {
+        "river_basin_code": river_basin_code, 
+        "total_sensors": total_sensors,
+        "sensors_with_models": len(sensors_with_models),
+        "sensors_without_models": len(sensors_without_models),
+        "ok": 0, 
+        "failed": 0, 
+        "details": []
+    }
 
-    for sensor_code in sensors:
+    # Process sensors with ML models first
+    for sensor_code in sensors_with_models:
         try:
             result = predict_for_sensor(session, settings, sensor_code, None)
             summary["ok"] += 1
-            summary["details"].append({"sensor_code": sensor_code, "status": "ok", "rows_inserted": result["rows_inserted"]})
+            summary["details"].append({
+                "sensor_code": sensor_code, 
+                "status": "ok", 
+                "method": "ml_model",
+                "model_code": result.get("model_code", "unknown"),
+                "rows_inserted": result["rows_inserted"]
+            })
         except ForecastError as e:
             summary["failed"] += 1
-            summary["details"].append({"sensor_code": sensor_code, "status": "error", "error": str(e)})
+            summary["details"].append({
+                "sensor_code": sensor_code, 
+                "status": "error", 
+                "method": "ml_model_failed",
+                "error": str(e)
+            })
         except Exception as e:
             summary["failed"] += 1
-            summary["details"].append({"sensor_code": sensor_code, "status": "error", "error": f"internal: {e}"})
-            # lanjut ke sensor berikutnya (jangan hentikan batch)
+            summary["details"].append({
+                "sensor_code": sensor_code, 
+                "status": "error", 
+                "method": "ml_model_failed",
+                "error": f"internal: {e}"
+            })
+
+    # Process sensors without models using fallback
+    for sensor_code in sensors_without_models:
+        try:
+            result = predict_for_sensor(session, settings, sensor_code, None)
+            summary["ok"] += 1
+            summary["details"].append({
+                "sensor_code": sensor_code, 
+                "status": "ok", 
+                "method": "fallback",
+                "model_code": result.get("model_code", "fallback"),
+                "fallback_reason": result.get("fallback_reason", "no_model"),
+                "rows_inserted": result["rows_inserted"]
+            })
+        except ForecastError as e:
+            summary["failed"] += 1
+            summary["details"].append({
+                "sensor_code": sensor_code, 
+                "status": "error", 
+                "method": "fallback_failed",
+                "error": str(e)
+            })
+        except Exception as e:
+            summary["failed"] += 1
+            summary["details"].append({
+                "sensor_code": sensor_code, 
+                "status": "error", 
+                "method": "fallback_failed",
+                "error": f"internal: {e}"
+            })
+    
+    # Add summary statistics
+    summary["success_rate"] = (summary["ok"] / total_sensors * 100) if total_sensors > 0 else 0
+    summary["ml_model_sensors"] = len([d for d in summary["details"] if d.get("method", "").startswith("ml_model")])
+    summary["fallback_sensors"] = len([d for d in summary["details"] if d.get("method") == "fallback"])
+    
     return summary
