@@ -1,8 +1,206 @@
 // Admin Panel JavaScript
 import Alpine from 'alpinejs'
+import Swal from 'sweetalert2'
 
 // Make Alpine available globally
 window.Alpine = Alpine
+
+// Initialize AdminUtils early to prevent race conditions
+window.AdminUtils = window.AdminUtils || {}
+
+// SweetAlert2 global helpers
+window.Swal = Swal
+
+// Toast helpers - Define early to prevent race conditions
+const Toast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    iconColor: 'white',
+    customClass: {
+        popup: 'colored-toast',
+    },
+    showConfirmButton: false,
+    timer: 5000,
+    timerProgressBar: true,
+})
+
+// Initialize toast functions immediately
+window.AdminUtils.toast = function(type = 'info', message = '', options = {}) {
+    const icon = ['success','error','warning','info','question'].includes(type) ? type : 'info'
+    
+    // Jika message panjang, gunakan html untuk formatting yang lebih baik
+    const toastOptions = {
+        icon,
+        ...options
+    }
+    
+    if (message && message.length > 50) {
+        toastOptions.html = `<div style="font-weight: 600; margin-bottom: 4px;">${this.getDefaultTitle(type)}</div><div style="font-size: 14px; font-weight: 400;">${message}</div>`
+    } else {
+        toastOptions.title = message || this.getDefaultTitle(type)
+    }
+    
+    return Toast.fire(toastOptions)
+}
+
+// Helper function untuk default title
+window.AdminUtils.getDefaultTitle = function(type) {
+    const titles = {
+        success: 'Success',
+        error: 'Error',
+        warning: 'Warning',
+        info: 'Info',
+        question: 'Question'
+    }
+    return titles[type] || 'Info'
+}
+
+window.AdminUtils.toastSuccess = function(message, options = {}) {
+    return window.AdminUtils.toast('success', message, options)
+}
+
+window.AdminUtils.toastError = function(message, options = {}) {
+    // Log error ke console untuk debugging
+    console.error('Toast Error:', message)
+    return window.AdminUtils.toast('error', message, options)
+}
+
+window.AdminUtils.toastWarning = function(message, options = {}) {
+    return window.AdminUtils.toast('warning', message, options)
+}
+
+window.AdminUtils.toastInfo = function(message, options = {}) {
+    return window.AdminUtils.toast('info', message, options)
+}
+
+// Fungsi khusus untuk error dengan detail
+window.AdminUtils.toastErrorDetail = function(title, message, options = {}) {
+    console.error('Toast Error Detail:', { title, message })
+    return Toast.fire({
+        icon: 'error',
+        html: `<div style="font-weight: 600; margin-bottom: 4px;">${title}</div><div style="font-size: 14px; font-weight: 400;">${message}</div>`,
+        ...options
+    })
+}
+
+// Fungsi khusus untuk info dengan detail
+window.AdminUtils.toastInfoDetail = function(title, message, options = {}) {
+    return Toast.fire({
+        icon: 'info',
+        html: `<div style="font-weight: 600; margin-bottom: 4px;">${title}</div><div style="font-size: 14px; font-weight: 400;">${message}</div>`,
+        ...options
+    })
+}
+
+// Global helper functions (simplified)
+window.showToast = {
+    success: (message, options = {}) => window.AdminUtils.toastSuccess(message, options),
+    error: (message, options = {}) => window.AdminUtils.toastError(message, options),
+    warning: (message, options = {}) => window.AdminUtils.toastWarning(message, options),
+    info: (message, options = {}) => window.AdminUtils.toastInfo(message, options),
+    errorDetail: (title, message, options = {}) => window.AdminUtils.toastErrorDetail(title, message, options),
+    infoDetail: (title, message, options = {}) => window.AdminUtils.toastInfoDetail(title, message, options)
+};
+
+// Sistem Notifikasi Komprehensif untuk Berbagai Skenario
+window.NotificationSystem = {
+    // CRUD Operations
+    create: {
+        success: (itemName = 'Data') => window.AdminUtils.toastSuccess(`${itemName} berhasil ditambahkan!`),
+        error: (itemName = 'Data', error = '') => {
+            const message = error ? `${itemName} gagal ditambahkan. ${error}` : `${itemName} gagal ditambahkan. Silakan coba lagi.`;
+            return window.AdminUtils.toastErrorDetail('Gagal Menambah Data', message);
+        },
+        validation: (errors = []) => {
+            const errorList = Array.isArray(errors) ? errors.join(', ') : errors;
+            return window.AdminUtils.toastErrorDetail('Validasi Gagal', `Periksa kembali input Anda: ${errorList}`);
+        }
+    },
+    
+    update: {
+        success: (itemName = 'Data') => window.AdminUtils.toastSuccess(`${itemName} berhasil diperbarui!`),
+        error: (itemName = 'Data', error = '') => {
+            const message = error ? `${itemName} gagal diperbarui. ${error}` : `${itemName} gagal diperbarui. Silakan coba lagi.`;
+            return window.AdminUtils.toastErrorDetail('Gagal Memperbarui Data', message);
+        },
+        notFound: (itemName = 'Data') => window.AdminUtils.toastErrorDetail('Data Tidak Ditemukan', `${itemName} yang akan diperbarui tidak ditemukan.`)
+    },
+    
+    delete: {
+        success: (itemName = 'Data') => window.AdminUtils.toastSuccess(`${itemName} berhasil dihapus!`),
+        error: (itemName = 'Data', error = '') => {
+            const message = error ? `${itemName} gagal dihapus. ${error}` : `${itemName} gagal dihapus. Silakan coba lagi.`;
+            return window.AdminUtils.toastErrorDetail('Gagal Menghapus Data', message);
+        },
+        notFound: (itemName = 'Data') => window.AdminUtils.toastErrorDetail('Data Tidak Ditemukan', `${itemName} yang akan dihapus tidak ditemukan.`),
+        confirm: (itemName = 'Data') => window.AdminUtils.confirmDelete(`Apakah Anda yakin ingin menghapus ${itemName}? Data yang dihapus tidak dapat dikembalikan.`)
+    },
+    
+    // Authentication & Authorization
+    auth: {
+        loginSuccess: (userName = '') => {
+            const message = userName ? `Selamat datang kembali, ${userName}!` : 'Login berhasil!';
+            return window.AdminUtils.toastSuccess(message);
+        },
+        loginError: () => window.AdminUtils.toastErrorDetail('Login Gagal', 'Email atau password salah. Silakan coba lagi.'),
+        logoutSuccess: () => window.AdminUtils.toastInfo('Anda telah berhasil logout.'),
+        unauthorized: () => window.AdminUtils.toastErrorDetail('Akses Ditolak', 'Anda tidak memiliki izin untuk melakukan aksi ini.'),
+        sessionExpired: () => window.AdminUtils.toastWarning('Sesi Anda telah berakhir. Silakan login kembali.')
+    },
+    
+    // File Operations
+    file: {
+        uploadSuccess: (fileName = 'File') => window.AdminUtils.toastSuccess(`${fileName} berhasil diunggah!`),
+        uploadError: (fileName = 'File', error = '') => {
+            const message = error ? `${fileName} gagal diunggah. ${error}` : `${fileName} gagal diunggah.`;
+            return window.AdminUtils.toastErrorDetail('Upload Gagal', message);
+        },
+        downloadSuccess: (fileName = 'File') => window.AdminUtils.toastInfo(`${fileName} berhasil diunduh.`),
+        downloadError: (fileName = 'File') => window.AdminUtils.toastErrorDetail('Download Gagal', `${fileName} gagal diunduh.`),
+        deleteSuccess: (fileName = 'File') => window.AdminUtils.toastSuccess(`${fileName} berhasil dihapus!`),
+        deleteError: (fileName = 'File') => window.AdminUtils.toastErrorDetail('Hapus File Gagal', `${fileName} gagal dihapus.`)
+    },
+    
+    // System & Network
+    system: {
+        maintenance: (time = '') => {
+            const message = time ? `Sistem akan maintenance pada ${time}.` : 'Sistem akan melakukan maintenance.';
+            return window.AdminUtils.toastInfoDetail('Maintenance', message);
+        },
+        networkError: () => window.AdminUtils.toastErrorDetail('Koneksi Gagal', 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.'),
+        serverError: () => window.AdminUtils.toastErrorDetail('Server Error', 'Terjadi kesalahan pada server. Silakan coba lagi nanti.'),
+        timeout: () => window.AdminUtils.toastErrorDetail('Timeout', 'Permintaan terlalu lama. Silakan coba lagi.')
+    },
+    
+    // Data & Import/Export
+    data: {
+        importSuccess: (count = 0) => window.AdminUtils.toastSuccess(`${count} data berhasil diimpor!`),
+        importError: (error = '') => {
+            const message = error || 'Data gagal diimpor. Periksa format file.';
+            return window.AdminUtils.toastErrorDetail('Import Gagal', message);
+        },
+        exportSuccess: (fileName = 'Data') => window.AdminUtils.toastSuccess(`${fileName} berhasil diekspor!`),
+        exportError: () => window.AdminUtils.toastErrorDetail('Export Gagal', 'Data gagal diekspor. Silakan coba lagi.'),
+        duplicate: (itemName = 'Data') => window.AdminUtils.toastWarning(`${itemName} sudah ada. Silakan gunakan data yang berbeda.`)
+    },
+    
+    // Form & Validation
+    form: {
+        saveSuccess: () => window.AdminUtils.toastSuccess('Form berhasil disimpan!'),
+        saveError: () => window.AdminUtils.toastError('Form gagal disimpan. Silakan coba lagi.'),
+        resetSuccess: () => window.AdminUtils.toastInfo('Form telah direset.'),
+        required: (fieldName = 'Field') => window.AdminUtils.toastWarning(`${fieldName} wajib diisi.`),
+        invalid: (fieldName = 'Field') => window.AdminUtils.toastWarning(`Format ${fieldName} tidak valid.`)
+    },
+    
+    // Custom Messages
+    custom: {
+        success: (title, message) => window.AdminUtils.toastSuccess(message),
+        error: (title, message) => window.AdminUtils.toastErrorDetail(title, message),
+        warning: (title, message) => window.AdminUtils.toastWarning(message),
+        info: (title, message) => window.AdminUtils.toastInfoDetail(title, message)
+    }
+};
 
 // Alpine Store for Sidebar
 Alpine.store('sidebar', {
@@ -287,8 +485,8 @@ Alpine.data('adminDataTable', () => ({
     }
 }))
 
-// Utility functions
-window.AdminUtils = {
+// Utility functions - Extend AdminUtils
+Object.assign(window.AdminUtils, {
     // Format date
     formatDate(date, format = 'DD/MM/YYYY HH:mm') {
         if (!date) return '-'
@@ -328,10 +526,51 @@ window.AdminUtils = {
     
     // Confirm action
     confirm(message = 'Apakah Anda yakin?') {
-        return new Promise((resolve) => {
-            const confirmed = window.confirm(message)
-            resolve(confirmed)
-        })
+        return Swal.fire({
+            title: 'Konfirmasi',
+            text: message,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, lanjutkan',
+            cancelButtonText: 'Batal',
+            reverseButtons: true
+        }).then(result => result.isConfirmed)
+    },
+
+    confirmDelete(message = 'Data yang dihapus tidak dapat dikembalikan. Lanjutkan?') {
+        return Swal.fire({
+            title: 'Hapus Data?',
+            text: message,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, hapus',
+            cancelButtonText: 'Batal',
+            reverseButtons: true
+        }).then(result => result.isConfirmed)
+    },
+
+    confirmSave(message = 'Simpan perubahan?') {
+        return Swal.fire({
+            title: 'Simpan Perubahan',
+            text: message,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Simpan',
+            cancelButtonText: 'Batal',
+            reverseButtons: true
+        }).then(result => result.isConfirmed)
+    },
+
+    confirmLogout(message = 'Yakin ingin keluar dari sistem?') {
+        return Swal.fire({
+            title: 'Keluar?',
+            text: message,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, keluar',
+            cancelButtonText: 'Batal',
+            reverseButtons: true
+        }).then(result => result.isConfirmed)
     },
     
     // Show loading state
@@ -349,12 +588,102 @@ window.AdminUtils = {
             element.innerHTML = originalText
         }
     }
-}
+})
 
 // Start Alpine
 Alpine.start()
 
+// Lepas kelas no-transitions setelah halaman selesai load
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        if (document && document.body) {
+            document.body.classList.remove('no-transitions')
+        }
+    }, 0)
+})
+
 // Export for use in other modules
 export default Alpine
+
+// Auto-bind confirm handlers for elements using data attributes
+//
+// Usage examples:
+// <a href="..." data-confirm>...</a>
+// <button type="submit" form="formId" data-confirm-delete>Hapus</button>
+// <form ... data-confirm-save>...</form>
+;
+(function initSweetAlertAutoBinding() {
+    if (window.__sweetalertAutoBound) return
+    window.__sweetalertAutoBound = true
+
+    // Click handler for elements with data-confirm* attributes
+    document.addEventListener('click', async (event) => {
+        const target = event.target.closest('[data-confirm],[data-confirm-delete],[data-confirm-save],[data-confirm-logout]')
+        if (!target) return
+
+        // Determine action type and message
+        let confirmed = false
+        if (target.hasAttribute('data-confirm-delete')) {
+            const msg = target.getAttribute('data-confirm-delete') || 'Data yang dihapus tidak dapat dikembalikan. Lanjutkan?'
+            confirmed = await window.AdminUtils.confirmDelete(msg)
+        } else if (target.hasAttribute('data-confirm-save')) {
+            const msg = target.getAttribute('data-confirm-save') || 'Simpan perubahan?'
+            confirmed = await window.AdminUtils.confirmSave(msg)
+        } else if (target.hasAttribute('data-confirm-logout')) {
+            const msg = target.getAttribute('data-confirm-logout') || 'Yakin ingin keluar dari sistem?'
+            confirmed = await window.AdminUtils.confirmLogout(msg)
+        } else if (target.hasAttribute('data-confirm')) {
+            const msg = target.getAttribute('data-confirm') || 'Apakah Anda yakin melakukan tindakan ini?'
+            confirmed = await window.AdminUtils.confirm(msg)
+        }
+
+        if (!confirmed) {
+            event.preventDefault()
+            event.stopPropagation()
+            return
+        }
+
+        // If target is a button without type or with type button, and attached form exists, submit it
+        // Otherwise allow default behavior (e.g., link navigation, submit button submit)
+        const isButton = target.tagName === 'BUTTON'
+        const typeAttr = (target.getAttribute('type') || '').toLowerCase()
+        if (isButton && (typeAttr === 'button' || typeAttr === '')) {
+            const formId = target.getAttribute('form')
+            const form = formId ? document.getElementById(formId) : target.closest('form')
+            if (form) {
+                event.preventDefault()
+                form.submit()
+            }
+        }
+    })
+
+    // Intercept form submits with data-confirm* attributes
+    document.addEventListener('submit', async (event) => {
+        const form = event.target
+        if (!(form instanceof HTMLFormElement)) return
+
+        const attr = ['data-confirm', 'data-confirm-delete', 'data-confirm-save', 'data-confirm-logout'].find(a => form.hasAttribute(a))
+        if (!attr) return
+
+        event.preventDefault()
+
+        let confirmed = false
+        if (attr === 'data-confirm-delete') {
+            const msg = form.getAttribute(attr) || 'Data yang dihapus tidak dapat dikembalikan. Lanjutkan?'
+            confirmed = await window.AdminUtils.confirmDelete(msg)
+        } else if (attr === 'data-confirm-save') {
+            const msg = form.getAttribute(attr) || 'Simpan perubahan?'
+            confirmed = await window.AdminUtils.confirmSave(msg)
+        } else if (attr === 'data-confirm-logout') {
+            const msg = form.getAttribute(attr) || 'Yakin ingin keluar dari sistem?'
+            confirmed = await window.AdminUtils.confirmLogout(msg)
+        } else {
+            const msg = form.getAttribute(attr) || 'Apakah Anda yakin melakukan tindakan ini?'
+            confirmed = await window.AdminUtils.confirm(msg)
+        }
+
+        if (confirmed) form.submit()
+    })
+})()
 
 

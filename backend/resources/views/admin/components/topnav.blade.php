@@ -11,8 +11,10 @@
             
             <!-- Desktop toggle button -->
             <button @click="$store.sidebar.toggle()" class="hidden lg:block sidebar-toggle-btn p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100">
-                <i class="fas fa-bars w-5 h-5 transition-all duration-300"></i>
+                <i class="fas fa-bars transition-all duration-300"></i>
             </button>
+        <!-- Title -->
+         @yield('page-title')
         </div>
         
         <!-- Right side -->
@@ -40,7 +42,7 @@
                 </button>
                 
                 <!-- Dropdown menu -->
-                <div x-show="isOpen" 
+                <div x-show="isOpen" x-cloak
                      x-transition:enter="transition ease-out duration-100"
                      x-transition:enter-start="transform opacity-0 scale-95"
                      x-transition:enter-end="transform opacity-100 scale-100"

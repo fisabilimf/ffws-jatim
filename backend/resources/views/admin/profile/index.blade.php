@@ -13,7 +13,7 @@
 <div class="space-y-6">
     <!-- Profil Information -->
     <x-admin.card title="Informasi Profil" subtitle="Update informasi profil Anda">
-        <form action="{{ route('admin.profile.update') }}" method="POST" class="space-y-4">
+        <form action="{{ route('admin.profile.update') }}" method="POST" class="space-y-4" data-confirm-save>
             @csrf
             @method('PUT')
             
@@ -54,7 +54,7 @@
 
     <!-- Change Password -->
     <x-admin.card title="Ubah Password" subtitle="Update password akun Anda">
-        <form action="{{ route('admin.profile.password.update') }}" method="POST" class="space-y-4">
+        <form action="{{ route('admin.profile.password.update') }}" method="POST" class="space-y-4" data-confirm-save>
             @csrf
             @method('PUT')
             
