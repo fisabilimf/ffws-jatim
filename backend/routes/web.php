@@ -5,7 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 
 // Public routes - Redirect root ke login
 Route::get('/', function () {
-    return redirect()->route('login');
+    return redirect()->route('admin.dashboard');
 });
 
 // Authentication routes
