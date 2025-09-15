@@ -2,6 +2,7 @@ from flask import Blueprint, current_app, request
 from sqlalchemy.orm import Session
 from .forecast import predict_for_sensor, predict_for_basin, ForecastError
 from .models import MasModels, MasSensors, MasRiverBasins
+from .fallback import FallbackForecastingSystem
 
 bp = Blueprint("api", __name__)
 
@@ -117,6 +118,7 @@ def run_forecast_hourly():
 def run_forecast_basin():
     """
     Jalankan forecast untuk SEMUA sensor dalam 1 river basin.
+    Sekarang menggunakan fallback system untuk sensor tanpa model.
     Body:
     { "river_basin_code": "DHOMPO", "only_active": true }  // only_active default true
     """
@@ -134,3 +136,84 @@ def run_forecast_basin():
         return out
     except Exception as e:
         return {"error": "internal_error", "detail": str(e)}, 500
+
+@bp.post("/forecast/fallback")
+def run_fallback_forecast():
+    """
+    Jalankan fallback forecast untuk sensor yang tidak memiliki model.
+    Body:
+    { 
+        "sensor_code": "SENSOR_01", 
+        "hours_ahead": 6 (opsional, default 6)
+    }
+    """
+    payload = request.get_json(force=True, silent=True) or {}
+    sensor_code = payload.get("sensor_code")
+    hours_ahead = payload.get("hours_ahead", 6)
+    
+    if not sensor_code:
+        return {"error": "sensor_code is required"}, 400
+
+    # Validate hours_ahead parameter
+    try:
+        hours_ahead = int(hours_ahead)
+        if hours_ahead < 1 or hours_ahead > 24:
+            return {"error": "hours_ahead must be between 1 and 24"}, 400
+    except (ValueError, TypeError):
+        return {"error": "Invalid hours_ahead format"}, 400
+
+    Session = current_app.config["DB_SESSION"]
+    settings = current_app.config["SETTINGS"]
+    
+    try:
+        with Session() as s:
+            fallback_system = FallbackForecastingSystem(s, settings)
+            result = fallback_system.run_fallback_forecast(sensor_code, hours_ahead)
+            
+            if not result['success']:
+                return {"error": result.get('error', 'Fallback forecast failed')}, 400
+            
+            return result
+            
+    except Exception as e:
+        return {"error": "internal_error", "detail": str(e)}, 500
+
+@bp.get("/sensors/no-models")
+def list_sensors_without_models():
+    """
+    Dapatkan daftar sensor yang tidak memiliki model (cocok untuk fallback).
+    """
+    Session = current_app.config["DB_SESSION"]
+    with Session() as s:
+        rows = s.query(MasSensors).filter(MasSensors.mas_model_code == None).all()
+        return [{"id": x.id, "code": x.sensor_code, "parameter": x.parameter.value,
+                 "device_code": x.mas_device_code, "status": x.status.value} for x in rows]
+
+@bp.get("/health/fallback")
+def health_check_fallback():
+    """
+    Health check khusus untuk sistem fallback.
+    """
+    Session = current_app.config["DB_SESSION"]
+    settings = current_app.config["SETTINGS"]
+    
+    try:
+        with Session() as s:
+            # Test fallback system with a simple sensor query
+            fallback_system = FallbackForecastingSystem(s, settings)
+            
+            # Count sensors without models
+            sensors_without_models = s.query(MasSensors).filter(MasSensors.mas_model_code == None).count()
+            sensors_with_models = s.query(MasSensors).filter(MasSensors.mas_model_code != None).count()
+            
+            return {
+                "status": "healthy",
+                "fallback_system": "operational",
+                "sensors_without_models": sensors_without_models,
+                "sensors_with_models": sensors_with_models,
+                "total_sensors": sensors_without_models + sensors_with_models,
+                "fallback_coverage": f"{sensors_without_models}/{sensors_without_models + sensors_with_models}"
+            }
+            
+    except Exception as e:
+        return {"status": "unhealthy", "error": str(e)}, 500
