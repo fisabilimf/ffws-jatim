@@ -6,6 +6,33 @@
 @section('content')
 
 <div class="space-y-6">
+    <!-- Action Buttons -->
+    <div class="flex justify-between items-center">
+        <div class="flex items-center space-x-4">
+            <a href="{{ route('admin.data-actuals.index') }}" 
+               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Kembali
+            </a>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button onclick="openEditModal({{ $dataActual->id }})" 
+                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <i class="fas fa-edit mr-2"></i>
+                Edit
+            </button>
+            <form action="{{ route('admin.data-actuals.destroy', $dataActual) }}" method="POST" class="inline delete-form" 
+                  data-confirm-delete="Data actual ini akan dihapus. Lanjutkan?">
+                @csrf
+                @method('DELETE')
+                <button type="submit" 
+                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                    <i class="fas fa-trash mr-2"></i>
+                    Hapus
+                </button>
+            </form>
+        </div>
+    </div>
 
     <!-- Data Information -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -191,4 +218,71 @@
         </x-admin.card>
     @endif
 </div>
+
+<!-- Modal Edit Data Actual -->
+<x-admin.modal name="dataActualModal" size="lg" title="Data Actual">
+    <form id="dataActualForm" class="space-y-4">
+        @csrf
+        <input type="hidden" id="dataActualId" name="id">
+        <input type="hidden" id="formMethod" name="_method" value="POST">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label for="mas_sensor_id" class="block text-sm font-medium text-gray-700 mb-1">Sensor</label>
+                <select id="mas_sensor_id" name="mas_sensor_id" required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">Pilih Sensor</option>
+                </select>
+                <div id="sensor_info" class="mt-1 text-sm text-gray-500"></div>
+            </div>
+            
+            <div>
+                <label for="value" class="block text-sm font-medium text-gray-700 mb-1">Nilai</label>
+                <input type="number" id="value" name="value" step="0.01" required
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                       placeholder="Masukkan nilai">
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label for="received_at" class="block text-sm font-medium text-gray-700 mb-1">Tanggal & Waktu</label>
+                <input type="datetime-local" id="received_at" name="received_at" required
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+            
+            <div>
+                <label for="threshold_status" class="block text-sm font-medium text-gray-700 mb-1">Status Threshold</label>
+                <select id="threshold_status" name="threshold_status" required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">Pilih Status</option>
+                    <option value="safe">Aman</option>
+                    <option value="warning">Waspada</option>
+                    <option value="danger">Bahaya</option>
+                </select>
+            </div>
+        </div>
+    </form>
+    
+    <x-slot name="footer">
+        <x-admin.button variant="outline" onclick="closeModal()">Batal</x-admin.button>
+        <x-admin.button variant="primary" onclick="submitForm()" id="submitBtn">
+            <span id="submitText">Update</span>
+        </x-admin.button>
+    </x-slot>
+</x-admin.modal>
+
 @endsection
+
+@push('scripts')
+@include('admin.data_actuals.script')
+<script>
+// Override untuk show page - set edit mode dan current ID
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.dataActualsManager) {
+        window.dataActualsManager.isEditMode = true;
+        window.dataActualsManager.currentDataActualId = {{ $dataActual->id ?? 0 }};
+    }
+});
+</script>
+@endpush
