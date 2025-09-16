@@ -20,9 +20,18 @@ const DetailPanel = ({
         setIsVisible(true);
       }, 10);
     } else {
+      // Animasi close - geser ke kiri
       setIsVisible(false);
     }
   }, [isOpen]);
+
+  // Handler untuk close dengan animasi
+  const handleClose = () => {
+    setIsVisible(false);
+    setTimeout(() => {
+      onClose();
+    }, 300); // Sama dengan durasi animasi
+  };
   // Fungsi untuk mendapatkan warna status
   const getStatusColor = (status) => {
     switch (status) {
@@ -47,23 +56,27 @@ const DetailPanel = ({
   if (!isOpen || !stationData) return null;
 
   return (
-    <div className={`fixed top-20 left-[26rem] right-80 bottom-0 z-[50] bg-white shadow-2xl transform transition-transform duration-300 ease-in-out ${
+    <div className={`fixed top-20 left-[26 rem] right-80 bottom-0 z-[50] bg-white shadow-2xl transform transition-transform duration-300 ease-in-out ${
       isVisible ? 'translate-x-0' : '-translate-x-full'
-    }`}>
+    }`}
+    style={{ willChange: 'transform' }}>
       <div className="h-full flex flex-col">
         {/* Header Panel */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Informasi Detail - {stationData.name}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-full"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+        <div className="bg-white border-b border-gray-200 p-4 flex-shrink-0">
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={handleClose}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors group"
+            >
+              <svg className="w-5 h-5 text-gray-600 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 17l-5-5m0 0l5-5m-5 5h12" />
+              </svg>
+            </button>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-gray-900">Informasi Detail</h3>
+              <p className="text-gray-500 text-sm">{stationData.name}</p>
+            </div>
+          </div>
         </div>
 
         {/* Konten Panel - Layout Two Column */}
@@ -154,9 +167,9 @@ const DetailPanel = ({
                   <Chart 
                     data={chartHistory}
                     width={350}
-                    height={180}
+                    height={160}
                     showTooltip={true}
-                    className="h-44"
+                    className="h-40"
                     canvasId="detail-side-panel-chart"
                     status={stationData.status}
                   />
