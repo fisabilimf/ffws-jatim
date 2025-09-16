@@ -5,10 +5,15 @@
 @section('content')
 <div class="space-y-6">
     <!-- Welcome Message -->
-    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-        <div class="p-6">
-            <h2 class="text-2xl font-bold text-gray-900 mb-2">Selamat Datang di Admin Panel</h2>
-            <p class="text-gray-600">Selamat datang, {{ Auth::user()->name }}! Anda memiliki akses penuh ke semua fitur administrasi.</p>
+    <div class="bg-gradient-to-r from-blue-500 to-indigo-600 overflow-hidden shadow-lg sm:rounded-lg">
+        <div class="p-6 flex items-center">
+            <div class="flex-shrink-0">
+                <i class="fas fa-tachometer-alt text-white text-4xl mr-6"></i>
+            </div>
+            <div>
+                <h2 class="text-2xl font-bold text-white mb-1">Selamat Datang di Admin Panel</h2>
+                <p class="text-white opacity-90">Halo, <span class="font-semibold">{{ Auth::user()->name }}</span>! Anda memiliki akses penuh ke semua fitur administrasi.</p>
+            </div>
         </div>
     </div>
 

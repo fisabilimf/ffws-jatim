@@ -5,6 +5,10 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\RiverBasinController;
+use App\Http\Controllers\Admin\MasDeviceController;
+use App\Http\Controllers\Admin\MasSensorController;
+use App\Http\Controllers\Admin\MasModelController;
+use App\Http\Controllers\Admin\DataActualController;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,24 +44,70 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         Route::post('/clear-config', [SettingController::class, 'clearConfig'])->name('config.clear');
     });
 
-    // Master Data
-    Route::prefix('master')->name('master.')->group(function () {
-        // Halaman data wilayah
-        Route::view('/kabupaten', 'admin.master.kabupaten')->name('kabupaten');
-        Route::view('/kecamatan', 'admin.master.kecamatan')->name('kecamatan');
-        Route::view('/desa', 'admin.master.desa')->name('desa');
+    // Data Region
+    Route::prefix('region')->name('region.')->group(function () {
+        // Halaman data region
+        Route::view('/kabupaten', 'admin.region.kabupaten')->name('kabupaten');
+        Route::view('/kecamatan', 'admin.region.kecamatan')->name('kecamatan');
+        Route::view('/desa', 'admin.region.desa')->name('desa');
 
-        // CRUD DAS (River Basins)
+        // CRUD DAS (River Basins) - Menggunakan modal
         Route::prefix('river-basins')->name('river-basins.')->group(function () {
             Route::get('/', [RiverBasinController::class, 'index'])->name('index');
-            Route::get('/create', [RiverBasinController::class, 'create'])->name('create');
             Route::post('/', [RiverBasinController::class, 'store'])->name('store');
-            Route::get('/{river_basin}/edit', [RiverBasinController::class, 'edit'])->name('edit');
             Route::put('/{river_basin}', [RiverBasinController::class, 'update'])->name('update');
             Route::delete('/{river_basin}', [RiverBasinController::class, 'destroy'])->name('destroy');
         });
     });
-    
+
+    // Data Master (Devices)
+    Route::prefix('devices')->name('devices.')->group(function () {
+        Route::get('/', [MasDeviceController::class, 'index'])->name('index');
+        Route::post('/', [MasDeviceController::class, 'store'])->name('store');
+        Route::put('/{id}', [MasDeviceController::class, 'update'])->name('update');
+        Route::delete('/{id}', [MasDeviceController::class, 'destroy'])->name('destroy');
+    });
+
+    // Data Master (Sensors)
+    Route::prefix('sensors')->name('sensors.')->group(function () {
+        Route::get('/', [MasSensorController::class, 'index'])->name('index');
+        Route::get('/create', [MasSensorController::class, 'create'])->name('create');
+        Route::post('/', [MasSensorController::class, 'store'])->name('store');
+        Route::get('/{sensor}', [MasSensorController::class, 'show'])->name('show');
+        Route::get('/{sensor}/edit', [MasSensorController::class, 'edit'])->name('edit');
+        Route::put('/{sensor}', [MasSensorController::class, 'update'])->name('update');
+        Route::delete('/{sensor}', [MasSensorController::class, 'destroy'])->name('destroy');
+    });
+
+    // Data Master (Models)
+    Route::prefix('mas-models')->name('mas-models.')->group(function () {
+        Route::get('/', [MasModelController::class, 'index'])->name('index');
+        Route::get('/create', [MasModelController::class, 'create'])->name('create');
+        Route::get('/form', [MasModelController::class, 'form'])->name('form');
+        Route::get('/form/{masModel}', [MasModelController::class, 'form'])->name('form.edit');
+        Route::post('/', [MasModelController::class, 'store'])->name('store');
+        Route::get('/export', [MasModelController::class, 'export'])->name('export');
+        Route::post('/import', [MasModelController::class, 'import'])->name('import');
+        Route::get('/{masModel}/edit', [MasModelController::class, 'edit'])->name('edit');
+        Route::put('/{masModel}', [MasModelController::class, 'update'])->name('update');
+        Route::delete('/{masModel}', [MasModelController::class, 'destroy'])->name('destroy');
+        Route::post('/{masModel}/toggle-status', [MasModelController::class, 'toggleStatus'])->name('toggle-status');
+        Route::get('/{masModel}', [MasModelController::class, 'show'])->name('show');
+    });
+
+    // Data Actuals
+    Route::prefix('data-actuals')->name('data-actuals.')->group(function () {
+        Route::get('/', [DataActualController::class, 'index'])->name('index');
+        Route::get('/create', [DataActualController::class, 'create'])->name('create');
+        Route::post('/', [DataActualController::class, 'store'])->name('store');
+        Route::get('/export/csv', [DataActualController::class, 'export'])->name('export');
+        Route::get('/chart/data', [DataActualController::class, 'chartData'])->name('chart.data');
+        Route::get('/{dataActual}', [DataActualController::class, 'show'])->name('show');
+        Route::get('/{dataActual}/edit', [DataActualController::class, 'edit'])->name('edit');
+        Route::put('/{dataActual}', [DataActualController::class, 'update'])->name('update');
+        Route::delete('/{dataActual}', [DataActualController::class, 'destroy'])->name('destroy');
+    });
+
     // Profile & Account
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [AdminController::class, 'profile'])->name('index');

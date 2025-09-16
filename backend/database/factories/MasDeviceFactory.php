@@ -18,9 +18,9 @@ class MasDeviceFactory extends Factory
     public function definition(): array
     {
         return [
-            'mas_river_basin_code' => MasRiverBasin::inRandomOrder()->first()->code,
+            'mas_river_basin_id' => MasRiverBasin::inRandomOrder()->first()->id,
             'name' => $this->faker->word,
-            'device_code' => $this->faker->unique()->bothify('DEV-####'),
+            'code' => $this->faker->unique()->ean8,
             'latitude' => $this->faker->latitude,
             'longitude' => $this->faker->longitude,
             'elevation_m' => $this->faker->randomFloat(2, 5, 1000),

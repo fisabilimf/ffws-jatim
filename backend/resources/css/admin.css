@@ -2,6 +2,135 @@
 
 [x-cloak] { display: none !important; }
 
+/* SweetAlert2 Toast Custom Styles */
+.colored-toast {
+    border-radius: 8px !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
+    border: none !important;
+    min-width: 300px !important;
+    margin: 10px !important;
+}
+
+/* Background colors untuk setiap jenis toast */
+.colored-toast.swal2-icon-success {
+    background-color: #a5dc86 !important;
+}
+
+.colored-toast.swal2-icon-error {
+    background-color: #f27474 !important;
+}
+
+.colored-toast.swal2-icon-warning {
+    background-color: #f8bb86 !important;
+}
+
+.colored-toast.swal2-icon-info {
+    background-color: #3fc3ee !important;
+}
+
+.colored-toast.swal2-icon-question {
+    background-color: #87adbd !important;
+}
+
+/* Toast positioning untuk pojok kanan */
+.swal2-toast-container {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    z-index: 9999 !important;
+    width: auto !important;
+    max-width: 400px !important;
+}
+
+.colored-toast .swal2-title {
+    color: white !important;
+    font-weight: 600 !important;
+    font-size: 16px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.colored-toast .swal2-html-container {
+    color: white !important;
+    font-size: 14px !important;
+    margin: 8px 0 0 0 !important;
+    padding: 0 !important;
+}
+
+.colored-toast .swal2-close {
+    color: white !important;
+}
+
+.colored-toast .swal2-icon {
+    width: 32px !important;
+    height: 32px !important;
+    margin: 0 12px 0 0 !important;
+}
+
+.colored-toast .swal2-icon.swal2-success {
+    border-color: #10b981 !important;
+    color: #10b981 !important;
+}
+
+.colored-toast .swal2-icon.swal2-error {
+    border-color: #ef4444 !important;
+    color: #ef4444 !important;
+}
+
+.colored-toast .swal2-icon.swal2-warning {
+    border-color: #f59e0b !important;
+    color: #f59e0b !important;
+}
+
+.colored-toast .swal2-icon.swal2-info {
+    border-color: #3b82f6 !important;
+    color: #3b82f6 !important;
+}
+
+.colored-toast .swal2-icon.swal2-question {
+    border-color: #8b5cf6 !important;
+    color: #8b5cf6 !important;
+}
+
+.colored-toast .swal2-timer-progress-bar {
+    background: rgba(255, 255, 255, 0.3) !important;
+}
+
+.colored-toast .swal2-timer-progress-bar-fill {
+    background: white !important;
+}
+
+/* Toast positioning dan animasi untuk pojok kanan */
+.swal2-toast.swal2-show {
+    animation: swal2-show-right 0.3s ease-out !important;
+}
+
+.swal2-toast.swal2-hide {
+    animation: swal2-hide-right 0.3s ease-in !important;
+}
+
+@keyframes swal2-show-right {
+    0% {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes swal2-hide-right {
+    0% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
 /* Matikan semua transition/animation saat initial load */
 .no-transitions, .no-transitions * {
     transition: none !important;
@@ -30,11 +159,31 @@ aside.fixed {
     top: 0;
     left: 0;
     height: 100vh;
+    z-index: 30;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
 }
 
-aside.lg\:relative {
-    position: relative;
+aside.lg\:sticky {
+    position: sticky;
+    top: 0;
     height: 100vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+/* Ensure main content has proper margin when sidebar is fixed */
+@media (min-width: 1024px) {
+    .main-content-with-sidebar {
+        margin-left: 4rem; /* 16 when collapsed */
+        transition: margin-left 0.3s ease-in-out;
+    }
+    
+    .main-content-with-sidebar.sidebar-expanded {
+        margin-left: 16rem; /* 64 when expanded */
+    }
 }
 
 /* Mini sidebar - hide all text and center icons only */

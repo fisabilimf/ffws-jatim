@@ -130,15 +130,6 @@
                     </div>
                 </form>
 
-                <!-- Register Link -->
-                <div class="mt-6 text-center">
-                    <p class="text-sm text-gray-600">
-                        Belum punya akun?
-                        <a href="{{ route('register') }}" class="font-medium text-gray-600 hover:text-gray-500">
-                            Daftar sekarang
-                        </a>
-                    </p>
-                </div>
             </div>
 
             <!-- Footer -->
