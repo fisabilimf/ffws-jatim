@@ -41,6 +41,7 @@ const Layout = ({ children }) => {
     setIsSidebarOpen(false)
   }
 
+
   const handleAutoSwitch = (station, index) => {
     setCurrentStationIndex(index)
     setSelectedStation(station)
@@ -116,7 +117,9 @@ const Layout = ({ children }) => {
         selectedStation={selectedStation}
         onClose={handleCloseStationDetail}
         tickerData={tickerData}
+        isAutoSwitchOn={isAutoSwitchOn}
       />
+
 
       
       {/* Main content - hidden in full screen mode */}

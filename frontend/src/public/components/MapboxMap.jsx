@@ -63,6 +63,9 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange, i
     setWaterAnimationActive(true);
     setSelectedStationCoords(coordinates);
     
+    // Tutup tooltip yang mungkin sedang terbuka
+    setTooltip(prev => ({ ...prev, visible: false }));
+    
     // Fly to station
     map.current.flyTo({
       center: coordinates,
@@ -75,14 +78,8 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange, i
       essential: true
     });
     
-    // Munculkan tooltip dengan jeda kecil
-    setTimeout(() => {
-      setTooltip({
-        visible: true,
-        station: station,
-        coordinates: coordinates
-      });
-    }, 800);
+    // Jangan munculkan tooltip saat auto switch ON
+    // Tooltip hanya muncul saat user klik manual
   };
   
   // Handler untuk menampilkan detail sidebar dari tooltip
@@ -168,7 +165,6 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange, i
     });
     
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-    map.current.addControl(new mapboxgl.FullscreenControl(), 'top-right');
     map.current.addControl(new mapboxgl.ScaleControl(), 'bottom-left');
     
     return () => {
