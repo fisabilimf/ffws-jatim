@@ -106,20 +106,37 @@ def create_sequence_input(values, n_time_steps, n_features):
     # Create features for each time step
     sequence_input = []
     for i in range(n_time_steps):
-        # For each time step, create n_features by using lag values
+        # Create features for this time step
         time_step_features = []
         
-        # Use current and previous values as features
-        for j in range(n_features):
-            if i - j >= 0:
-                time_step_features.append(sequence_values[i - j])
+        # Primary feature: current value
+        time_step_features.append(sequence_values[i])
+        
+        # Additional features: create derived features if model expects more than 1
+        for j in range(1, n_features):
+            if j == 1 and i > 0:
+                # Feature 2: difference from previous value
+                time_step_features.append(sequence_values[i] - sequence_values[i-1])
+            elif j == 2 and i > 1:
+                # Feature 3: moving average of last 3 values
+                avg_window = min(3, i + 1)
+                moving_avg = np.mean(sequence_values[max(0, i-avg_window+1):i+1])
+                time_step_features.append(moving_avg)
+            elif j == 3:
+                # Feature 4: normalized position in sequence
+                time_step_features.append(i / (n_time_steps - 1))
             else:
-                # Pad with the first available value if we don't have enough history
-                time_step_features.append(sequence_values[0])
+                # Fallback: repeat the primary value for additional features
+                time_step_features.append(sequence_values[i])
         
         sequence_input.append(time_step_features)
     
-    return np.array(sequence_input).reshape(1, n_time_steps, n_features)
+    result = np.array(sequence_input).reshape(1, n_time_steps, n_features)
+    
+    print(f"   🔧 Created sequence: {len(values)} values → shape {result.shape}")
+    print(f"   📊 Sample features: {result[0, 0, :].tolist()}")
+    
+    return result
 
 def _fetch_series_multi_feature(session: Session, sensor_code: str, n_features: int, min_extra: int = 50) -> list:
     """
@@ -291,11 +308,12 @@ def predict_for_sensor(session: Session, settings: Settings, sensor_code: str, m
     
     # Scale input features
     try:
-        # X is now shape (1, 5, n_features), but scaler expects (n_samples, n_features)
+        # X is shape (1, n_time_steps, n_features), but scaler expects (n_samples, n_features)
         # We need to reshape for scaling, then reshape back
-        X_reshaped = X.reshape(-1, n_features)  # (5, n_features)
-        X_scaled_reshaped = x_scaler.transform(X_reshaped)  # (5, n_features)
-        X_scaled = X_scaled_reshaped.reshape(1, 5, n_features)  # (1, 5, n_features)
+        batch_size, n_time_steps, n_features = X.shape
+        X_reshaped = X.reshape(-1, n_features)  # (n_time_steps, n_features)
+        X_scaled_reshaped = x_scaler.transform(X_reshaped)  # (n_time_steps, n_features)
+        X_scaled = X_scaled_reshaped.reshape(batch_size, n_time_steps, n_features)  # (1, n_time_steps, n_features)
         print(f"   ✅ Scaled input: {X_scaled.shape}")
     except Exception as e:
         raise ForecastError(f"Input scaling failed: {e}")

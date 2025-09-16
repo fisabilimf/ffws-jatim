@@ -20,6 +20,26 @@ class CompatibleGRU(GRU):
         kwargs.pop('time_major', None)
         super().__init__(*args, **kwargs)
 
+# Compatible TCN class that ignores unsupported parameters
+class CompatibleTCN:
+    """TCN layer compatible with older model files."""
+    def __new__(cls, *args, **kwargs):
+        try:
+            from tcn import TCN
+            
+            # Custom TCN class to ignore unrecognized parameters
+            class CustomTCN(TCN):
+                def __init__(self, **inner_kwargs):
+                    inner_kwargs.pop('use_weight_norm', None)  # Remove unsupported parameter
+                    super().__init__(**inner_kwargs)
+            
+            # Remove the unsupported parameter before creating the instance
+            kwargs.pop('use_weight_norm', None)
+            return CustomTCN(*args, **kwargs)
+            
+        except ImportError:
+            raise ValueError("TCN library not available. Install with: pip install keras-tcn")
+
 @lru_cache(maxsize=64)
 def load_keras_model(cache_key: str, file_path: str):
     """
@@ -37,15 +57,8 @@ def load_keras_model(cache_key: str, file_path: str):
             custom_objects = {
                 'GRU': CompatibleGRU,
                 'LSTM': CompatibleLSTM,
+                'TCN': CompatibleTCN,  # Add TCN support
             }
-            
-            # Try to add TCN if available
-            try:
-                from tcn import TCN
-                custom_objects['TCN'] = TCN
-            except ImportError:
-                # TCN not available, but that's okay for GRU/LSTM models
-                pass
             
             # Load model with custom objects
             model = load_model(file_path, compile=False, custom_objects=custom_objects)
