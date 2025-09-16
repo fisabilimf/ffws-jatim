@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Chart from './Chart';
+import DetailPanel from './DetailPanel'; // Import DetailPanel
 
 // Reusable Sidebar Template Component
 const SidebarTemplate = ({ 
@@ -146,104 +147,174 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
     }
   };
   
+  // Data dummy untuk sensor air
+  const sensorData = {
+    sensorType: "Ultrasonic Sensor",
+    sensorDepth: "5 meter",
+    installationDate: "15 Januari 2023",
+    lastMaintenance: "10 Oktober 2023",
+    batteryLevel: "87%",
+    signalStrength: "Strong",
+    accuracy: "±2cm"
+  };
+  
+  // Data dummy untuk kualitas air
+  const waterQualityData = {
+    pH: 7.2,
+    turbidity: 12.5,
+    temperature: 26.8,
+    dissolvedOxygen: 6.8,
+    conductivity: 450,
+    tds: 225
+  };
+  
+  // Data dummy untuk informasi cuaca
+  const weatherData = {
+    current: {
+      temperature: 28,
+      humidity: 78,
+      rainfall: 2.4,
+      windSpeed: 12,
+      windDirection: "Barat Daya"
+    },
+    forecast: [
+      { time: "14:00", rain: 80, temp: 29 },
+      { time: "17:00", rain: 60, temp: 27 },
+      { time: "20:00", rain: 40, temp: 25 },
+      { time: "23:00", rain: 20, temp: 24 }
+    ]
+  };
+  
+  // Data dummy untuk riwayat banjir
+  const floodHistory = [
+    { date: "12 Nov 2023", level: 4.2, duration: "3 jam" },
+    { date: "5 Okt 2023", level: 3.8, duration: "2 jam" },
+    { date: "18 Sep 2023", level: 4.5, duration: "4 jam" }
+  ];
+  
   if (!selectedStation || !stationData) {
     return null;
   }
   
   return (
-    <SidebarTemplate
-      isOpen={!!selectedStation}
-      onClose={onClose}
-      title={stationData.name}
-      subtitle={stationData.location}
-      statusDot={getStatusDotColor(stationData.status)}
-      topPosition="top-20"
-    >
-      <div className="p-5 space-y-6 pb-6">
-        {/* Status Card */}
-        <div className={`p-5 rounded-xl border-2 ${getStatusBgColor(stationData.status)} shadow-sm`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Status Saat Ini</p>
-              <p className={`text-2xl font-bold ${getStatusColor(stationData.status)}`}>
-                {getStatusText(stationData.status)}
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="text-4xl font-bold text-gray-900">
-                {stationData.value.toFixed(1)}
-              </p>
-              <p className="text-sm text-gray-500">{stationData.unit}</p>
+    <>
+      <SidebarTemplate
+        isOpen={!!selectedStation}
+        onClose={onClose}
+        title={stationData.name}
+        subtitle={stationData.location}
+        statusDot={getStatusDotColor(stationData.status)}
+        topPosition="top-20"
+      >
+        <div className="p-5 space-y-6 pb-6">
+          {/* Status Card */}
+          <div className={`p-5 rounded-xl border-2 ${getStatusBgColor(stationData.status)} shadow-sm`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Status Saat Ini</p>
+                <p className={`text-2xl font-bold ${getStatusColor(stationData.status)}`}>
+                  {getStatusText(stationData.status)}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-4xl font-bold text-gray-900">
+                  {stationData.value.toFixed(1)}
+                </p>
+                <p className="text-sm text-gray-500">{stationData.unit}</p>
+              </div>
             </div>
           </div>
-        </div>
-        
-        {/* Divider */}
-        <div className="border-t border-gray-200"></div>
-        
-        {/* Chart Section */}
-        <div>
-          <h4 className="text-base font-medium text-gray-900 mb-2">Grafik Level Air</h4>
-          <p className="text-sm text-gray-500 mb-4">Data 10 menit terakhir</p>
-          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-            <Chart 
-              data={chartHistory}
-              width={380}
-              height={180}
-              showTooltip={true}
-              className="h-44"
-              canvasId="station-detail-chart"
-              status={stationData.status}
-              color={getChartColor(stationData.status)}
-            />
-          </div>
-        </div>
-        
-        {/* Divider */}
-        <div className="border-t border-gray-200"></div>
-        
-        {/* Statistics Grid */}
-        <div>
-          <h4 className="text-base font-medium text-gray-900 mb-4">Statistik</h4>
-          <div className="grid grid-cols-2 gap-4">
+          
+          {/* Divider */}
+          <div className="border-t border-gray-200"></div>
+          
+          {/* Chart Section */}
+          <div>
+            <h4 className="text-base font-medium text-gray-900 mb-2">Grafik Level Air</h4>
+            <p className="text-sm text-gray-500 mb-4">Data 10 menit terakhir</p>
             <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-              <p className="text-sm text-gray-500 mb-1">Level Tertinggi</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {Math.max(...chartHistory).toFixed(1)}m
-              </p>
+              <Chart 
+                data={chartHistory}
+                width={380}
+                height={180}
+                showTooltip={true}
+                className="h-44"
+                canvasId="station-detail-chart"
+                status={stationData.status}
+                color={getChartColor(stationData.status)}
+              />
             </div>
-            <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-              <p className="text-sm text-gray-500 mb-1">Level Terendah</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {Math.min(...chartHistory).toFixed(1)}m
-              </p>
+          </div>
+          
+          {/* Divider */}
+          <div className="border-t border-gray-200"></div>
+          
+          {/* Statistics Grid */}
+          <div>
+            <h4 className="text-base font-medium text-gray-900 mb-4">Statistik</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+                <p className="text-sm text-gray-500 mb-1">Level Tertinggi</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {Math.max(...chartHistory).toFixed(1)}m
+                </p>
+              </div>
+              <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+                <p className="text-sm text-gray-500 mb-1">Level Terendah</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {Math.min(...chartHistory).toFixed(1)}m
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Divider */}
+          <div className="border-t border-gray-200"></div>
+          
+          {/* Additional Info */}
+          <div>
+            <h4 className="text-base font-medium text-gray-900 mb-4">Informasi Stasiun</h4>
+            <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm space-y-3">
+              <div className="flex justify-between items-center py-2">
+                <span className="text-gray-600">ID Stasiun</span>
+                <span className="text-gray-900 font-medium">#{stationData.id}</span>
+              </div>
+              <div className="flex justify-between items-center py-2">
+                <span className="text-gray-600">Lokasi</span>
+                <span className="text-gray-900 font-medium text-right max-w-48">{stationData.location}</span>
+              </div>
+              <div className="flex justify-between items-center py-2">
+                <span className="text-gray-600">Update Terakhir</span>
+                <span className="text-gray-900 font-medium">{new Date().toLocaleTimeString('id-ID')}</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Divider */}
+          <div className="border-t border-gray-200"></div>
+          
+          {/* Hint for Detail Panel */}
+          <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-sm text-blue-700">Klik panah di sebelah kanan untuk melihat detail informasi sensor, kualitas air, dan cuaca</p>
             </div>
           </div>
         </div>
-        
-        {/* Divider */}
-        <div className="border-t border-gray-200"></div>
-        
-        {/* Additional Info */}
-        <div>
-          <h4 className="text-base font-medium text-gray-900 mb-4">Informasi Stasiun</h4>
-          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm space-y-3">
-            <div className="flex justify-between items-center py-2">
-              <span className="text-gray-600">ID Stasiun</span>
-              <span className="text-gray-900 font-medium">#{stationData.id}</span>
-            </div>
-            <div className="flex justify-between items-center py-2">
-              <span className="text-gray-600">Lokasi</span>
-              <span className="text-gray-900 font-medium text-right max-w-48">{stationData.location}</span>
-            </div>
-            <div className="flex justify-between items-center py-2">
-              <span className="text-gray-600">Update Terakhir</span>
-              <span className="text-gray-900 font-medium">{new Date().toLocaleTimeString('id-ID')}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </SidebarTemplate>
+      </SidebarTemplate>
+      
+      {/* Detail Panel - Ditempatkan di sebelah kanan sidebar */}
+      <DetailPanel 
+        stationData={stationData}
+        sensorData={sensorData}
+        waterQualityData={waterQualityData}
+        weatherData={weatherData}
+        floodHistory={floodHistory}
+        isSidebarOpen={!!selectedStation} // Kirim status sidebar
+      />
+    </>
   );
 };
 
