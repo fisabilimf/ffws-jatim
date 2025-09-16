@@ -1,10 +1,11 @@
 import React, { useState, useRef } from 'react'
 import Dashboard from '../pages/Dashboard'
 import GoogleMapsSearchbar from '../components/GoogleMapsSearchbar'
-import MapboxMap from '../components/MapboxMap'
+import MapboxMap from '../components/Device/MapboxMap'
 import FloatingLegend from '../components/FloatingLegend'
 import FloodRunningBar from '../components/FloodRunningBar'
 import StationDetail from '../components/StationDetail'
+import DetailPanel from '../components/DetailPanel'
 import AutoSwitchToggle from '../components/AutoSwitchToggle'
 
 const Layout = ({ children }) => {
@@ -12,7 +13,9 @@ const Layout = ({ children }) => {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedStation, setSelectedStation] = useState(null)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isDetailPanelOpen, setIsDetailPanelOpen] = useState(false)
   const [currentStationIndex, setCurrentStationIndex] = useState(0)
+  const [isAutoSwitchOn, setIsAutoSwitchOn] = useState(false)
   const mapRef = useRef(null)
 
   const handleSearch = (query) => {
@@ -26,10 +29,34 @@ const Layout = ({ children }) => {
     setIsSidebarOpen(true)
   }
 
+  const handleAutoSwitchToggle = (isOn) => {
+    setIsAutoSwitchOn(isOn)
+    // If auto switch is turned off, close sidebar
+    if (!isOn) {
+      setIsSidebarOpen(false)
+      setSelectedStation(null)
+    }
+  }
+
   const handleCloseStationDetail = () => {
     setSelectedStation(null)
     setIsSidebarOpen(false)
   }
+
+  const handleToggleDetailPanel = () => {
+    if (isDetailPanelOpen) {
+      // Jika panel terbuka, tutup dengan animasi
+      handleCloseDetailPanel()
+    } else {
+      // Jika panel tertutup, buka langsung
+      setIsDetailPanelOpen(true)
+    }
+  }
+
+  const handleCloseDetailPanel = () => {
+    setIsDetailPanelOpen(false)
+  }
+
 
   const handleAutoSwitch = (station, index) => {
     setCurrentStationIndex(index)
@@ -58,6 +85,13 @@ const Layout = ({ children }) => {
           tickerData={tickerData} 
           onStationSelect={handleStationSelect}
           onAutoSwitch={handleAutoSwitch}
+          isAutoSwitchOn={isAutoSwitchOn}
+          onCloseSidebar={() => {
+            if (!isAutoSwitchOn) {
+              setIsSidebarOpen(false)
+              setSelectedStation(null)
+            }
+          }}
         />
       </div>
       
@@ -86,6 +120,7 @@ const Layout = ({ children }) => {
             tickerData={tickerData}
             onStationChange={handleStationChange}
             currentStationIndex={currentStationIndex}
+            onAutoSwitchToggle={handleAutoSwitchToggle}
           />
         </div>
 
@@ -98,6 +133,18 @@ const Layout = ({ children }) => {
         selectedStation={selectedStation}
         onClose={handleCloseStationDetail}
         tickerData={tickerData}
+        isAutoSwitchOn={isAutoSwitchOn}
+        showArrow={true}
+        onArrowToggle={handleToggleDetailPanel}
+        isDetailPanelOpen={isDetailPanelOpen}
+      />
+
+      {/* Detail Panel */}
+      <DetailPanel 
+        isOpen={isDetailPanelOpen}
+        onClose={handleCloseDetailPanel}
+        stationData={selectedStation}
+        chartHistory={selectedStation?.history || []}
       />
 
       
