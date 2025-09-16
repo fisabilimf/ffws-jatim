@@ -7,14 +7,8 @@
 
 @section('content')
 <div class="space-y-6" x-data="riverBasinsPage()" x-init="init()">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-            <h2 class="text-lg font-medium text-gray-900">Daftar DAS</h2>
-            <p class="mt-1 text-sm text-gray-500">Kelola master data DAS</p>
-        </div>
-    </div>
 
-    <x-datatable
+    <x-table
         title="Daftar DAS"
         :headers="$tableHeaders"
         :rows="$riverBasins"
@@ -28,20 +22,34 @@
                 Tambah DAS
             </button>
         </x-slot:actions>
-    </x-datatable>
+    </x-table>
 
     <!-- Modal Create -->
-    <x-admin.modal :show="false" name="river-basin-create" title="Tambah DAS" size="md">
-        <form x-ref="createForm" action="{{ route('admin.master.river-basins.store') }}" method="POST" class="space-y-6">
+    <x-admin.modal :show="false" name="river-basin-create" title="Tambah DAS" size="md" :close-on-backdrop="true">
+        <form id="rbCreateForm" x-ref="createForm" action="{{ route('admin.region.river-basins.store') }}" method="POST" class="space-y-6">
             @csrf
             <input type="hidden" name="context" value="create" />
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <x-admin.form-input type="text" name="name" label="Nama DAS" placeholder="Contoh: Brantas" required="true" />
-                <x-admin.form-input type="text" name="code" label="Kode DAS" placeholder="Contoh: DAS-BRANTAS" required="true" />
+                <x-admin.form-input 
+                    type="text" 
+                    name="name" 
+                    label="Nama DAS" 
+                    placeholder="Contoh: Brantas" 
+                    required="true" 
+                    :error="$errors->first('name')"
+                />
+                <x-admin.form-input 
+                    type="text" 
+                    name="code" 
+                    label="Kode DAS" 
+                    placeholder="Contoh: DAS-BRANTAS" 
+                    required="true" 
+                    :error="$errors->first('code')"
+                />
             </div>
             <x-slot:footer>
                 <button type="button" class="px-4 py-2 border rounded-md" @click="$dispatch('close-modal', 'river-basin-create')">Batal</button>
-                <x-admin.button type="submit" variant="primary">
+                <x-admin.button type="submit" variant="primary" form="rbCreateForm">
                     <i class="fas fa-check -ml-1 mr-2"></i>
                     Simpan
                 </x-admin.button>
@@ -50,19 +58,33 @@
     </x-admin.modal>
 
     <!-- Modal Edit -->
-    <x-admin.modal :show="false" name="river-basin-edit" title="Edit DAS" size="md">
-        <form x-ref="editForm" :action="editAction" method="POST" class="space-y-6">
+    <x-admin.modal :show="false" name="river-basin-edit" title="Edit DAS" size="md" :close-on-backdrop="true">
+        <form id="rbEditForm" x-ref="editForm" :action="editAction" method="POST" class="space-y-6">
             @csrf
             @method('PUT')
             <input type="hidden" name="context" value="edit" />
             <input type="hidden" name="id" :value="editData.id" />
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <x-admin.form-input type="text" name="name" label="Nama DAS" x-model="editData.name" required="true" />
-                <x-admin.form-input type="text" name="code" label="Kode DAS" x-model="editData.code" required="true" />
+                <x-admin.form-input 
+                    type="text" 
+                    name="name" 
+                    label="Nama DAS" 
+                    x-model="editData.name" 
+                    required="true" 
+                    :error="$errors->first('name')"
+                />
+                <x-admin.form-input 
+                    type="text" 
+                    name="code" 
+                    label="Kode DAS" 
+                    x-model="editData.code" 
+                    required="true" 
+                    :error="$errors->first('code')"
+                />
             </div>
             <x-slot:footer>
                 <button type="button" class="px-4 py-2 border rounded-md" @click="$dispatch('close-modal', 'river-basin-edit')">Batal</button>
-                <x-admin.button type="submit" variant="primary">
+                <x-admin.button type="submit" variant="primary" form="rbEditForm">
                     <i class="fas fa-check -ml-1 mr-2"></i>
                     Update
                 </x-admin.button>
@@ -78,30 +100,8 @@ function riverBasinsPage() {
         editData: { id: null, name: '', code: '' },
         editAction: '',
         init() {
-            // Buka modal otomatis jika ada error validasi
-            const hasErrors = {{ $errors->any() ? 'true' : 'false' }};
-            const ctx = @json(old('context'));
-            if (hasErrors && ctx === 'create') {
-                this.$dispatch('open-modal', 'river-basin-create');
-            }
-            if (hasErrors && ctx === 'edit') {
-                this.editData = {
-                    id: @json(old('id')),
-                    name: @json(old('name')) ?? '',
-                    code: @json(old('code')) ?? ''
-                };
-                if (this.editData.id) {
-                    this.editAction = `${window.location.origin}/admin/master/river-basins/${this.editData.id}`;
-                }
-                this.$dispatch('open-modal', 'river-basin-edit');
-            }
-
             // Listener untuk aksi edit dari tabel
             window.addEventListener('open-edit-river-basin', (e) => {
-                const item = e.detail || {};
-                this.openEdit(item);
-            });
-            window.addEventListener('rb:edit', (e) => {
                 const item = e.detail || {};
                 this.openEdit(item);
             });
@@ -111,7 +111,7 @@ function riverBasinsPage() {
         },
         openEdit(item) {
             this.editData = { id: item.id, name: item.name, code: item.code };
-            this.editAction = `${window.location.origin}/admin/master/river-basins/${item.id}`;
+            this.editAction = `${window.location.origin}/admin/region/river-basins/${item.id}`;
             this.$dispatch('open-modal', 'river-basin-edit');
         }
     }
@@ -119,5 +119,3 @@ function riverBasinsPage() {
 </script>
 @endpush
 @endsection
-
-

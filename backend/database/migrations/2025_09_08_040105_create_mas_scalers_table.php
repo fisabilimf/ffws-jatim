@@ -13,12 +13,9 @@ return new class extends Migration
     {
         Schema::create('mas_scalers', function (Blueprint $table) {
             $table->id();
-            $table->string('mas_model_code');
-            $table->foreign('mas_model_code')->references('model_code')->on('mas_models')->onUpdate('restrict')->onDelete('cascade');
-            $table->string('mas_sensor_code')->nullable();
-            $table->foreign('mas_sensor_code')->references('sensor_code')->on('mas_sensors')->onUpdate('restrict')->onDelete('set null');
+            $table->foreignId('mas_model_id')->constrained('mas_models')->onUpdate('restrict')->onDelete('cascade');
+            $table->foreignId('mas_sensor_id')->nullable()->constrained('mas_sensors')->onUpdate('restrict')->onDelete('set null');
             $table->string('name');
-            $table->string('scaler_code')->unique();
             $table->enum('io_axis', ['x', 'y']);
             $table->enum('technique', ['standard', 'minmax', 'robust', 'custom'])->default('custom');
             $table->string('version', 64)->nullable();
@@ -28,7 +25,7 @@ return new class extends Migration
             $table->timestamps();
 
             // Unique Index
-            $table->unique(['mas_model_code', 'mas_sensor_code', 'io_axis', 'is_active'], 'uk_model_sensor_axis_active');
+            $table->unique(['mas_model_id', 'mas_sensor_id', 'io_axis', 'is_active'], 'uk_model_sensor_axis_active');
 
             // Other Indexes
             $table->index('io_axis');

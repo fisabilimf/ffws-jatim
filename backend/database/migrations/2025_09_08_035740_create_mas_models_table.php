@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('name');
             $table->string('model_type');
             $table->string('version')->nullable();
-            $table->string('model_code')->unique();
             $table->string('description')->nullable();
             $table->string('file_path')->nullable();
             $table->tinyInteger('n_steps_in')->nullable();

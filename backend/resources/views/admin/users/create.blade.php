@@ -95,7 +95,7 @@
                     Batal
                 </a>
                 <x-admin.button type="submit" variant="primary">
-                    <i class="fas fa-check -ml-1 mr-2 h-5 w-5"></i>
+                    <i class="fas fa-check -ml-1 mr-2 "></i>
                     Simpan User
                 </x-admin.button>
             </div>

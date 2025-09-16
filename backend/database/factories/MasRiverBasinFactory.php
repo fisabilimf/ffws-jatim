@@ -16,11 +16,9 @@ class MasRiverBasinFactory extends Factory
      */
     public function definition(): array
     {
-        static $counter = 1;
-        
         return [
             'name' => $this->faker->city . ' River Basin',
-            'code' => 'RB' . str_pad($counter++, 3, '0', STR_PAD_LEFT), // RB001, RB002, etc.
+            'code' => $this->faker->unique()->lexify('??-###'),
         ];
     }
 }
