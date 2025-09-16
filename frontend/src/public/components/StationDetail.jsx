@@ -299,13 +299,13 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
               <svg className="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <p className="text-sm text-blue-700">Klik panah di sebelah kanan untuk melihat detail informasi sensor, kualitas air, dan cuaca</p>
+              <p className="text-sm text-blue-700">Klik panah di sebelah kiri untuk melihat detail informasi sensor, kualitas air, dan cuaca</p>
             </div>
           </div>
         </div>
       </SidebarTemplate>
       
-      {/* Detail Panel - Ditempatkan di sebelah kanan sidebar */}
+      {/* Detail Panel - Hanya tombol toggle yang terlihat */}
       <DetailPanel 
         stationData={stationData}
         sensorData={sensorData}

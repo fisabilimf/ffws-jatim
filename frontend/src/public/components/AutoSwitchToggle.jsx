@@ -4,6 +4,7 @@ const AutoSwitchToggle = ({
   tickerData, 
   onStationChange,
   currentStationIndex,
+  onAutoSwitchToggle,
   interval = 5000 
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -43,8 +44,14 @@ const AutoSwitchToggle = ({
   const togglePlayPause = () => {
     if (isPlaying) {
       stopAutoSwitch();
+      if (onAutoSwitchToggle) {
+        onAutoSwitchToggle(false);
+      }
     } else {
       startAutoSwitch();
+      if (onAutoSwitchToggle) {
+        onAutoSwitchToggle(true);
+      }
     }
   };
   
