@@ -73,59 +73,82 @@
                :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0 h-0 py-0 overflow-hidden': !$store.sidebar.open && window.innerWidth >= 1024 }">
                Master</div>
 
-               <!-- Devices -->
-               <a href="{{ route('admin.devices.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative
+            <!-- Devices -->
+            <a href="{{ route('admin.devices.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative
                                            {{ request()->routeIs('admin.devices.*')
    ? 'active'
    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}"
-                  :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
-                  <i class="fas fa-screwdriver-wrench text-base"
-                     :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
-                  <span
-                     :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Devices</span>
-               </a>
+               :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
+               <i class="fas fa-screwdriver-wrench text-base"
+                  :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
+               <span
+                  :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Devices</span>
+            </a>
 
-               <!-- Sensors -->
-               <a href="{{ route('admin.sensors.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative
+            <!-- Sensors -->
+            <a href="{{ route('admin.sensors.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative
                                            {{ request()->routeIs('admin.sensors.*')
    ? 'active'
    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}"
-                  :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
-                  <i class="fa-solid fa-microchip text-base"
-                     :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
-                  <span
-                     :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Sensors</span>
-               </a>
+               :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
+               <i class="fa-solid fa-microchip text-base"
+                  :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
+               <span
+                  :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Sensors</span>
+            </a>
 
-               <!-- Data Actuals -->
-               <a href="{{ route('admin.data-actuals.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative
+            <!-- Data Heading -->
+            <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider"
+               :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0 h-0 py-0 overflow-hidden': !$store.sidebar.open && window.innerWidth >= 1024 }">
+               Data</div>
+
+            <!-- Data: Data Actuals -->
+            <a href="{{ route('admin.data-actuals.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative
                                            {{ request()->routeIs('admin.data-actuals.*')
    ? 'active'
    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}"
-                  :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
-                  <i class="fas fa-chart-line text-base"
-                     :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
-                  <span
-                     :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Data Actuals</span>
-               </a>
+               :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
+               <i class="fas fa-chart-line text-base"
+                  :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
+               <span
+                  :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Data
+                  Actuals</span>
+            </a>
 
-               <!-- Region Heading -->
-               <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider"
+            <!-- Forecasting Heading -->
+            <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider"
+               :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0 h-0 py-0 overflow-hidden': !$store.sidebar.open && window.innerWidth >= 1024 }">
+               Forecasting</div>
+
+            <!-- Models -->
+            <a href="{{ route('admin.mas-models.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative
+                                                            {{ request()->routeIs('admin.mas-models.*')
+   ? 'active'
+   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}"
+               :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
+               <i class="fas fa-brain text-base"
+                  :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
+               <span
+                  :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Models</span>
+            </a>
+
+            <!-- Region Heading -->
+            <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider"
                :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0 h-0 py-0 overflow-hidden': !$store.sidebar.open && window.innerWidth >= 1024 }">
                Region</div>
-               
-               <!-- Region: Data Aliran Sungai -->
-               <a href="{{ route('admin.region.river-basins.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative
+
+            <!-- Region: Data Aliran Sungai -->
+            <a href="{{ route('admin.region.river-basins.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative
                             {{ request()->routeIs('admin.region.river-basins.*')
    ? 'active'
    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}"
-                  :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
-                  <i class="fas fa-water text-base"
-                     :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
-                  <span
-                     :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Daerah
-                     Aliran Sungai</span>
-               </a>
+               :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
+               <i class="fas fa-water text-base"
+                  :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
+               <span
+                  :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Daerah
+                  Aliran Sungai</span>
+            </a>
 
 
             <!-- Region: Kabupaten -->
