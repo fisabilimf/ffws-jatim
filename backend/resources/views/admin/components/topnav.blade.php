@@ -13,8 +13,6 @@
             <button @click="$store.sidebar.toggle()" class="hidden lg:block sidebar-toggle-btn p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100">
                 <i class="fas fa-bars transition-all duration-300"></i>
             </button>
-        <!-- Title -->
-         @yield('title')
         </div>
         
         <!-- Right side -->
