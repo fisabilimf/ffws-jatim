@@ -63,7 +63,7 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
       { id: 19, name: 'Stasiun Wates', value: 2.25, unit: 'm', location: 'Wates' },
       { id: 20, name: 'Stasiun Lempuyangan', value: 1.85, unit: 'm', location: 'Lempuyangan' },
     ];
-    
+
     return stations.map(station => ({
       ...station,
       coordinates: stationCoordinates[station.id],
@@ -74,8 +74,6 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
 
   const [tickerData, setTickerData] = useState(initializeStationData());
   const [selectedStationId, setSelectedStationId] = useState(null);
-  const tickerRef = useRef(null);
-  const [scrollPosition, setScrollPosition] = useState(0);
 
   const handleStationClick = (station) => {
     console.log('Station clicked:', station);
@@ -121,7 +119,7 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
         };
       }));
     };
-    
+
     const interval = setInterval(updateTickerData, 3000);
     return () => clearInterval(interval);
   }, []);
@@ -131,31 +129,6 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
       onDataUpdate(tickerData);
     }
   }, [tickerData, onDataUpdate]);
-
-  useEffect(() => {
-    const scrollTicker = () => {
-      if (tickerRef.current) {
-        setScrollPosition(prev => {
-          const newPosition = prev + 0.5;
-          const maxScroll = tickerRef.current.scrollWidth / 2; // Karena kita duplikasi konten
-          
-          if (newPosition >= maxScroll) {
-            return 0; // Reset ke awal tanpa terlihat karena konten terduplikasi
-          }
-          return newPosition;
-        });
-      }
-    };
-    
-    const scrollInterval = setInterval(scrollTicker, 50);
-    return () => clearInterval(scrollInterval);
-  }, []);
-
-  useEffect(() => {
-    if (tickerRef.current) {
-      tickerRef.current.scrollLeft = scrollPosition;
-    }
-  }, [scrollPosition]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -182,89 +155,107 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
     }).format(value);
   };
 
+  // Hitung durasi animasi berdasarkan jumlah data
+  const animationDuration = tickerData.length * 4; // 4 detik per item
+
   return (
-    <div className={`absolute top-4 z-[70] transition-all duration-300 ease-in-out`}
-      style={{ 
-        left: '400px', 
+    <div className={`fixed top-4 z-[70] transition-all duration-300 ease-in-out`}
+      style={{
+        left: 'calc(368px + 2rem)',
         right: '58px'
       }}>
       <div className="w-full">
-        <div 
-          ref={tickerRef}
-          className="flex space-x-2 sm:space-x-2 overflow-hidden whitespace-nowrap bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-1.5 sm:p-2"
-          style={{ scrollBehavior: 'smooth' }}
-        >
-          {/* Konten pertama */}
-          {tickerData.map((item) => (
-            <div 
-              key={`first-${item.id}`} 
-              className={`flex items-center space-x-1.5 sm:space-x-2 rounded-lg px-1.5 sm:px-2 py-1 sm:py-1.5 min-w-max transition-all duration-300 cursor-pointer border border-gray-200 ${
-                selectedStationId === item.id 
-                  ? 'bg-blue-100 border-blue-400 scale-105 shadow-md' 
-                  : 'hover:bg-gray-50 hover:scale-105'
-              }`}
-              onClick={() => handleStationClick(item)}
-              title={`Klik untuk pindah ke ${item.name.replace('Stasiun ', '')}`}
-            >
-              <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${getStatusBgColor(item.status)} ${
-                selectedStationId === item.id ? 'animate-pulse' : ''
-              }`}></div>
-              <span className="text-xs text-gray-700 font-medium truncate max-w-12 sm:max-w-16">
-                {item.name.replace('Stasiun ', '')}
-              </span>
-              <div className="flex items-center space-x-0.5 sm:space-x-1">
-                <span className="text-xs font-bold text-gray-900">{formatValue(item.value)}</span>
-                <span className="text-xs text-gray-500">{item.unit}</span>
+        <div className="overflow-hidden bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-1.5 sm:p-2">
+          <div 
+            className="flex space-x-2 sm:space-x-2 whitespace-nowrap"
+            style={{
+              animation: `infiniteScroll ${animationDuration}s linear infinite`,
+              width: 'fit-content'
+            }}
+          >
+            {/* Konten pertama */}
+            {tickerData.map((item) => (
+              <div 
+                key={`first-${item.id}`} 
+                className={`flex items-center space-x-1.5 sm:space-x-2 rounded-lg px-1.5 sm:px-2 py-1 sm:py-1.5 min-w-max transition-all duration-300 cursor-pointer border border-gray-200 ${
+                  selectedStationId === item.id 
+                    ? 'bg-blue-100 border-blue-400 scale-105 shadow-md' 
+                    : 'hover:bg-gray-50 hover:scale-105'
+                }`}
+                onClick={() => handleStationClick(item)}
+                title={`Klik untuk pindah ke ${item.name.replace('Stasiun ', '')}`}
+              >
+                <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${getStatusBgColor(item.status)} ${
+                  selectedStationId === item.id ? 'animate-pulse' : ''
+                }`}></div>
+                <span className="text-xs text-gray-700 font-medium truncate max-w-12 sm:max-w-16">
+                  {item.name.replace('Stasiun ', '')}
+                </span>
+                <div className="flex items-center space-x-0.5 sm:space-x-1">
+                  <span className="text-xs font-bold text-gray-900">{formatValue(item.value)}</span>
+                  <span className="text-xs text-gray-500">{item.unit}</span>
+                </div>
+                <Chart
+                  data={item.history}
+                  width={48}
+                  height={22}
+                  showTooltip={false}
+                  miniMode={true}
+                  status={item.status}
+                  canvasId={`chart-first-${item.id}`}
+                  className="w-12 h-6 rounded"
+                />
               </div>
-              <Chart
-                data={item.history}
-                width={48}
-                height={22}
-                showTooltip={false}
-                miniMode={true}
-                status={item.status}
-                canvasId={`chart-first-${item.id}`}
-                className="w-12 h-6 rounded"
-              />
-            </div>
-          ))}
-          
-          {/* Konten duplikat untuk seamless scrolling */}
-          {tickerData.map((item) => (
-            <div 
-              key={`second-${item.id}`} 
-              className={`flex items-center space-x-1.5 sm:space-x-2 rounded-lg px-1.5 sm:px-2 py-1 sm:py-1.5 min-w-max transition-all duration-300 cursor-pointer border border-gray-200 ${
-                selectedStationId === item.id 
-                  ? 'bg-blue-100 border-blue-400 scale-105 shadow-md' 
-                  : 'hover:bg-gray-50 hover:scale-105'
-              }`}
-              onClick={() => handleStationClick(item)}
-              title={`Klik untuk pindah ke ${item.name.replace('Stasiun ', '')}`}
-            >
-              <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${getStatusBgColor(item.status)} ${
-                selectedStationId === item.id ? 'animate-pulse' : ''
-              }`}></div>
-              <span className="text-xs text-gray-700 font-medium truncate max-w-12 sm:max-w-16">
-                {item.name.replace('Stasiun ', '')}
-              </span>
-              <div className="flex items-center space-x-0.5 sm:space-x-1">
-                <span className="text-xs font-bold text-gray-900">{formatValue(item.value)}</span>
-                <span className="text-xs text-gray-500">{item.unit}</span>
+            ))}
+            
+            {/* Konten duplikat untuk seamless scrolling */}
+            {tickerData.map((item) => (
+              <div 
+                key={`second-${item.id}`} 
+                className={`flex items-center space-x-1.5 sm:space-x-2 rounded-lg px-1.5 sm:px-2 py-1 sm:py-1.5 min-w-max transition-all duration-300 cursor-pointer border border-gray-200 ${
+                  selectedStationId === item.id 
+                    ? 'bg-blue-100 border-blue-400 scale-105 shadow-md' 
+                    : 'hover:bg-gray-50 hover:scale-105'
+                }`}
+                onClick={() => handleStationClick(item)}
+                title={`Klik untuk pindah ke ${item.name.replace('Stasiun ', '')}`}
+              >
+                <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${getStatusBgColor(item.status)} ${
+                  selectedStationId === item.id ? 'animate-pulse' : ''
+                }`}></div>
+                <span className="text-xs text-gray-700 font-medium truncate max-w-12 sm:max-w-16">
+                  {item.name.replace('Stasiun ', '')}
+                </span>
+                <div className="flex items-center space-x-0.5 sm:space-x-1">
+                  <span className="text-xs font-bold text-gray-900">{formatValue(item.value)}</span>
+                  <span className="text-xs text-gray-500">{item.unit}</span>
+                </div>
+                <Chart
+                  data={item.history}
+                  width={48}
+                  height={22}
+                  showTooltip={false}
+                  miniMode={true}
+                  status={item.status}
+                  canvasId={`chart-second-${item.id}`}
+                  className="w-12 h-6 rounded"
+                />
               </div>
-              <Chart
-                data={item.history}
-                width={48}
-                height={22}
-                showTooltip={false}
-                miniMode={true}
-                status={item.status}
-                canvasId={`chart-second-${item.id}`}
-                className="w-12 h-6 rounded"
-              />
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes infiniteScroll {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+      `}</style>
     </div>
   );
 };
