@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Chart from './Chart';
-import DetailPanel from './DetailPanel'; // Import DetailPanel
+import DetailPanel from './DetailPanel';
 
 // Reusable Sidebar Template Component
 const SidebarTemplate = ({ 
@@ -8,13 +8,16 @@ const SidebarTemplate = ({
   onClose, 
   title, 
   subtitle, 
-  width = "w-[380px]", // Lebar sidebar disesuaikan
+  width = "w-[380px]", 
   position = "fixed", 
   zIndex = "z-[60]",
   topPosition = "top-20", 
   children,
   headerContent,
-  statusDot
+  statusDot,
+  showDetailToggle = false,
+  isDetailOpen = false,
+  onDetailToggle = () => {}
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   
@@ -46,24 +49,45 @@ const SidebarTemplate = ({
     >
       {/* Header */}
       <div className="bg-white border-b border-gray-200 p-4 flex-shrink-0">
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={handleClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-          >
-            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <div className="flex-1">
-            {headerContent || (
-              <>
-                <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-                {subtitle && <p className="text-gray-500 text-sm">{subtitle}</p>}
-              </>
-            )}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={handleClose}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <div className="flex-1">
+              {headerContent || (
+                <>
+                  <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+                  {subtitle && <p className="text-gray-500 text-sm">{subtitle}</p>}
+                </>
+              )}
+            </div>
+            {statusDot && <div className={`w-3 h-3 rounded-full ${statusDot}`}></div>}
           </div>
-          {statusDot && <div className={`w-3 h-3 rounded-full ${statusDot}`}></div>}
+          
+          {/* Tombol toggle untuk DetailPanel */}
+          {showDetailToggle && (
+            <button
+              onClick={onDetailToggle}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              aria-label={isDetailOpen ? "Tutup panel detail" : "Buka panel detail"}
+            >
+              {isDetailOpen ? (
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                </svg>
+              )}
+            </button>
+          )}
         </div>
       </div>
       
@@ -78,6 +102,7 @@ const SidebarTemplate = ({
 const StationDetail = ({ selectedStation, onClose, tickerData }) => {
   const [stationData, setStationData] = useState(null);
   const [chartHistory, setChartHistory] = useState([]);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   
   // Initialize station data when selected
   useEffect(() => {
@@ -91,6 +116,13 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
     }
   }, [selectedStation, tickerData]);
   
+  // Reset detail panel when sidebar closes
+  useEffect(() => {
+    if (!selectedStation) {
+      setIsDetailOpen(false);
+    }
+  }, [selectedStation]);
+  
   // Update chart data in real-time from tickerData
   useEffect(() => {
     if (!stationData || !tickerData) return;
@@ -102,6 +134,25 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
     }
   }, [tickerData, stationData]);
 
+  // Handle auto switch activation
+  useEffect(() => {
+    const handleAutoSwitchActivated = () => {
+      if (selectedStation) {
+        onClose();
+      }
+    };
+    
+    document.addEventListener('autoSwitchActivated', handleAutoSwitchActivated);
+    
+    return () => {
+      document.removeEventListener('autoSwitchActivated', handleAutoSwitchActivated);
+    };
+  }, [selectedStation, onClose]);
+
+  const handleDetailToggle = () => {
+    setIsDetailOpen(!isDetailOpen);
+  };
+  
   const getStatusColor = (status) => {
     switch (status) {
       case 'safe': return 'text-green-600';
@@ -117,15 +168,6 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
       case 'warning': return 'bg-yellow-50 border-yellow-200';
       case 'alert': return 'bg-red-50 border-red-200';
       default: return 'bg-gray-50 border-gray-200';
-    }
-  };
-  
-  const getStatusDotColor = (status) => {
-    switch (status) {
-      case 'safe': return 'bg-green-500';
-      case 'warning': return 'bg-yellow-500';
-      case 'alert': return 'bg-red-500';
-      default: return 'bg-gray-500';
     }
   };
   
@@ -203,8 +245,10 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
         onClose={onClose}
         title={stationData.name}
         subtitle={stationData.location}
-        statusDot={getStatusDotColor(stationData.status)}
         topPosition="top-20"
+        showDetailToggle={true}
+        isDetailOpen={isDetailOpen}
+        onDetailToggle={handleDetailToggle}
       >
         <div className="p-5 space-y-6 pb-6">
           {/* Status Card */}
@@ -299,20 +343,22 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
               <svg className="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <p className="text-sm text-blue-700">Klik panah di sebelah kiri untuk melihat detail informasi sensor, kualitas air, dan cuaca</p>
+              <p className="text-sm text-blue-700">Klik ikon panah di pojok kanan atas untuk melihat detail informasi sensor, kualitas air, dan cuaca</p>
             </div>
           </div>
         </div>
       </SidebarTemplate>
       
-      {/* Detail Panel - Hanya tombol toggle yang terlihat */}
+      {/* Detail Panel */}
       <DetailPanel 
         stationData={stationData}
         sensorData={sensorData}
         waterQualityData={waterQualityData}
         weatherData={weatherData}
         floodHistory={floodHistory}
-        isSidebarOpen={!!selectedStation} // Kirim status sidebar
+        isSidebarOpen={!!selectedStation}
+        isOpen={isDetailOpen}
+        onClose={() => setIsDetailOpen(false)}
       />
     </>
   );
