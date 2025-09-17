@@ -16,6 +16,12 @@ const AutoSwitchToggle = ({
     if (!tickerData || tickerData.length === 0) return;
     
     setIsPlaying(true);
+    
+    // Dispatch custom event untuk menutup sidebar dan detail panel
+    document.dispatchEvent(new CustomEvent('autoSwitchActivated', { 
+      detail: { active: true } 
+    }));
+    
     intervalRef.current = setInterval(() => {
       setCurrentIndex(prevIndex => {
         const nextIndex = (prevIndex + 1) % tickerData.length;
@@ -38,6 +44,11 @@ const AutoSwitchToggle = ({
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
+    
+    // Dispatch custom event saat auto switch dimatikan
+    document.dispatchEvent(new CustomEvent('autoSwitchDeactivated', { 
+      detail: { active: false } 
+    }));
   };
   
   // Toggle play/pause
