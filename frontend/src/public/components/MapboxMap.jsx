@@ -3,11 +3,14 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import MapTooltip from './maptooltip'; // Import komponen tooltip
 
-const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange }) => {
+const MapboxMap = ({ onStationSelect, onMapFocus, onStationChange }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [waterAnimationActive, setWaterAnimationActive] = useState(false);
   const [selectedStationCoords, setSelectedStationCoords] = useState(null);
+  const [devicesData, setDevicesData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   
   // State untuk tooltip
   const [tooltip, setTooltip] = useState({
@@ -15,6 +18,41 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
     station: null,
     coordinates: null
   });
+
+  // Fetch devices data from API
+  const fetchDevicesData = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:8000/api/devices/map', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          // Add authorization header if needed
+          // 'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        setDevicesData(result.data);
+        setError(null);
+      } else {
+        throw new Error(result.message || 'Failed to fetch devices data');
+      }
+    } catch (err) {
+      console.error('Error fetching devices data:', err);
+      setError(err.message);
+      // Fallback to mock data for development
+      setDevicesData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Handler untuk auto focus dari running bar
   const handleMapFocus = (focusData) => {
@@ -37,28 +75,24 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
     
     // Tampilkan tooltip setelah jeda singkat
     setTimeout(() => {
-      if (tickerData) {
-        const station = tickerData.find(s => s.id === stationId);
-        if (station) {
-          const coordinates = getStationCoordinates(station.name);
-          if (coordinates) {
-            setTooltip({
-              visible: true,
-              station: station,
-              coordinates: coordinates
-            });
-          }
+      if (devicesData) {
+        const device = devicesData.find(d => d.id === stationId);
+        if (device) {
+          setTooltip({
+            visible: true,
+            station: device,
+            coordinates: [device.longitude, device.latitude]
+          });
         }
       }
     }, 800);
   };
 
   // Handler untuk auto switch dari toggle
-  const handleAutoSwitch = (station, index) => {
-    if (!map.current || !station) return;
+  const handleAutoSwitch = (device, index) => {
+    if (!map.current || !device) return;
     
-    const coordinates = getStationCoordinates(station.name);
-    if (!coordinates) return;
+    const coordinates = [device.longitude, device.latitude];
     
     setWaterAnimationActive(true);
     setSelectedStationCoords(coordinates);
@@ -79,7 +113,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
     setTimeout(() => {
       setTooltip({
         visible: true,
-        station: station,
+        station: device,
         coordinates: coordinates
       });
     }, 800);
@@ -106,32 +140,11 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
     switch (status) {
       case 'safe': return '#10B981';
       case 'warning': return '#F59E0B';
-      case 'alert': return '#EF4444';
+      case 'danger': return '#EF4444';
       default: return '#6B7280';
     }
   };
-  
-  const getStationCoordinates = (stationName) => {
-    const coordinates = {
-      'Stasiun Surabaya': [112.7508, -7.2575],
-      'Stasiun Malang': [112.6308, -7.9831],
-      'Stasiun Sidoarjo': [112.7183, -7.4478],
-      'Stasiun Probolinggo': [113.7156, -7.7764],
-      'Stasiun Pasuruan': [112.6909, -7.6461],
-      'Stasiun Mojokerto': [112.4694, -7.4706],
-      'Stasiun Lamongan': [112.3333, -7.1167],
-      'Stasiun Gresik': [112.5729, -7.1554],
-      'Stasiun Tuban': [112.0483, -6.8976],
-      'Stasiun Bojonegoro': [111.8816, -7.1500],
-      'Stasiun Jombang': [112.2333, -7.5500],
-      'Stasiun Nganjuk': [111.8833, -7.6000],
-      'Stasiun Kediri': [112.0167, -7.8167],
-      'Stasiun Blitar': [112.1667, -8.1000],
-      'Stasiun Tulungagung': [111.9000, -8.0667]
-    };
-    return coordinates[stationName] || null;
-  };
-  
+
   // Expose handleMapFocus ke window object
   useEffect(() => {
     window.mapboxAutoFocus = handleMapFocus;
@@ -140,7 +153,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
         delete window.mapboxAutoFocus;
       }
     };
-  }, [tickerData]);
+  }, [devicesData]);
 
   // Expose handleAutoSwitch ke window object
   useEffect(() => {
@@ -150,7 +163,17 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
         delete window.mapboxAutoSwitch;
       }
     };
-  }, [tickerData]);
+  }, [devicesData]);
+
+  // Fetch devices data on component mount
+  useEffect(() => {
+    fetchDevicesData();
+    
+    // Set up periodic refresh (optional)
+    const interval = setInterval(fetchDevicesData, 30000); // Refresh every 30 seconds
+    
+    return () => clearInterval(interval);
+  }, []);
   
   // Initialize map
   useEffect(() => {
@@ -179,62 +202,63 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
     };
   }, []);
   
-  // Update markers when tickerData changes
+  // Update markers when devicesData changes
   useEffect(() => {
-    if (!map.current || !tickerData) return;
+    if (!map.current || !devicesData || devicesData.length === 0) return;
     
     const existingMarkers = document.querySelectorAll('.custom-marker');
     existingMarkers.forEach(marker => marker.remove());
     
-    tickerData.forEach((station) => {
-      const coordinates = getStationCoordinates(station.name);
-      if (coordinates) {
-        const markerEl = document.createElement('div');
-        markerEl.className = 'custom-marker';
-        markerEl.style.width = '30px';
-        markerEl.style.height = '30px';
-        markerEl.style.borderRadius = '50%';
-        markerEl.style.backgroundColor = getStatusColor(station.status);
-        markerEl.style.border = '3px solid white';
-        markerEl.style.boxShadow = '0 4px 8px rgba(0,0,0,0.4)';
-        markerEl.style.cursor = 'pointer';
-        markerEl.style.zIndex = '10';
-        
-        if (station.status === 'alert') {
-          markerEl.innerHTML = `<div style="position: absolute; width: 100%; height: 100%; border-radius: 50%; background-color: ${getStatusColor(station.status)}; opacity: 0.7; animation: alert-pulse 2s infinite;"></div>`;
-        }
-        
-        const marker = new mapboxgl.Marker(markerEl).setLngLat(coordinates).addTo(map.current);
-        
-        // Event untuk klik marker
-        markerEl.addEventListener('click', (e) => {
-          e.stopPropagation(); // Mencegah event bubbling
-          
-          setWaterAnimationActive(true);
-          setSelectedStationCoords(coordinates);
-          
-          // Animasi flyTo
-          map.current.flyTo({
-            center: coordinates,
-            zoom: 12,
-            pitch: 45,
-            bearing: -17.6,
-            speed: 1.2,
-            curve: 1.4,
-            easing: (t) => t,
-            essential: true
-          });
-          
-          // Tampilkan tooltip
-          setTooltip({
-            visible: true,
-            station: station,
-            coordinates: coordinates
-          });
-        });
+    devicesData.forEach((device) => {
+      if (!device.latitude || !device.longitude) return;
+      
+      const coordinates = [device.longitude, device.latitude];
+      
+      const markerEl = document.createElement('div');
+      markerEl.className = 'custom-marker';
+      markerEl.style.width = '30px';
+      markerEl.style.height = '30px';
+      markerEl.style.borderRadius = '50%';
+      markerEl.style.backgroundColor = getStatusColor(device.status);
+      markerEl.style.border = '3px solid white';
+      markerEl.style.boxShadow = '0 4px 8px rgba(0,0,0,0.4)';
+      markerEl.style.cursor = 'pointer';
+      markerEl.style.zIndex = '10';
+      
+      if (device.status === 'danger') {
+        markerEl.innerHTML = `<div style="position: absolute; width: 100%; height: 100%; border-radius: 50%; background-color: ${getStatusColor(device.status)}; opacity: 0.7; animation: alert-pulse 2s infinite;"></div>`;
       }
+      
+      const marker = new mapboxgl.Marker(markerEl).setLngLat(coordinates).addTo(map.current);
+      
+      // Event untuk klik marker
+      markerEl.addEventListener('click', (e) => {
+        e.stopPropagation(); // Mencegah event bubbling
+        
+        setWaterAnimationActive(true);
+        setSelectedStationCoords(coordinates);
+        
+        // Animasi flyTo
+        map.current.flyTo({
+          center: coordinates,
+          zoom: 12,
+          pitch: 45,
+          bearing: -17.6,
+          speed: 1.2,
+          curve: 1.4,
+          easing: (t) => t,
+          essential: true
+        });
+        
+        // Tampilkan tooltip
+        setTooltip({
+          visible: true,
+          station: device,
+          coordinates: coordinates
+        });
+      });
     });
-  }, [tickerData]);
+  }, [devicesData]);
   
   // Event listener untuk klik di luar tooltip
   useEffect(() => {
@@ -252,6 +276,23 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
   
   return (
     <div className="w-full h-screen overflow-hidden relative z-0">
+      {loading && (
+        <div className="absolute top-4 right-4 z-20 bg-blue-100 text-blue-800 px-4 py-2 rounded-lg shadow-md">
+          <div className="flex items-center space-x-2">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-800"></div>
+            <span>Loading devices...</span>
+          </div>
+        </div>
+      )}
+      
+      {error && (
+        <div className="absolute top-4 right-4 z-20 bg-red-100 text-red-800 px-4 py-2 rounded-lg shadow-md">
+          <div className="flex items-center space-x-2">
+            <span>⚠️ {error}</span>
+          </div>
+        </div>
+      )}
+      
       <div ref={mapContainer} className="w-full h-full relative z-0" />
       <MapTooltip 
         map={map.current}

@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\DeviceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,6 +21,21 @@ use App\Http\Controllers\Api\UserController;
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+});
+
+// Public device routes for map
+Route::prefix('devices')->group(function () {
+    Route::get('/map', [DeviceController::class, 'getDevicesForMap']);
+    Route::get('/{id}', [DeviceController::class, 'show']);
+});
+
+// Test route untuk memastikan API berjalan
+Route::get('/test', function () {
+    return response()->json([
+        'success' => true,
+        'message' => 'API FFWS Jawa Timur is running!',
+        'timestamp' => now()
+    ]);
 });
 
 // Protected routes (authentication required)

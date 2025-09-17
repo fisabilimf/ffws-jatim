@@ -55,7 +55,6 @@ const Layout = ({ children }) => {
       <div className="w-full h-full relative z-0">
         <MapboxMap 
           ref={mapRef}
-          tickerData={tickerData} 
           onStationSelect={handleStationSelect}
           onAutoSwitch={handleAutoSwitch}
         />

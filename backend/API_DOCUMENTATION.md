@@ -172,7 +172,85 @@ DELETE /api/users/{id}
 Authorization: Bearer {token}
 ```
 
-### 3. Test Endpoint
+### 3. Device Management Endpoints
+
+#### Get Devices for Map Display
+```http
+GET /api/devices/map
+Authorization: Bearer {token}
+```
+
+**Response:**
+```json
+{
+    "success": true,
+    "message": "Devices data retrieved successfully",
+    "data": [
+        {
+            "id": 1,
+            "name": "Stasiun Monitoring Dhompo",
+            "code": "DHM001",
+            "latitude": -7.1234,
+            "longitude": 112.5678,
+            "elevation_m": 150.5,
+            "status": "warning",
+            "river_basin": {
+                "id": 1,
+                "name": "DAS Brantas",
+                "code": "BRT001"
+            },
+            "sensors": [
+                {
+                    "sensor_id": 1,
+                    "sensor_code": "DHM001_WL",
+                    "parameter": "water_level",
+                    "unit": "meter",
+                    "value": 2.5,
+                    "received_at": "2024-01-01T12:00:00.000000Z",
+                    "status": "warning",
+                    "thresholds": {
+                        "safe": 2.0,
+                        "warning": 2.5,
+                        "danger": 3.0
+                    }
+                }
+            ],
+            "sensor_count": 2
+        }
+    ]
+}
+```
+
+#### Get Device Detail by ID
+```http
+GET /api/devices/{id}
+Authorization: Bearer {token}
+```
+
+**Response:**
+```json
+{
+    "success": true,
+    "message": "Device retrieved successfully",
+    "data": {
+        "id": 1,
+        "name": "Stasiun Monitoring Dhompo",
+        "code": "DHM001",
+        "latitude": -7.1234,
+        "longitude": 112.5678,
+        "elevation_m": 150.5,
+        "status": "active",
+        "river_basin": {
+            "id": 1,
+            "name": "DAS Brantas",
+            "code": "BRT001"
+        },
+        "sensors": [...]
+    }
+}
+```
+
+### 4. Test Endpoint
 
 #### API Health Check
 ```http
