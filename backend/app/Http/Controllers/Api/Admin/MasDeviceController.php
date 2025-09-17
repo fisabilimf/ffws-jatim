@@ -31,9 +31,7 @@ class MasDeviceController extends Controller
             
             return $this->successResponse($formattedDevice, 'Device retrieved successfully');
         } catch (\Exception $e) {
-            return $this->errorResponse('Device not found', 404, [
-                'error' => $e->getMessage()
-            ]);
+            return $this->serverErrorResponse('Terjadi kesalahan saat mengambil data device');
         }
     }
 }
