@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\Admin\MasDeviceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -47,6 +48,11 @@ Route::middleware('auth:sanctum')->group(function () {
                 'message' => 'Data actuals endpoint - implementasi selanjutnya'
             ]);
         });
+    });
+
+    // Admin routes
+    Route::prefix('devices')->group(function () {
+        Route::get('/{id}', [MasDeviceController::class, 'show']);
     });
 });
 
