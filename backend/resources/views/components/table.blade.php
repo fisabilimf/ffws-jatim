@@ -234,14 +234,26 @@
                                             @if(isset($row->{'formatted_' . $header['key']}))
                                                 {{ $row->{'formatted_' . $header['key']} }}
                                             @else
-                                                {{ $row[$header['key']] ?? '' }}
+                                                @php
+                                                    $value = $row[$header['key']] ?? '';
+                                                    if (is_array($value)) {
+                                                        $value = json_encode($value);
+                                                    }
+                                                @endphp
+                                                {{ $value }}
                                             @endif
                                     @endswitch
                                 @else
                                     @if(isset($row->{'formatted_' . $header['key']}))
                                         {{ $row->{'formatted_' . $header['key']} }}
                                     @else
-                                        {{ $row[$header['key']] ?? '' }}
+                                        @php
+                                            $value = $row[$header['key']] ?? '';
+                                            if (is_array($value)) {
+                                                $value = json_encode($value);
+                                            }
+                                        @endphp
+                                        {{ $value }}
                                     @endif
                                 @endif
                             </td>
@@ -349,15 +361,25 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Handle delete confirmation
+    // Handle delete confirmation with SweetAlert
     document.querySelectorAll('.delete-form').forEach(function(form) {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             
             const confirmMessage = this.getAttribute('data-confirm-delete') || 'Data yang dihapus tidak dapat dikembalikan. Lanjutkan?';
             
-            if (confirm(confirmMessage)) {
-                this.submit();
+            // Use SweetAlert for confirmation
+            if (window.AdminUtils && window.AdminUtils.confirmDelete) {
+                window.AdminUtils.confirmDelete(confirmMessage).then(function(confirmed) {
+                    if (confirmed) {
+                        form.submit();
+                    }
+                });
+            } else {
+                // Fallback to native confirm if SweetAlert not available
+                if (confirm(confirmMessage)) {
+                    form.submit();
+                }
             }
         });
     });

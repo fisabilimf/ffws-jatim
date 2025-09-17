@@ -91,6 +91,23 @@ class DataActualController extends Controller
                     'url' => route('admin.data-actuals.show', $data),
                     'icon' => 'eye',
                     'color' => 'blue'
+                ],
+                [
+                    'type' => 'edit',
+                    'label' => 'Edit',
+                    'url' => '#',
+                    'icon' => 'pen',
+                    'color' => 'gray',
+                    'onclick' => 'openEditModal(' . $data->id . ')'
+                ],
+                [
+                    'type' => 'hapus',
+                    'label' => 'Hapus',
+                    'url' => route('admin.data-actuals.destroy', $data),
+                    'icon' => 'trash',
+                    'color' => 'red',
+                    'method' => 'DELETE',
+                    'confirm' => 'Data actual ini akan dihapus. Lanjutkan?'
                 ]
             ];
             return $data;
@@ -103,6 +120,64 @@ class DataActualController extends Controller
             'stats',
             'tableHeaders'
         ));
+    }
+
+    /**
+     * Tampilkan form untuk membuat data actual baru
+     */
+    public function create()
+    {
+        $sensors = MasSensor::with('device.riverBasin')->get();
+        
+        return response()->json([
+            'success' => true,
+            'sensors' => $sensors->map(function($sensor) {
+                return [
+                    'id' => $sensor->id,
+                    'sensor_code' => $sensor->sensor_code,
+                    'parameter' => $sensor->parameter,
+                    'unit' => $sensor->unit,
+                    'device_name' => $sensor->device->name ?? 'N/A',
+                    'river_basin' => $sensor->device->riverBasin->name ?? 'N/A'
+                ];
+            })
+        ]);
+    }
+
+    /**
+     * Simpan data actual baru
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'mas_sensor_id' => 'required|exists:mas_sensors,id',
+            'value' => 'required|numeric',
+            'received_at' => 'required|date',
+            'threshold_status' => 'required|in:safe,warning,danger'
+        ]);
+
+        try {
+            $sensor = MasSensor::findOrFail($request->mas_sensor_id);
+            
+            $dataActual = DataActual::create([
+                'mas_sensor_id' => $request->mas_sensor_id,
+                'mas_sensor_code' => $sensor->sensor_code,
+                'value' => $request->value,
+                'received_at' => $request->received_at,
+                'threshold_status' => $request->threshold_status
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data actual berhasil ditambahkan!',
+                'data' => $dataActual
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menambahkan data actual: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -120,6 +195,91 @@ class DataActualController extends Controller
             ->get();
 
         return view('admin.data_actuals.show', compact('dataActual', 'relatedData'));
+    }
+
+    /**
+     * Tampilkan form untuk mengedit data actual
+     */
+    public function edit(DataActual $dataActual)
+    {
+        $sensors = MasSensor::with('device.riverBasin')->get();
+        
+        return response()->json([
+            'success' => true,
+            'dataActual' => [
+                'id' => $dataActual->id,
+                'mas_sensor_id' => $dataActual->mas_sensor_id,
+                'value' => $dataActual->value,
+                'received_at' => $dataActual->received_at->format('Y-m-d\TH:i'),
+                'threshold_status' => $dataActual->threshold_status
+            ],
+            'sensors' => $sensors->map(function($sensor) {
+                return [
+                    'id' => $sensor->id,
+                    'sensor_code' => $sensor->sensor_code,
+                    'parameter' => $sensor->parameter,
+                    'unit' => $sensor->unit,
+                    'device_name' => $sensor->device->name ?? 'N/A',
+                    'river_basin' => $sensor->device->riverBasin->name ?? 'N/A'
+                ];
+            })
+        ]);
+    }
+
+    /**
+     * Update data actual
+     */
+    public function update(Request $request, DataActual $dataActual)
+    {
+        $request->validate([
+            'mas_sensor_id' => 'required|exists:mas_sensors,id',
+            'value' => 'required|numeric',
+            'received_at' => 'required|date',
+            'threshold_status' => 'required|in:safe,warning,danger'
+        ]);
+
+        try {
+            $sensor = MasSensor::findOrFail($request->mas_sensor_id);
+            
+            $dataActual->update([
+                'mas_sensor_id' => $request->mas_sensor_id,
+                'mas_sensor_code' => $sensor->sensor_code,
+                'value' => $request->value,
+                'received_at' => $request->received_at,
+                'threshold_status' => $request->threshold_status
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data actual berhasil diperbarui!',
+                'data' => $dataActual
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memperbarui data actual: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Hapus data actual
+     */
+    public function destroy(DataActual $dataActual)
+    {
+        try {
+            $dataActual->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Data actual berhasil dihapus!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus data actual: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

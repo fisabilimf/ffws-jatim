@@ -26,7 +26,7 @@ class MasSensorController extends Controller
                 $q->where('sensor_code', 'like', "%{$search}%")
                     ->orWhere('description', 'like', "%{$search}%")
                     ->orWhereHas('device', function ($deviceQuery) use ($search) {
-                        $deviceQuery->where('device_name', 'like', "%{$search}%");
+                        $deviceQuery->where('name', 'like', "%{$search}%");
                     });
             });
         }
