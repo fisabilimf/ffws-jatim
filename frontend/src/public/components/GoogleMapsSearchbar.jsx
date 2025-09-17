@@ -3,19 +3,21 @@ import React, { useState } from 'react';
 const GoogleMapsSearchbar = ({ onSearch, placeholder = "Cari di Maps", isSidebarOpen = false }) => {
   const [searchValue, setSearchValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
-
+  
   const handleSearch = (e) => {
     e.preventDefault();
     if (onSearch) {
       onSearch(searchValue);
     }
   };
-
+  
   return (
-    <div className={`fixed top-4 left-4 z-[70] transition-all duration-300 ease-in-out ${
-      isSidebarOpen ? 'transform translate-x-80' : 'transform translate-x-0'
+    <div className={`fixed top-4 z-[70] transition-all duration-300 ease-in-out ${
+      isSidebarOpen 
+        ? 'left-4 transform translate-x-0' // Tetap di posisi semula saat sidebar terbuka
+        : 'left-4 transform translate-x-0'
     }`}>
-      <div className="w-80">
+      <div className="w-92">
         <form onSubmit={handleSearch} className="relative">
           <div className={`bg-white rounded-lg shadow-lg transition-all duration-200 p-1.5 sm:p-2 ${
             isFocused ? 'shadow-xl ring-2 ring-blue-500' : ''
