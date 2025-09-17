@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\Admin\MasDeviceController;
+use App\Http\Controllers\Api\Admin\MasSensorController;
 
 /*
 |--------------------------------------------------------------------------
@@ -50,9 +51,18 @@ Route::middleware('auth:sanctum')->group(function () {
         });
     });
 
-    // Admin routes
+    // Device routes
     Route::prefix('devices')->group(function () {
         Route::get('/{id}', [MasDeviceController::class, 'show']);
+    });
+
+    // Sensor routes
+    Route::prefix('sensors')->group(function () {
+        Route::get('/', [MasSensorController::class, 'index']);
+        Route::get('/{id}', [MasSensorController::class, 'show']);
+        Route::get('/device/{deviceId}', [MasSensorController::class, 'getByDevice']);
+        Route::get('/parameter/{parameter}', [MasSensorController::class, 'getByParameter']);
+        Route::get('/status/{status}', [MasSensorController::class, 'getByStatus']);
     });
 });
 
@@ -60,7 +70,6 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::get('/test', function () {
     return response()->json([
         'success' => true,
-        'message' => 'API FFWS Jawa Timur is running!',
-        'timestamp' => now()
+        'message' => 'API berjalan dengan baik'
     ]);
 });
