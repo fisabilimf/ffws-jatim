@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\RiverBasinController;
 use App\Http\Controllers\Admin\MasDeviceController;
 use App\Http\Controllers\Admin\MasSensorController;
+use App\Http\Controllers\Admin\MasModelController;
 use App\Http\Controllers\Admin\DataActualController;
 
 /*
@@ -78,12 +79,33 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         Route::delete('/{sensor}', [MasSensorController::class, 'destroy'])->name('destroy');
     });
 
+    // Data Master (Models)
+    Route::prefix('mas-models')->name('mas-models.')->group(function () {
+        Route::get('/', [MasModelController::class, 'index'])->name('index');
+        Route::get('/create', [MasModelController::class, 'create'])->name('create');
+        Route::get('/form', [MasModelController::class, 'form'])->name('form');
+        Route::get('/form/{masModel}', [MasModelController::class, 'form'])->name('form.edit');
+        Route::post('/', [MasModelController::class, 'store'])->name('store');
+        Route::get('/export', [MasModelController::class, 'export'])->name('export');
+        Route::post('/import', [MasModelController::class, 'import'])->name('import');
+        Route::get('/{masModel}/edit', [MasModelController::class, 'edit'])->name('edit');
+        Route::put('/{masModel}', [MasModelController::class, 'update'])->name('update');
+        Route::delete('/{masModel}', [MasModelController::class, 'destroy'])->name('destroy');
+        Route::post('/{masModel}/toggle-status', [MasModelController::class, 'toggleStatus'])->name('toggle-status');
+        Route::get('/{masModel}', [MasModelController::class, 'show'])->name('show');
+    });
+
     // Data Actuals
     Route::prefix('data-actuals')->name('data-actuals.')->group(function () {
         Route::get('/', [DataActualController::class, 'index'])->name('index');
-        Route::get('/{dataActual}', [DataActualController::class, 'show'])->name('show');
+        Route::get('/create', [DataActualController::class, 'create'])->name('create');
+        Route::post('/', [DataActualController::class, 'store'])->name('store');
         Route::get('/export/csv', [DataActualController::class, 'export'])->name('export');
         Route::get('/chart/data', [DataActualController::class, 'chartData'])->name('chart.data');
+        Route::get('/{dataActual}', [DataActualController::class, 'show'])->name('show');
+        Route::get('/{dataActual}/edit', [DataActualController::class, 'edit'])->name('edit');
+        Route::put('/{dataActual}', [DataActualController::class, 'update'])->name('update');
+        Route::delete('/{dataActual}', [DataActualController::class, 'destroy'])->name('destroy');
     });
 
     // Profile & Account
