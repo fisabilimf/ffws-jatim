@@ -109,46 +109,95 @@
                                 @if(isset($header['format']))
                                     @switch($header['format'])
                                         @case('date')
-                                            {{ \Carbon\Carbon::parse($row[$header['key']])->format('d/m/Y H:i') }}
+                                            @if(isset($row->formatted_received_at))
+                                                {{ \Carbon\Carbon::parse($row->formatted_received_at)->format('d/m/Y H:i') }}
+                                            @else
+                                                {{ \Carbon\Carbon::parse($row[$header['key']])->format('d/m/Y H:i') }}
+                                            @endif
+                                            @break
+                                        @case('sensor')
+                                            <div class="text-sm font-medium text-gray-900">{{ $row->formatted_sensor ?? $row[$header['key']] }}</div>
+                                            @if(isset($row->formatted_sensor_device))
+                                                <div class="text-sm text-gray-500">{{ $row->formatted_sensor_device }}</div>
+                                            @endif
+                                            @break
+                                        @case('parameter')
+                                            <div class="text-sm text-gray-900">{{ $row->formatted_parameter ?? $row[$header['key']] }}</div>
+                                            @if(isset($row->formatted_parameter_unit) && $row->formatted_parameter_unit)
+                                                <div class="text-sm text-gray-500">{{ $row->formatted_parameter_unit }}</div>
+                                            @endif
+                                            @break
+                                        @case('value')
+                                            <span class="font-mono text-sm">{{ $row->formatted_value ?? $row[$header['key']] }}</span>
                                             @break
                                         @case('status')
                                             @php
+                                                $statusValue = $row->formatted_threshold_status ?? $row[$header['key']];
                                                 $statusClasses = [
                                                     'active' => 'bg-green-100 text-green-800',
                                                     'inactive' => 'bg-red-100 text-red-800',
                                                     'maintenance' => 'bg-yellow-100 text-yellow-800',
                                                     'pending' => 'bg-yellow-100 text-yellow-800',
-                                                    'draft' => 'bg-gray-100 text-gray-800'
+                                                    'draft' => 'bg-gray-100 text-gray-800',
+                                                    'safe' => 'bg-green-100 text-green-800',
+                                                    'warning' => 'bg-yellow-100 text-yellow-800',
+                                                    'danger' => 'bg-red-100 text-red-800'
                                                 ];
-                                                $statusClass = $statusClasses[$row[$header['key']] ?? 'draft'] ?? 'bg-gray-100 text-gray-800';
+                                                $statusClass = $statusClasses[$statusValue ?? 'draft'] ?? 'bg-gray-100 text-gray-800';
+                                                
+                                                // Custom labels for threshold status
+                                                $statusLabels = [
+                                                    'safe' => 'Aman',
+                                                    'warning' => 'Waspada',
+                                                    'danger' => 'Bahaya'
+                                                ];
+                                                $statusLabel = $statusLabels[$statusValue] ?? ucfirst($statusValue ?? 'Unknown');
                                             @endphp
                                             <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full {{ $statusClass }}">
-                                                {{ ucfirst($row[$header['key']] ?? 'Unknown') }}
+                                                {{ $statusLabel }}
                                             </span>
                                             @break
                                         @case('actions')
                                             <div class="flex items-center space-x-2">
-                                                @if(isset($row['actions']))
-                                                    @foreach($row['actions'] as $action)
+                                                @php
+                                                    // Check for both 'actions' and 'formatted_actions' properties
+                                                    $actions = $row->actions ?? $row->formatted_actions ?? [];
+                                                @endphp
+                                                @if(!empty($actions))
+                                                    @foreach($actions as $action)
                                                         @php
+                                                            // Get action properties with fallbacks
                                                             $rawType = strtolower(trim($action['type'] ?? ($action['label'] ?? '')));
                                                             $isDeleteByType = str_contains($rawType, 'hapus') || str_contains($rawType, 'delete') || str_contains($rawType, 'destroy');
                                                             $isViewByType = str_contains($rawType, 'detail') || str_contains($rawType, 'lihat') || str_contains($rawType, 'view') || str_contains($rawType, 'show');
                                                             $isEditByType = str_contains($rawType, 'edit');
 
-                                                            $isDelete = isset($action['method']) && strtoupper($action['method']) === 'DELETE';
-                                                            if (!$isDelete && $isDeleteByType) {
-                                                                $isDelete = true;
-                                                            }
+                                                            // Check for delete action by method or type
+                                                            $isDelete = (isset($action['method']) && strtoupper($action['method']) === 'DELETE') || $isDeleteByType;
 
+                                                            // Determine icon with better fallbacks
                                                             $icon = $action['icon'] ?? null;
                                                             if (!$icon) {
-                                                                $icon = $isDelete ? 'trash' : ($isEditByType ? 'pen' : ($isViewByType ? 'eye' : null));
+                                                                if ($isDelete) {
+                                                                    $icon = 'trash';
+                                                                } elseif ($isEditByType) {
+                                                                    $icon = 'pen';
+                                                                } elseif ($isViewByType) {
+                                                                    $icon = 'eye';
+                                                                } else {
+                                                                    $icon = 'ellipsis';
+                                                                }
                                                             }
 
-                                                            $label = $action['label'] ?? null;
+                                                            // Get other properties with fallbacks
+                                                            $label = $action['label'] ?? 'Aksi';
                                                             $color = $action['color'] ?? ($isDelete ? 'red' : 'gray');
-                                                            $title = $action['title'] ?? ($label ?? ($isDelete ? 'Hapus' : ($isEditByType ? 'Edit' : ($isViewByType ? 'Detail' : 'Aksi'))));
+                                                            $title = $action['title'] ?? $label;
+                                                            $url = $action['url'] ?? '#';
+                                                            $onclick = $action['onclick'] ?? null;
+                                                            $confirm = $action['confirm'] ?? null;
+
+                                                            // Button classes
                                                             $baseBtn = 'inline-flex items-center justify-center w-9 h-9 rounded-lg border text-sm transition';
                                                             $normalClasses = ' border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900';
                                                             $dangerClasses = ' border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700';
@@ -156,46 +205,56 @@
                                                         @endphp
 
                                                         @if($isDelete)
-                                                            <form action="{{ $action['url'] }}" method="POST" class="inline" data-confirm-delete="{{ $action['confirm'] ?? 'Data yang dihapus tidak dapat dikembalikan. Lanjutkan?' }}">
+                                                            <form action="{{ $url }}" method="POST" class="inline delete-form" data-confirm-delete="{{ $confirm ?? 'Data yang dihapus tidak dapat dikembalikan. Lanjutkan?' }}">
                                                                 @csrf
                                                                 @method('DELETE')
                                                                 <button type="submit" class="{{ $btnClasses }}" title="{{ $title }}">
-                                                                    @if($icon)
-                                                                        <i class="fas fa-{{ $icon }}"></i>
-                                                                    @else
-                                                                        <span class="sr-only">{{ $label ?? 'Hapus' }}</span>
-                                                                        <i class="fas fa-trash"></i>
-                                                                    @endif
+                                                                    <i class="fas fa-{{ $icon }}"></i>
+                                                                    <span class="sr-only">{{ $label }}</span>
                                                                 </button>
                                                             </form>
-                                                        @elseif(isset($action['onclick']))
-                                                            <button type="button" onclick="{{ $action['onclick'] }}" class="{{ $btnClasses }}" title="{{ $title }}">
-                                                                @if($icon)
-                                                                    <i class="fas fa-{{ $icon }}"></i>
-                                                                @else
-                                                                    <span class="sr-only">{{ $label ?? 'Aksi' }}</span>
-                                                                    <i class="fas fa-ellipsis"></i>
-                                                                @endif
+                                                        @elseif($onclick)
+                                                            <button type="button" onclick="{{ $onclick }}" class="{{ $btnClasses }}" title="{{ $title }}">
+                                                                <i class="fas fa-{{ $icon }}"></i>
+                                                                <span class="sr-only">{{ $label }}</span>
                                                             </button>
                                                         @else
-                                                            <a href="{{ $action['url'] }}" class="{{ $btnClasses }}" title="{{ $title }}">
-                                                                @if($icon)
-                                                                    <i class="fas fa-{{ $icon }}"></i>
-                                                                @else
-                                                                    <span class="sr-only">{{ $label ?? 'Detail' }}</span>
-                                                                    <i class="fas fa-ellipsis"></i>
-                                                                @endif
+                                                            <a href="{{ $url }}" class="{{ $btnClasses }}" title="{{ $title }}">
+                                                                <i class="fas fa-{{ $icon }}"></i>
+                                                                <span class="sr-only">{{ $label }}</span>
                                                             </a>
                                                         @endif
                                                     @endforeach
+                                                @else
+                                                    <span class="text-gray-400 text-sm">Tidak ada aksi</span>
                                                 @endif
                                             </div>
                                             @break
                                         @default
-                                            {{ $row[$header['key']] ?? '' }}
+                                            @if(isset($row->{'formatted_' . $header['key']}))
+                                                {{ $row->{'formatted_' . $header['key']} }}
+                                            @else
+                                                @php
+                                                    $value = $row[$header['key']] ?? '';
+                                                    if (is_array($value)) {
+                                                        $value = json_encode($value);
+                                                    }
+                                                @endphp
+                                                {{ $value }}
+                                            @endif
                                     @endswitch
                                 @else
-                                    {{ $row[$header['key']] ?? '' }}
+                                    @if(isset($row->{'formatted_' . $header['key']}))
+                                        {{ $row->{'formatted_' . $header['key']} }}
+                                    @else
+                                        @php
+                                            $value = $row[$header['key']] ?? '';
+                                            if (is_array($value)) {
+                                                $value = json_encode($value);
+                                            }
+                                        @endphp
+                                        {{ $value }}
+                                    @endif
                                 @endif
                             </td>
                         @endforeach
@@ -240,14 +299,6 @@
                         $lastPage = $rows->lastPage();
                         $startPage = max(1, $currentPage - 2);
                         $endPage = min($lastPage, $currentPage + 2);
-                        
-                        // Adjust range if we're near the beginning or end
-                        if ($currentPage <= 3) {
-                            $endPage = min(5, $lastPage);
-                        }
-                        if ($currentPage >= $lastPage - 2) {
-                            $startPage = max(1, $lastPage - 4);
-                        }
                     @endphp
 
                     {{-- First page if not in range --}}
@@ -306,3 +357,32 @@
         </div>
     @endif
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle delete confirmation with SweetAlert
+    document.querySelectorAll('.delete-form').forEach(function(form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const confirmMessage = this.getAttribute('data-confirm-delete') || 'Data yang dihapus tidak dapat dikembalikan. Lanjutkan?';
+            
+            // Use SweetAlert for confirmation
+            if (window.AdminUtils && window.AdminUtils.confirmDelete) {
+                window.AdminUtils.confirmDelete(confirmMessage).then(function(confirmed) {
+                    if (confirmed) {
+                        form.submit();
+                    }
+                });
+            } else {
+                // Fallback to native confirm if SweetAlert not available
+                if (confirm(confirmMessage)) {
+                    form.submit();
+                }
+            }
+        });
+    });
+});
+</script>
+@endpush
