@@ -12,7 +12,8 @@ const DetailPanel = ({
   isOpen, 
   onClose, 
   stationData, 
-  chartHistory 
+  chartHistory,
+  isAutoSwitchOn = false
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [activeTab, setActiveTab] = useState('sensor'); // 'sensor' | 'kualitas' | 'cuaca' | 'riwayat'
@@ -28,6 +29,14 @@ const DetailPanel = ({
       setIsVisible(false);
     }
   }, [isOpen]);
+
+  // Auto close detail panel saat auto switch berjalan
+  useEffect(() => {
+    if (isAutoSwitchOn && isOpen) {
+      // Tutup detail panel dengan animasi saat auto switch aktif
+      handleClose();
+    }
+  }, [isAutoSwitchOn]);
 
   // Handler untuk close dengan animasi
   const handleClose = () => {
@@ -69,7 +78,15 @@ const DetailPanel = ({
             
             {/* Bagian kanan - status info */}
             <div className="text-right">
-              <div className={`text-sm font-medium ${getStatusColor(stationData.status)}`}>{getStatusText(stationData.status)}</div>
+              <div className="flex items-center justify-end gap-2 mb-1">
+                {isAutoSwitchOn && (
+                  <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                    Auto Switch
+                  </div>
+                )}
+                <div className={`text-sm font-medium ${getStatusColor(stationData.status)}`}>{getStatusText(stationData.status)}</div>
+              </div>
               <div className="text-xs text-gray-500">Update {new Date().toLocaleTimeString('id-ID')}</div>
             </div>
           </div>
@@ -123,7 +140,6 @@ const DetailPanel = ({
                   </h3>
                   {activeTab === 'sensor' && (
                     <div className="flex items-center space-x-2">
-                      <span className="text-sm font-medium text-gray-700">Status Monitoring:</span>
                       <div className="flex items-center space-x-1">
                         <div className={`w-3 h-3 rounded-full ${getStatusColor(stationData.status).replace('text-', 'bg-')}`}></div>
                         <span className={`text-sm font-medium ${getStatusColor(stationData.status)}`}>

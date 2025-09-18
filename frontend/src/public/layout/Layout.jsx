@@ -33,6 +33,9 @@ const Layout = ({ children }) => {
     if (!isOn) {
       setIsSidebarOpen(false)
       setSelectedStation(null)
+    } else {
+      // Jika auto switch diaktifkan, tutup detail panel
+      setIsDetailPanelOpen(false)
     }
   }
 
@@ -68,6 +71,10 @@ const Layout = ({ children }) => {
     // Buka panel detail saat auto switch
     setSelectedStation(station)
     setIsSidebarOpen(true)
+    // Tutup detail panel jika auto switch sedang berjalan
+    if (isAutoSwitchOn) {
+      setIsDetailPanelOpen(false)
+    }
     // Trigger map auto switch
     if (window.mapboxAutoSwitch) {
       window.mapboxAutoSwitch(station, index)
@@ -144,6 +151,7 @@ const Layout = ({ children }) => {
         onClose={handleCloseDetailPanel}
         stationData={selectedStation}
         chartHistory={selectedStation?.history || []}
+        isAutoSwitchOn={isAutoSwitchOn}
       />
 
       
