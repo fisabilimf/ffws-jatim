@@ -1,3 +1,5 @@
+// stationdetail.jsx
+
 import React, { useState, useEffect } from 'react';
 import Chart from './Chart';
 import DetailPanel from './DetailPanel';
@@ -17,7 +19,8 @@ const SidebarTemplate = ({
   statusDot,
   showDetailToggle = false,
   isDetailOpen = false,
-  onDetailToggle = () => {}
+  onDetailToggle = () => {},
+  status = 'safe' // Tambahkan prop status
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   
@@ -38,61 +41,84 @@ const SidebarTemplate = ({
     }, 300);
   };
   
+  // Fungsi untuk mendapatkan warna berdasarkan status
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'safe': return 'text-green-600';
+      case 'warning': return 'text-yellow-600';
+      case 'alert': return 'text-red-600';
+      default: return 'text-gray-600';
+    }
+  };
+  
+  const getStatusBgColor = (status) => {
+    switch (status) {
+      case 'safe': return 'bg-green-600';
+      case 'warning': return 'bg-yellow-600';
+      case 'alert': return 'bg-red-600';
+      default: return 'bg-gray-600';
+    }
+  };
+  
+  const getStatusBorderColor = (status) => {
+    switch (status) {
+      case 'safe': return 'border-green-600';
+      case 'warning': return 'border-yellow-600';
+      case 'alert': return 'border-red-600';
+      default: return 'border-gray-600';
+    }
+  };
+  
   if (!isOpen) return null;
   
   return (
     <div 
-      className={`${position} ${topPosition} left-0 h-[calc(100vh-5rem)] ${width} bg-white shadow-2xl ${zIndex} transform transition-transform duration-300 ease-in-out flex flex-col ${
+      className={`${position} ${topPosition} left-0 h-[calc(100vh-5rem)] ${width} bg-gradient-to-b from-white to-gray-50 shadow-2xl ${zIndex} transform transition-transform duration-300 ease-in-out flex flex-col ${
         isVisible ? 'translate-x-0' : '-translate-x-full'
-      }`}
+      } border-r border-gray-200`}
       style={{ willChange: 'transform' }}
     >
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 p-4 flex-shrink-0">
+      <div className={`bg-gradient-to-r ${getStatusBgColor(status)} text-white p-4 flex-shrink-0`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <button
               onClick={handleClose}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2 hover:bg-black hover:bg-opacity-10 rounded-full transition-colors"
             >
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
             <div className="flex-1">
               {headerContent || (
                 <>
-                  <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-                  {subtitle && <p className="text-gray-500 text-sm">{subtitle}</p>}
+                  <h3 className="text-lg font-semibold text-white">{title}</h3>
+                  {subtitle && <p className="text-white text-opacity-80 text-sm">{subtitle}</p>}
                 </>
               )}
             </div>
             {statusDot && <div className={`w-3 h-3 rounded-full ${statusDot}`}></div>}
           </div>
           
-          {/* Tombol toggle untuk DetailPanel */}
-          {showDetailToggle && (
-            <button
-              onClick={onDetailToggle}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              aria-label={isDetailOpen ? "Tutup panel detail" : "Buka panel detail"}
-            >
-              {isDetailOpen ? (
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-                </svg>
-              )}
-            </button>
-          )}
+   {/* Tombol toggle untuk DetailPanel - Diubah menjadi teks */}
+    {showDetailToggle && (
+    <button
+        onClick={onDetailToggle}
+        className="px-2 py-1 bg-blue-500 bg-opacity-10 hover:bg-opacity-10 rounded-lg transition-colors text-sm font-medium text-white flex items-center"
+        aria-label={isDetailOpen ? "Tutup panel detail" : "Buka panel detail"}
+    >
+        <span>Informasi Detail</span>
+        <svg className={`w-3 h-3 ml-1.5 transition-transform duration-300 ${isDetailOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
+        </svg>
+     </button>
+      )}
         </div>
       </div>
       
       {/* Content - Scrollable Area */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
         {children}
       </div>
     </div>
@@ -249,10 +275,11 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
         showDetailToggle={true}
         isDetailOpen={isDetailOpen}
         onDetailToggle={handleDetailToggle}
+        status={stationData.status} // Teruskan status ke SidebarTemplate
       >
         <div className="p-5 space-y-6 pb-6">
           {/* Status Card */}
-          <div className={`p-5 rounded-xl border-2 ${getStatusBgColor(stationData.status)} shadow-sm`}>
+          <div className={`p-5 rounded-xl border-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 ${getStatusBgColor(stationData.status)}`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 mb-1">Status Saat Ini</p>
@@ -274,9 +301,16 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
           
           {/* Chart Section */}
           <div>
-            <h4 className="text-base font-medium text-gray-900 mb-2">Grafik Level Air</h4>
+            <div className="flex items-center mb-2">
+              <div className="bg-blue-100 p-2 rounded-lg mr-3">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <h4 className="text-base font-medium text-gray-900">Grafik Level Air</h4>
+            </div>
             <p className="text-sm text-gray-500 mb-4">Data 10 menit terakhir</p>
-            <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+            <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-lg hover:shadow-xl transition-shadow">
               <Chart 
                 data={chartHistory}
                 width={380}
@@ -295,15 +329,22 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
           
           {/* Statistics Grid */}
           <div>
-            <h4 className="text-base font-medium text-gray-900 mb-4">Statistik</h4>
+            <div className="flex items-center mb-4">
+              <div className="bg-blue-100 p-2 rounded-lg mr-3">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <h4 className="text-base font-medium text-gray-900">Statistik</h4>
+            </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+              <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                 <p className="text-sm text-gray-500 mb-1">Level Tertinggi</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {Math.max(...chartHistory).toFixed(1)}m
                 </p>
               </div>
-              <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+              <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                 <p className="text-sm text-gray-500 mb-1">Level Terendah</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {Math.min(...chartHistory).toFixed(1)}m
@@ -317,19 +358,49 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
           
           {/* Additional Info */}
           <div>
-            <h4 className="text-base font-medium text-gray-900 mb-4">Informasi Stasiun</h4>
-            <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm space-y-3">
-              <div className="flex justify-between items-center py-2">
-                <span className="text-gray-600">ID Stasiun</span>
-                <span className="text-gray-900 font-medium">#{stationData.id}</span>
+            <div className="flex items-center mb-4">
+              <div className="bg-blue-100 p-2 rounded-lg mr-3">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
               </div>
-              <div className="flex justify-between items-center py-2">
-                <span className="text-gray-600">Lokasi</span>
-                <span className="text-gray-900 font-medium text-right max-w-48">{stationData.location}</span>
+              <h4 className="text-base font-medium text-gray-900">Informasi Stasiun</h4>
+            </div>
+            <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-lg hover:shadow-xl transition-shadow space-y-3">
+              <div className="flex justify-between items-center py-2 border-b border-gray-100 group">
+                <div className="flex items-center">
+                  <div className="bg-gray-100 p-2 rounded-lg mr-3 group-hover:bg-blue-100 transition-colors">
+                    <svg className="w-4 h-4 text-gray-600 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                  </div>
+                  <span className="text-gray-600 font-medium">ID Stasiun</span>
+                </div>
+                <span className="text-gray-900 font-semibold bg-blue-50 px-3 py-1 rounded-lg">#{stationData.id}</span>
               </div>
-              <div className="flex justify-between items-center py-2">
-                <span className="text-gray-600">Update Terakhir</span>
-                <span className="text-gray-900 font-medium">{new Date().toLocaleTimeString('id-ID')}</span>
+              <div className="flex justify-between items-center py-2 border-b border-gray-100 group">
+                <div className="flex items-center">
+                  <div className="bg-gray-100 p-2 rounded-lg mr-3 group-hover:bg-blue-100 transition-colors">
+                    <svg className="w-4 h-4 text-gray-600 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  <span className="text-gray-600 font-medium">Lokasi</span>
+                </div>
+                <span className="text-gray-900 font-semibold bg-blue-50 px-3 py-1 rounded-lg text-right max-w-48">{stationData.location}</span>
+              </div>
+              <div className="flex justify-between items-center py-2 group">
+                <div className="flex items-center">
+                  <div className="bg-gray-100 p-2 rounded-lg mr-3 group-hover:bg-blue-100 transition-colors">
+                    <svg className="w-4 h-4 text-gray-600 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <span className="text-gray-600 font-medium">Update Terakhir</span>
+                </div>
+                <span className="text-gray-900 font-semibold bg-blue-50 px-3 py-1 rounded-lg">{new Date().toLocaleTimeString('id-ID')}</span>
               </div>
             </div>
           </div>
@@ -337,13 +408,33 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
           {/* Divider */}
           <div className="border-t border-gray-200"></div>
           
-          {/* Hint for Detail Panel */}
-          <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-            <div className="flex items-center">
-              <svg className="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p className="text-sm text-blue-700">Klik ikon panah di pojok kanan atas untuk melihat detail informasi sensor, kualitas air, dan cuaca</p>
+          {/* Hint for Detail Panel - Diubah untuk lebih jelas */}
+          <div className={`rounded-xl p-4 border transition-all duration-300 shadow-md ${
+            stationData.status === 'alert' ? 'bg-gradient-to-r from-yellow-50 to-amber-50 border-yellow-200' : 
+            stationData.status === 'warning' ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200' :
+            'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200'
+          }`}>
+            <div className="flex items-start">
+              <div className={`p-2 rounded-lg mr-3 ${
+                stationData.status === 'alert' ? 'bg-yellow-100' : 
+                stationData.status === 'warning' ? 'bg-blue-100' :
+                'bg-green-100'
+              }`}>
+                <svg className={`w-5 h-5 transition-colors duration-300 ${
+                  stationData.status === 'alert' ? 'text-yellow-600' : 
+                  stationData.status === 'warning' ? 'text-blue-600' :
+                  'text-green-600'
+                }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <p className={`text-sm font-medium transition-colors duration-300 ${
+                stationData.status === 'alert' ? 'text-yellow-700' : 
+                stationData.status === 'warning' ? 'text-blue-700' :
+                'text-green-700'
+              }`}>
+                Klik tombol "Informasi Detail" di pojok kanan atas untuk melihat detail informasi sensor, kualitas air, dan cuaca
+              </p>
             </div>
           </div>
         </div>
