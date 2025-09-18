@@ -60,22 +60,10 @@ const SidebarTemplate = ({
           {showArrow && !isDetailPanelOpen && (
             <button
               onClick={onArrowToggle}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors group"
+              className="px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
               title="Buka Detail Panel"
             >
-              <svg 
-                className="w-5 h-5 group-hover:text-blue-600 transition-colors"
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M13 7l5 5m0 0l-5 5m5-5H6" 
-                />
-              </svg>
+              Informasi Detail
             </button>
           )}
         </div>
