@@ -8,58 +8,53 @@
 @section('content')
 <div class="space-y-6">
     <!-- Filter Section -->
-    <x-admin.card title="Filter & Pencarian">
-        <form method="GET" action="{{ route('admin.sensors.index') }}" class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                <div>
-                    <label for="search" class="block text-sm font-medium text-gray-700">Cari Sensor</label>
-                    <input type="text" 
-                           name="search" 
-                           id="search"
-                           value="{{ request('search') }}"
-                           placeholder="Cari berdasarkan kode atau deskripsi..."
-                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                </div>
-                <div>
-                    <label for="parameter" class="block text-sm font-medium text-gray-700">Parameter</label>
-                    <select name="parameter" id="parameter" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                        <option value="">Semua Parameter</option>
-                        @foreach($parameterOptions as $value => $label)
-                            <option value="{{ $value }}" {{ request('parameter') == $value ? 'selected' : '' }}>
-                                {{ $label }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
-                    <select name="status" id="status" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                        <option value="">Semua Status</option>
-                        @foreach($statusOptions as $value => $label)
-                            <option value="{{ $value }}" {{ request('status') == $value ? 'selected' : '' }}>
-                                {{ $label }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label for="per_page" class="block text-sm font-medium text-gray-700">Per Halaman</label>
-                    <select name="per_page" id="per_page" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                        <option value="10" {{ request('per_page') == '10' ? 'selected' : '' }}>10</option>
-                        <option value="15" {{ request('per_page') == '15' || !request('per_page') ? 'selected' : '' }}>15</option>
-                        <option value="25" {{ request('per_page') == '25' ? 'selected' : '' }}>25</option>
-                        <option value="50" {{ request('per_page') == '50' ? 'selected' : '' }}>50</option>
-                        <option value="100" {{ request('per_page') == '100' ? 'selected' : '' }}>100</option>
-                    </select>
-                </div>
-                <div class="flex items-end">
-                    <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <i class="fas fa-search mr-2"></i>Filter
-                    </button>
-                </div>
-            </div>
-        </form>
-    </x-admin.card>
+    @php
+        $filterConfig = [
+            [
+                'type' => 'text',
+                'name' => 'search',
+                'label' => 'Cari Sensor',
+                'placeholder' => 'Cari berdasarkan kode atau deskripsi...'
+            ],
+            [
+                'type' => 'select',
+                'name' => 'parameter',
+                'label' => 'Parameter',
+                'empty_option' => 'Semua Parameter',
+                'options' => collect($parameterOptions)->map(function($label, $value) {
+                    return ['value' => $value, 'label' => $label];
+                })->values()->toArray()
+            ],
+            [
+                'type' => 'select',
+                'name' => 'status',
+                'label' => 'Status',
+                'empty_option' => 'Semua Status',
+                'options' => collect($statusOptions)->map(function($label, $value) {
+                    return ['value' => $value, 'label' => $label];
+                })->values()->toArray()
+            ],
+            [
+                'type' => 'select',
+                'name' => 'per_page',
+                'label' => 'Per Halaman',
+                'options' => [
+                    ['value' => '10', 'label' => '10'],
+                    ['value' => '15', 'label' => '15'],
+                    ['value' => '25', 'label' => '25'],
+                    ['value' => '50', 'label' => '50'],
+                    ['value' => '100', 'label' => '100']
+                ]
+            ]
+        ];
+    @endphp
+
+    <x-filter-bar 
+        title="Filter & Pencarian Sensor"
+        :filters="$filterConfig"
+        :action="route('admin.sensors.index')"
+        gridCols="md:grid-cols-4"
+    />
 
     <!-- Table Section -->
     <x-table
