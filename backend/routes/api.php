@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\Admin\MasDeviceController;
 use App\Http\Controllers\Api\Admin\MasSensorController;
+use App\Http\Controllers\Api\Admin\RiverBasinController;
 
 /*
 |--------------------------------------------------------------------------
@@ -63,6 +64,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/device/{deviceId}', [MasSensorController::class, 'getByDevice']);
         Route::get('/parameter/{parameter}', [MasSensorController::class, 'getByParameter']);
         Route::get('/status/{status}', [MasSensorController::class, 'getByStatus']);
+    });
+
+    // River Basin routes
+    Route::prefix('river-basins')->group(function () {
+        Route::get('/{id}', [RiverBasinController::class, 'show']);
     });
 });
 
