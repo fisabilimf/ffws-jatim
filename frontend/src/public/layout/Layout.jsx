@@ -1,12 +1,12 @@
 import React, { useState, useRef } from 'react'
 import Dashboard from '../pages/Dashboard'
-import GoogleMapsSearchbar from '../components/GoogleMapsSearchbar'
-import MapboxMap from '../components/Device/MapboxMap'
-import FloatingLegend from '../components/FloatingLegend'
-import FloodRunningBar from '../components/FloodRunningBar'
-import StationDetail from '../components/StationDetail'
-import DetailPanel from '../components/DetailPanel'
-import AutoSwitchToggle from '../components/AutoSwitchToggle'
+import GoogleMapsSearchbar from '../components/ui/GoogleMapsSearchbar'
+import MapboxMap from '../components/devices/MapboxMap'
+import FloatingLegend from '../components/ui/FloatingLegend'
+import FloodRunningBar from '../components/predictions/FloodRunningBar'
+import StationDetail from '../components/sensors/StationDetail'
+import DetailPanel from '../components/sensors/DetailPanel'
+import AutoSwitchToggle from '../components/ui/AutoSwitchToggle'
 
 const Layout = ({ children }) => {
   const [tickerData, setTickerData] = useState(null)
@@ -20,8 +20,6 @@ const Layout = ({ children }) => {
 
   const handleSearch = (query) => {
     setSearchQuery(query)
-    // Implementasi pencarian bisa ditambahkan di sini
-    console.log('Searching for:', query)
   }
 
   const handleStationSelect = (station) => {
@@ -137,6 +135,7 @@ const Layout = ({ children }) => {
         showArrow={true}
         onArrowToggle={handleToggleDetailPanel}
         isDetailPanelOpen={isDetailPanelOpen}
+        onCloseDetailPanel={handleCloseDetailPanel}
       />
 
       {/* Detail Panel */}
