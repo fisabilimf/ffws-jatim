@@ -9,7 +9,7 @@ use App\Http\Controllers\Admin\MasDeviceController;
 use App\Http\Controllers\Admin\MasSensorController;
 use App\Http\Controllers\Admin\MasModelController;
 use App\Http\Controllers\Admin\DataActualController;
-use App\Http\Controllers\Api\Admin\DataPredictionController;
+use App\Http\Controllers\Admin\DataPredictionController;
 
 /*
 |--------------------------------------------------------------------------

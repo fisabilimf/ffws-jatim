@@ -7,13 +7,6 @@
 
 @section('content')
 <div class="space-y-6">
-    <!-- Page Actions -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-            <h2 class="text-lg font-medium text-gray-900">Daftar Users</h2>
-            <p class="mt-1 text-sm text-gray-500">Kelola semua user dalam sistem</p>
-        </div>
-    </div>
 
     <!-- Filter Section -->
     @php
