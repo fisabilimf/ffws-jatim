@@ -14,7 +14,6 @@ const DetailPanel = ({
   const [isVisible, setIsVisible] = useState(false);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('sensor');
-  const [tabContentVisible, setTabContentVisible] = useState(true);
   const [dynamicData, setDynamicData] = useState({
     sensorInfo: {},
     waterQuality: {},
@@ -25,39 +24,31 @@ const DetailPanel = ({
   useEffect(() => {
     if (isOpen) {
       setIsPanelOpen(true);
-      setTimeout(() => {
-        setIsVisible(true);
-      }, 10);
+      setTimeout(() => setIsVisible(true), 10);
     } else {
       setIsVisible(false);
-      setTimeout(() => {
-        setIsPanelOpen(false);
-      }, 300); // Match the duration of the transition
+      setTimeout(() => setIsPanelOpen(false), 300);
     }
   }, [isOpen]);
   
-  // Generate dynamic data based on station data
   useEffect(() => {
     if (stationData) {
-      // Generate sensor data based on station type and ID
       const generateSensorData = () => {
         const sensorTypes = ["Ultrasonic Sensor", "Pressure Sensor", "Radar Sensor", "Float Sensor"];
         const depths = ["3 meter", "5 meter", "8 meter", "10 meter"];
         const installationDates = ["15 Jan 2023", "20 Feb 2023", "10 Mar 2023", "05 Apr 2023"];
         
-        // Use station ID to determine sensor type consistently
         const sensorIndex = stationData.id % sensorTypes.length;
         const depthIndex = stationData.id % depths.length;
         const dateIndex = stationData.id % installationDates.length;
         
-        // Generate battery level based on station status
         let batteryLevel;
         if (stationData.status === 'alert') {
-          batteryLevel = Math.floor(Math.random() * 30) + 20; // 20-50%
+          batteryLevel = Math.floor(Math.random() * 30) + 20;
         } else if (stationData.status === 'warning') {
-          batteryLevel = Math.floor(Math.random() * 40) + 40; // 40-80%
+          batteryLevel = Math.floor(Math.random() * 40) + 40;
         } else {
-          batteryLevel = Math.floor(Math.random() * 20) + 80; // 80-100%
+          batteryLevel = Math.floor(Math.random() * 20) + 80;
         }
         
         return {
@@ -71,26 +62,23 @@ const DetailPanel = ({
         };
       };
       
-      // Generate water quality data based on station location and status
       const generateWaterQualityData = () => {
-        // Use station ID to generate consistent but varied data
-        const basePh = 6.5 + (stationData.id % 4) * 0.5; // 6.5-8.0
-        const baseTurbidity = 5 + (stationData.id % 10) * 2; // 5-25
-        const baseTemp = 25 + (stationData.id % 5); // 25-30
+        const basePh = 6.5 + (stationData.id % 4) * 0.5;
+        const baseTurbidity = 5 + (stationData.id % 10) * 2;
+        const baseTemp = 25 + (stationData.id % 5);
         
-        // Adjust values based on station status
         let ph = basePh;
         let turbidity = baseTurbidity;
         let temperature = baseTemp;
         
         if (stationData.status === 'alert') {
-          ph += Math.random() * 0.5 - 0.25; // More variation
-          turbidity += Math.random() * 10; // Higher turbidity
-          temperature += Math.random() * 2; // Higher temperature
+          ph += Math.random() * 0.5 - 0.25;
+          turbidity += Math.random() * 10;
+          temperature += Math.random() * 2;
         } else if (stationData.status === 'warning') {
-          ph += Math.random() * 0.3 - 0.15; // Some variation
-          turbidity += Math.random() * 5; // Moderate turbidity
-          temperature += Math.random() * 1; // Slightly higher temperature
+          ph += Math.random() * 0.3 - 0.15;
+          turbidity += Math.random() * 5;
+          temperature += Math.random() * 1;
         }
         
         return {
@@ -103,24 +91,20 @@ const DetailPanel = ({
         };
       };
       
-      // Generate weather data based on current conditions and station location
       const generateWeatherData = () => {
-        // Base values that change with time
-        const baseTemp = 25 + Math.floor(Math.random() * 8); // 25-33
-        const baseHumidity = 60 + Math.floor(Math.random() * 30); // 60-90
-        const baseRainfall = Math.random() * 5; // 0-5mm
+        const baseTemp = 25 + Math.floor(Math.random() * 8);
+        const baseHumidity = 60 + Math.floor(Math.random() * 30);
+        const baseRainfall = Math.random() * 5;
         
-        // Adjust based on station status
         let temperature = baseTemp;
         let humidity = baseHumidity;
         let rainfall = baseRainfall;
         
         if (stationData.status === 'alert') {
-          rainfall += Math.random() * 10; // Higher chance of rain
-          humidity += Math.random() * 10; // Higher humidity
+          rainfall += Math.random() * 10;
+          humidity += Math.random() * 10;
         }
         
-        // Generate forecast based on current conditions
         const forecast = [];
         const currentHour = new Date().getHours();
         
@@ -128,17 +112,15 @@ const DetailPanel = ({
           const hour = (currentHour + (i + 1) * 3) % 24;
           const forecastHour = hour < 10 ? `0${hour}:00` : `${hour}:00`;
           
-          // Rain probability increases with current rainfall
           let rainProb = Math.min(100, rainfall * 20);
           if (stationData.status === 'alert') rainProb = Math.min(100, rainProb + 20);
           if (stationData.status === 'warning') rainProb = Math.min(100, rainProb + 10);
           
-          // Temperature changes throughout the day
           let forecastTemp = temperature;
           if (hour >= 6 && hour <= 15) {
-            forecastTemp += 2; // Warmer during the day
+            forecastTemp += 2;
           } else {
-            forecastTemp -= 2; // Cooler at night
+            forecastTemp -= 2;
           }
           
           forecast.push({
@@ -160,9 +142,8 @@ const DetailPanel = ({
         };
       };
       
-      // Generate flood history based on station location and historical data
       const generateFloodHistory = () => {
-        const historyCount = 2 + Math.floor(Math.random() * 3); // 2-4 historical events
+        const historyCount = 2 + Math.floor(Math.random() * 3);
         const history = [];
         
         const months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
@@ -171,19 +152,17 @@ const DetailPanel = ({
         for (let i = 0; i < historyCount; i++) {
           const monthIndex = Math.floor(Math.random() * 12);
           const day = 1 + Math.floor(Math.random() * 28);
-          const year = currentYear - Math.floor(Math.random() * 3); // Last 3 years
+          const year = currentYear - Math.floor(Math.random() * 3);
           
-          // Flood level based on station status
           let level;
           if (stationData.status === 'alert') {
-            level = 3.5 + Math.random() * 2; // 3.5-5.5
+            level = 3.5 + Math.random() * 2;
           } else if (stationData.status === 'warning') {
-            level = 2.5 + Math.random() * 2; // 2.5-4.5
+            level = 2.5 + Math.random() * 2;
           } else {
-            level = 1.5 + Math.random() * 2; // 1.5-3.5
+            level = 1.5 + Math.random() * 2;
           }
           
-          // Duration based on flood level
           const duration = Math.floor(level) + Math.floor(Math.random() * 3);
           
           history.push({
@@ -193,7 +172,6 @@ const DetailPanel = ({
           });
         }
         
-        // Sort by date (newest first)
         return history.sort((a, b) => {
           const dateA = new Date(a.date.replace(/(\d+) (\w+) (\d+)/, '$3 $2 $1'));
           const dateB = new Date(b.date.replace(/(\d+) (\w+) (\d+)/, '$3 $2 $1'));
@@ -201,7 +179,6 @@ const DetailPanel = ({
         });
       };
       
-      // Update dynamic data
       setDynamicData({
         sensorInfo: generateSensorData(),
         waterQuality: generateWaterQualityData(),
@@ -211,16 +188,14 @@ const DetailPanel = ({
     }
   }, [stationData]);
   
-  // Helper function to generate random maintenance date
   const getRandomDate = (installDate) => {
     const install = new Date(installDate);
-    const monthsSinceInstall = Math.floor(Math.random() * 6) + 1; // 1-6 months
+    const monthsSinceInstall = Math.floor(Math.random() * 6) + 1;
     const maintenanceDate = new Date(install);
     maintenanceDate.setMonth(maintenanceDate.getMonth() + monthsSinceInstall);
     
-    // Pastikan tanggal valid (misalnya, jika hasilnya 31 Feb, disesuaikan)
     if (maintenanceDate.getMonth() !== (install.getMonth() + monthsSinceInstall) % 12) {
-      maintenanceDate.setDate(0); // Set to last day of previous month
+      maintenanceDate.setDate(0);
     }
     
     const day = maintenanceDate.getDate();
@@ -230,34 +205,24 @@ const DetailPanel = ({
     return `${day} ${month} ${year}`;
   };
   
-  // Calculate water level percentage based on station data
   const calculateWaterLevelPercentage = () => {
-    if (!stationData) return 30; // Default value
+    if (!stationData) return 30;
     
-    // Get max depth from sensor data
     const maxDepth = parseInt(dynamicData.sensorInfo.sensorDepth);
     const currentLevel = stationData.value;
     
-    // Calculate percentage (capped at 95% for visual purposes)
     const percentage = Math.min(95, (currentLevel / maxDepth) * 100);
-    return Math.max(5, percentage); // Ensure at least 5% for visibility
+    return Math.max(5, percentage);
   };
   
-  // Handle tab change with smooth transition
   const handleTabChange = (tabId) => {
     if (tabId !== activeTab) {
-      setTabContentVisible(false);
-      setTimeout(() => {
-        setActiveTab(tabId);
-        setTabContentVisible(true);
-      }, 150); // Match the duration of the fade-out animation
+      setActiveTab(tabId);
     }
   };
   
-  // Don't render if sidebar is closed or panel is not open
   if (!isSidebarOpen || !isPanelOpen) return null;
   
-  // Calculate water level percentage
   const waterLevelPercentage = calculateWaterLevelPercentage();
   
   return (
@@ -272,21 +237,16 @@ const DetailPanel = ({
         transformOrigin: 'left center'
       }}
     >
-      {/* Header */}
       <div className="bg-white border-b border-gray-200 p-4 flex-shrink-0">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900">Detail Informasi Stasiun</h3>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-          >
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
             <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
         
-        {/* Tabs with smooth transition */}
         <div className="flex mt-4 border-b border-gray-200 relative">
           {[
             { id: 'sensor', label: 'Sensor' },
@@ -297,16 +257,13 @@ const DetailPanel = ({
             <button
               key={tab.id}
               className={`px-11 py-3 font-medium text-sm transition-colors duration-200 ${
-                activeTab === tab.id
-                  ? 'text-blue-600'
-                  : 'text-gray-500 hover:text-gray-700'
+                activeTab === tab.id ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
               }`}
               onClick={() => handleTabChange(tab.id)}
             >
               {tab.label}
             </button>
           ))}
-          {/* Animated active tab indicator */}
           <div 
             className="absolute bottom-0 h-0.5 bg-blue-600 transition-all duration-300 ease-in-out"
             style={{ 
@@ -317,12 +274,10 @@ const DetailPanel = ({
         </div>
       </div>
       
-      {/* Content with smooth transition */}
-      <div className="flex-1 overflow-y-auto p-5">
-        {/* Sensor Tab */}
+      <div className="flex-1 overflow-hidden">
         <div 
-          className={`transition-opacity duration-300 ease-in-out ${
-            tabContentVisible && activeTab === 'sensor' ? 'opacity-100' : 'opacity-0 absolute'
+          className={`h-full overflow-y-auto p-5 custom-scrollbar ${
+            activeTab === 'sensor' ? 'block' : 'hidden'
           }`}
         >
           <div className="space-y-5">
@@ -334,27 +289,20 @@ const DetailPanel = ({
                 <span className="text-gray-900 font-medium">{dynamicData.sensorInfo.sensorType}</span>
               </div>
               
-              {/* Kedalaman Maksimum dengan Visual Tabung yang Lebih Besar */}
               <div className="flex justify-between items-center py-3 border-b border-gray-100">
                 <span className="text-gray-600">Kedalaman Maksimum</span>
                 <div className="flex items-center space-x-3">
                   <span className="text-gray-900 font-medium">{dynamicData.sensorInfo.sensorDepth}</span>
-                  {/* Visual Tabung Air yang Lebih Besar dengan level dinamis */}
                   <div className="relative flex flex-col items-center">
-                    <div className="relative w-20 h-26 border-2 border-gray-300 rounded-b-lg overflow-hidden">
-                      <div className="absolute bottom-0 w-full bg-blue-400" style={{ height: `${waterLevelPercentage}%` }}></div>
-                      {/* Efek gelombang air dengan animasi naik turun */}
+                    <div className="relative w-24 h-32 border-2 border-gray-300 rounded-b-lg overflow-hidden shadow-inner">
+                      <div className="absolute bottom-0 w-full bg-gradient-to-t from-blue-500 to-blue-400" style={{ height: `${waterLevelPercentage}%` }}></div>
                       <div className="absolute bottom-0 w-full" style={{ height: `${waterLevelPercentage}%` }}>
-                        {/* Gelombang pertama */}
                         <div className="absolute top-0 left-0 w-full h-3 bg-blue-300 rounded-full opacity-50 animate-wave animate-wave-vertical"></div>
-                        {/* Gelombang kedua dengan delay */}
                         <div className="absolute top-1 left-0 w-full h-3 bg-blue-300 rounded-full opacity-30 animate-wave animate-wave-vertical delay-300"></div>
-                        {/* Gelombang ketiga dengan delay berbeda */}
                         <div className="absolute top-2 left-0 w-full h-3 bg-blue-300 rounded-full opacity-20 animate-wave animate-wave-vertical delay-700"></div>
                       </div>
-                      {/* Indikator level saat ini */}
                       <div className="absolute right-1" style={{ bottom: `${waterLevelPercentage}%` }}>
-                        <div className="w-3 h-3 bg-red-500 rounded-full border-2 border-white shadow-sm animate-pulse"></div>
+                        <div className="w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow-sm animate-pulse"></div>
                       </div>
                     </div>
                     <div className="flex justify-between w-full mt-1">
@@ -375,29 +323,28 @@ const DetailPanel = ({
                 <span className="text-gray-900 font-medium">{dynamicData.sensorInfo.lastMaintenance}</span>
               </div>
               
-              {/* Level Baterai dengan Visual Baterai yang Lebih Besar */}
               <div className="flex justify-between items-center py-3 border-b border-gray-100">
                 <span className="text-gray-600">Level Baterai</span>
                 <div className="flex items-center space-x-3">
                   <span className="text-gray-900 font-medium">{dynamicData.sensorInfo.batteryLevel}</span>
-                  {/* Visual Baterai yang Lebih Besar */}
                   <div className="relative flex flex-col items-center">
-                    <div className="relative w-16 h-8 border-2 border-gray-300 rounded-md">
-                      <div className="absolute top-1 right-0 w-2 h-6 bg-gray-300 rounded-r-md"></div>
+                    <div className="relative w-20 h-10 border-2 border-gray-300 rounded-md shadow-inner">
+                      <div className="absolute top-1 right-0 w-2 h-8 bg-gray-300 rounded-r-md"></div>
                       <div 
-                        className="absolute top-0 left-0 h-full rounded-md" 
+                        className="absolute top-0 left-0 h-full rounded-md transition-all duration-500" 
                         style={{ 
                           width: `${parseInt(dynamicData.sensorInfo.batteryLevel)}%`,
-                          backgroundColor: parseInt(dynamicData.sensorInfo.batteryLevel) > 70 ? '#10B981' : 
-                                         parseInt(dynamicData.sensorInfo.batteryLevel) > 40 ? '#F59E0B' : '#EF4444'
+                          background: parseInt(dynamicData.sensorInfo.batteryLevel) > 70 ? 
+                            'linear-gradient(90deg, #10B981, #34D399)' : 
+                            parseInt(dynamicData.sensorInfo.batteryLevel) > 40 ? 
+                            'linear-gradient(90deg, #F59E0B, #FCD34D)' : 
+                            'linear-gradient(90deg, #EF4444, #F87171)'
                         }}
                       >
-                        {/* Efek cahaya baterai */}
                         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-white to-transparent opacity-30 rounded-md"></div>
                       </div>
-                      {/* Indikator persentase */}
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-xs font-bold text-white">{dynamicData.sensorInfo.batteryLevel}</span>
+                        <span className="text-xs font-bold text-white drop-shadow">{dynamicData.sensorInfo.batteryLevel}</span>
                       </div>
                     </div>
                     <span className="text-xs text-gray-500 mt-1">Baterai</span>
@@ -409,7 +356,6 @@ const DetailPanel = ({
                 <span className="text-gray-600">Kekuatan Sinyal</span>
                 <div className="flex items-center space-x-2">
                   <span className="text-gray-900 font-medium">{dynamicData.sensorInfo.signalStrength}</span>
-                  {/* Visual Sinyal */}
                   <div className="flex space-x-1">
                     {[1, 2, 3, 4].map((bar) => (
                       <div 
@@ -419,7 +365,7 @@ const DetailPanel = ({
                           dynamicData.sensorInfo.signalStrength === 'Medium' ? 'bg-yellow-500' : 'bg-red-500'
                         }`}
                         style={{ 
-                          height: `${bar * 4}px`,
+                          height: `${bar * 5}px`,
                           opacity: dynamicData.sensorInfo.signalStrength === 'Strong' ? 1 :
                                   dynamicData.sensorInfo.signalStrength === 'Medium' ? bar <= 3 ? 1 : 0.3 :
                                   bar <= 2 ? 1 : 0.3
@@ -446,10 +392,9 @@ const DetailPanel = ({
           </div>
         </div>
         
-        {/* Water Quality Tab */}
         <div 
-          className={`transition-opacity duration-300 ease-in-out ${
-            tabContentVisible && activeTab === 'quality' ? 'opacity-100' : 'opacity-0 absolute'
+          className={`h-full overflow-y-auto p-5 custom-scrollbar ${
+            activeTab === 'quality' ? 'block' : 'hidden'
           }`}
         >
           <div className="space-y-5">
@@ -498,7 +443,7 @@ const DetailPanel = ({
                 <p className="text-2xl font-bold text-gray-900">{dynamicData.waterQuality.temperature}</p>
                 <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-blue-500 rounded-full transition-all duration-500" 
+                    className="h-full bg-gradient-to-r from-blue-400 to-blue-600 rounded-full transition-all duration-500" 
                     style={{ width: `${(dynamicData.waterQuality.temperature / 40) * 100}%` }}
                   ></div>
                 </div>
@@ -513,7 +458,7 @@ const DetailPanel = ({
                 <p className="text-2xl font-bold text-gray-900">{dynamicData.waterQuality.dissolvedOxygen}</p>
                 <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-purple-500 rounded-full transition-all duration-500" 
+                    className="h-full bg-gradient-to-r from-purple-400 to-purple-600 rounded-full transition-all duration-500" 
                     style={{ width: `${(dynamicData.waterQuality.dissolvedOxygen / 10) * 100}%` }}
                   ></div>
                 </div>
@@ -529,7 +474,7 @@ const DetailPanel = ({
                 <div className="mt-2 flex items-center">
                   <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
                     <div 
-                      className="h-full bg-indigo-500 rounded-full transition-all duration-500" 
+                      className="h-full bg-gradient-to-r from-indigo-400 to-indigo-600 rounded-full transition-all duration-500" 
                       style={{ width: `${Math.min(dynamicData.waterQuality.conductivity / 1000 * 100, 100)}%` }}
                     ></div>
                   </div>
@@ -543,7 +488,7 @@ const DetailPanel = ({
                 <div className="mt-2 flex items-center">
                   <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
                     <div 
-                      className="h-full bg-cyan-500 rounded-full transition-all duration-500" 
+                      className="h-full bg-gradient-to-r from-cyan-400 to-cyan-600 rounded-full transition-all duration-500" 
                       style={{ width: `${Math.min(dynamicData.waterQuality.tds / 500 * 100, 100)}%` }}
                     ></div>
                   </div>
@@ -570,10 +515,9 @@ const DetailPanel = ({
           </div>
         </div>
         
-        {/* Weather Tab */}
         <div 
-          className={`transition-opacity duration-300 ease-in-out ${
-            tabContentVisible && activeTab === 'weather' ? 'opacity-100' : 'opacity-0 absolute'
+          className={`h-full overflow-y-auto p-5 custom-scrollbar ${
+            activeTab === 'weather' ? 'block' : 'hidden'
           }`}
         >
           <div className="space-y-5">
@@ -680,10 +624,9 @@ const DetailPanel = ({
           </div>
         </div>
         
-        {/* History Tab */}
         <div 
-          className={`transition-opacity duration-300 ease-in-out ${
-            tabContentVisible && activeTab === 'history' ? 'opacity-100' : 'opacity-0 absolute'
+          className={`h-full overflow-y-auto p-5 custom-scrollbar ${
+            activeTab === 'history' ? 'block' : 'hidden'
           }`}
         >
           <div className="space-y-5">
@@ -760,7 +703,6 @@ const DetailPanel = ({
         </div>
       </div>
       
-      {/* Custom CSS untuk animations */}
       <style jsx>{`
         @keyframes wave {
           0% { transform: translateX(-100%); }
@@ -796,6 +738,28 @@ const DetailPanel = ({
         @keyframes pulse {
           0%, 100% { opacity: 1; }
           50% { opacity: .7; }
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 8px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #c5c5c5;
+          border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #a8a8a8;
+        }
+        
+        .drop-shadow {
+          text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
         }
       `}</style>
     </div>
