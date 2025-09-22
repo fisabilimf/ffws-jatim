@@ -54,18 +54,18 @@ const SidebarTemplate = ({
               <>
                 <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
                 {subtitle && <p className="text-gray-500 text-sm">{subtitle}</p>}
+                {showArrow && !isDetailPanelOpen && (
+                  <button
+                    onClick={onArrowToggle}
+                    className="text-blue-600 text-sm font-medium mt-1 hover:text-blue-700 hover:underline transition-colors text-left"
+                    title="Buka Detail Panel"
+                  >
+                    Informasi Detail
+                  </button>
+                )}
               </>
             )}
           </div>
-          {showArrow && !isDetailPanelOpen && (
-            <button
-              onClick={onArrowToggle}
-              className="px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-              title="Buka Detail Panel"
-            >
-              Informasi Detail
-            </button>
-          )}
         </div>
       </div>
       

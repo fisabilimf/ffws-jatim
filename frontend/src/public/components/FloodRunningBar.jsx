@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { determineStatus, getThresholdInfo } from '../config/stationThresholds';
-import Chart from './Chart';
+import Chart from './ui/Chart';
 
 const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarOpen = false }) => {
   // Station coordinates - format [lng, lat] sesuai MapboxMap (hanya 20 stasiun)
