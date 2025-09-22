@@ -1,12 +1,12 @@
 import React, { useState, useRef } from 'react'
 import Dashboard from '../pages/Dashboard'
-import GoogleMapsSearchbar from '../components/GoogleMapsSearchbar'
-import MapboxMap from '../components/Device/MapboxMap'
-import FloatingLegend from '../components/FloatingLegend'
+import GoogleMapsSearchbar from '../components/ui/GoogleMapsSearchbar'
+import MapboxMap from '../components/devices/MapboxMap'
+import FloatingLegend from '../components/ui/FloatingLegend'
 import FloodRunningBar from '../components/FloodRunningBar'
-import StationDetail from '../components/StationDetail'
-import DetailPanel from '../components/DetailPanel'
-import AutoSwitchToggle from '../components/AutoSwitchToggle'
+import StationDetail from '../components/sensors/StationDetail'
+import DetailPanel from '../components/sensors/DetailPanel'
+import AutoSwitchToggle from '../components/ui/AutoSwitchToggle'
 
 const Layout = ({ children }) => {
   const [tickerData, setTickerData] = useState(null)
@@ -20,8 +20,6 @@ const Layout = ({ children }) => {
 
   const handleSearch = (query) => {
     setSearchQuery(query)
-    // Implementasi pencarian bisa ditambahkan di sini
-    console.log('Searching for:', query)
   }
 
   const handleStationSelect = (station) => {
@@ -35,6 +33,9 @@ const Layout = ({ children }) => {
     if (!isOn) {
       setIsSidebarOpen(false)
       setSelectedStation(null)
+    } else {
+      // Jika auto switch diaktifkan, tutup detail panel
+      setIsDetailPanelOpen(false)
     }
   }
 
@@ -70,6 +71,10 @@ const Layout = ({ children }) => {
     // Buka panel detail saat auto switch
     setSelectedStation(station)
     setIsSidebarOpen(true)
+    // Tutup detail panel jika auto switch sedang berjalan
+    if (isAutoSwitchOn) {
+      setIsDetailPanelOpen(false)
+    }
     // Trigger map auto switch
     if (window.mapboxAutoSwitch) {
       window.mapboxAutoSwitch(station, index)
@@ -137,6 +142,7 @@ const Layout = ({ children }) => {
         showArrow={true}
         onArrowToggle={handleToggleDetailPanel}
         isDetailPanelOpen={isDetailPanelOpen}
+        onCloseDetailPanel={handleCloseDetailPanel}
       />
 
       {/* Detail Panel */}
@@ -145,6 +151,7 @@ const Layout = ({ children }) => {
         onClose={handleCloseDetailPanel}
         stationData={selectedStation}
         chartHistory={selectedStation?.history || []}
+        isAutoSwitchOn={isAutoSwitchOn}
       />
 
       
