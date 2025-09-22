@@ -7,13 +7,58 @@
 
 @section('content')
 <div class="space-y-6">
-    <!-- Page Actions -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-            <h2 class="text-lg font-medium text-gray-900">Daftar Users</h2>
-            <p class="mt-1 text-sm text-gray-500">Kelola semua user dalam sistem</p>
-        </div>
-    </div>
+
+    <!-- Filter Section -->
+    @php
+        $filterConfig = [
+            [
+                'type' => 'text',
+                'name' => 'search',
+                'label' => 'Cari User',
+                'placeholder' => 'Cari berdasarkan nama atau email...'
+            ],
+            [
+                'type' => 'select',
+                'name' => 'role',
+                'label' => 'Role',
+                'empty_option' => 'Semua Role',
+                'options' => [
+                    ['value' => 'admin', 'label' => 'Admin'],
+                    ['value' => 'user', 'label' => 'User'],
+                    ['value' => 'operator', 'label' => 'Operator']
+                ]
+            ],
+            [
+                'type' => 'select',
+                'name' => 'status',
+                'label' => 'Status',
+                'empty_option' => 'Semua Status',
+                'options' => [
+                    ['value' => 'active', 'label' => 'Aktif'],
+                    ['value' => 'inactive', 'label' => 'Non-aktif']
+                ]
+            ],
+            [
+                'type' => 'select',
+                'name' => 'per_page',
+                'label' => 'Per Halaman',
+                'options' => [
+                    ['value' => '10', 'label' => '10'],
+                    ['value' => '15', 'label' => '15'],
+                    ['value' => '25', 'label' => '25'],
+                    ['value' => '50', 'label' => '50'],
+                    ['value' => '100', 'label' => '100']
+                ]
+            ]
+        ];
+    @endphp
+
+    <x-filter-bar 
+        title="Filter & Pencarian Users"
+        :filters="$filterConfig"
+        :action="route('admin.users.index')"
+        gridCols="md:grid-cols-4"
+    />
 
     <!-- Users Table -->
     <x-table

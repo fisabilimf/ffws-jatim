@@ -130,6 +130,9 @@
                                         @case('value')
                                             <span class="font-mono text-sm">{{ $row->formatted_value ?? $row[$header['key']] }}</span>
                                             @break
+                                        @case('percentage')
+                                            <span class="font-mono text-sm">{{ $row->formatted_confidence ?? $row[$header['key']] }}</span>
+                                            @break
                                         @case('status')
                                             @php
                                                 $statusValue = $row->formatted_threshold_status ?? $row[$header['key']];
