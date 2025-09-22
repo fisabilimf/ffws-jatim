@@ -17,11 +17,6 @@ const AutoSwitchToggle = ({
     
     setIsPlaying(true);
     
-    // Dispatch custom event untuk menutup sidebar dan detail panel
-    document.dispatchEvent(new CustomEvent('autoSwitchActivated', { 
-      detail: { active: true } 
-    }));
-    
     intervalRef.current = setInterval(() => {
       setCurrentIndex(prevIndex => {
         const nextIndex = (prevIndex + 1) % tickerData.length;
@@ -44,11 +39,6 @@ const AutoSwitchToggle = ({
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-    
-    // Dispatch custom event saat auto switch dimatikan
-    document.dispatchEvent(new CustomEvent('autoSwitchDeactivated', { 
-      detail: { active: false } 
-    }));
   };
   
   // Toggle play/pause
@@ -81,24 +71,6 @@ const AutoSwitchToggle = ({
       setCurrentIndex(currentStationIndex);
     }
   }, [currentStationIndex]);
-  
-  // Add event listener for user interactions
-  useEffect(() => {
-    const handleUserInteraction = (event) => {
-      if (isPlaying) {
-        console.log('User interaction detected, stopping auto switch:', event.detail);
-        stopAutoSwitch();
-      }
-    };
-    
-    // Listen for custom event from other components
-    document.addEventListener('userInteraction', handleUserInteraction);
-    
-    // Cleanup
-    return () => {
-      document.removeEventListener('userInteraction', handleUserInteraction);
-    };
-  }, [isPlaying]);
   
   // Selalu render komponen; nonaktifkan toggle jika tidak ada data
   const hasData = tickerData && tickerData.length > 0;
