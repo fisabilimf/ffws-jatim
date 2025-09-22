@@ -1,47 +1,25 @@
 // stationdetail.jsx
-
 import React, { useState, useEffect } from 'react';
 import Chart from './Chart';
 import DetailPanel from './DetailPanel';
 
-// Reusable Sidebar Template Component
 const SidebarTemplate = ({ 
-  isOpen, 
-  onClose, 
-  title, 
-  subtitle, 
-  width = "w-[380px]", 
-  position = "fixed", 
-  zIndex = "z-[60]",
-  topPosition = "top-20", 
-  children,
-  headerContent,
-  statusDot,
-  showDetailToggle = false,
-  isDetailOpen = false,
-  onDetailToggle = () => {},
-  status = 'safe' // Tambahkan prop status
+  isOpen, onClose, title, subtitle, width = "w-[380px]", position = "fixed", 
+  zIndex = "z-[60]", topPosition = "top-20", children, headerContent, statusDot,
+  showDetailToggle = false, isDetailOpen = false, onDetailToggle = () => {}, status = 'safe'
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   
   useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => {
-        setIsVisible(true);
-      }, 10);
-    } else {
-      setIsVisible(false);
-    }
+    if (isOpen) setTimeout(() => setIsVisible(true), 10);
+    else setIsVisible(false);
   }, [isOpen]);
   
   const handleClose = () => {
     setIsVisible(false);
-    setTimeout(() => {
-      onClose();
-    }, 300);
+    setTimeout(() => onClose(), 300);
   };
   
-  // Fungsi untuk mendapatkan warna berdasarkan status
   const getStatusColor = (status) => {
     switch (status) {
       case 'safe': return 'text-green-600';
@@ -60,32 +38,16 @@ const SidebarTemplate = ({
     }
   };
   
-  const getStatusBorderColor = (status) => {
-    switch (status) {
-      case 'safe': return 'border-green-600';
-      case 'warning': return 'border-yellow-600';
-      case 'alert': return 'border-red-600';
-      default: return 'border-gray-600';
-    }
-  };
-  
   if (!isOpen) return null;
   
   return (
-    <div 
-      className={`${position} ${topPosition} left-0 h-[calc(100vh-5rem)] ${width} bg-gradient-to-b from-white to-gray-50 shadow-2xl ${zIndex} transform transition-transform duration-300 ease-in-out flex flex-col ${
-        isVisible ? 'translate-x-0' : '-translate-x-full'
-      } border-r border-gray-200`}
-      style={{ willChange: 'transform' }}
-    >
-      {/* Header */}
+    <div className={`${position} ${topPosition} left-0 h-[calc(100vh-5rem)] ${width} bg-gradient-to-b from-white to-gray-50 shadow-2xl ${zIndex} transform transition-transform duration-300 ease-in-out flex flex-col ${
+      isVisible ? 'translate-x-0' : '-translate-x-full'
+    } border-r border-gray-200`} style={{ willChange: 'transform' }}>
       <div className={`bg-gradient-to-r ${getStatusBgColor(status)} text-white p-4 flex-shrink-0`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <button
-              onClick={handleClose}
-              className="p-2 hover:bg-black hover:bg-opacity-10 rounded-full transition-colors"
-            >
+            <button onClick={handleClose} className="p-2 hover:bg-black hover:bg-opacity-10 rounded-full transition-colors">
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
@@ -101,23 +63,17 @@ const SidebarTemplate = ({
             {statusDot && <div className={`w-3 h-3 rounded-full ${statusDot}`}></div>}
           </div>
           
-   {/* Tombol toggle untuk DetailPanel - Diubah menjadi teks */}
-    {showDetailToggle && (
-    <button
-        onClick={onDetailToggle}
-        className="px-2 py-1 bg-blue-500 bg-opacity-10 hover:bg-opacity-10 rounded-lg transition-colors text-sm font-medium text-white flex items-center"
-        aria-label={isDetailOpen ? "Tutup panel detail" : "Buka panel detail"}
-    >
-        <span>Informasi Detail</span>
-        <svg className={`w-3 h-3 ml-1.5 transition-transform duration-300 ${isDetailOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
-        </svg>
-     </button>
-      )}
+          {showDetailToggle && (
+            <button onClick={onDetailToggle} className="px-2 py-1 bg-opacity-10 hover:bg-opacity-10 rounded-lg transition-colors text-xs font-medium text-white flex items-center cursor-pointer hover:underline" aria-label={isDetailOpen ? "Tutup panel detail" : "Buka panel detail"}>
+              <span className="cursor-pointer">Informasi Detail</span>
+              <svg className={`w-3 h-3 ml-1.5 transition-transform duration-300 ${isDetailOpen ? 'rotate-180' : ''} cursor-pointer`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
       
-      {/* Content - Scrollable Area */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
         {children}
       </div>
@@ -130,10 +86,8 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
   const [chartHistory, setChartHistory] = useState([]);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   
-  // Initialize station data when selected
   useEffect(() => {
     if (selectedStation && tickerData) {
-      // Find the station data from tickerData
       const foundStation = tickerData.find(station => station.id === selectedStation.id);
       if (foundStation) {
         setStationData(foundStation);
@@ -142,17 +96,12 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
     }
   }, [selectedStation, tickerData]);
   
-  // Reset detail panel when sidebar closes
   useEffect(() => {
-    if (!selectedStation) {
-      setIsDetailOpen(false);
-    }
+    if (!selectedStation) setIsDetailOpen(false);
   }, [selectedStation]);
   
-  // Update chart data in real-time from tickerData
   useEffect(() => {
     if (!stationData || !tickerData) return;
-    // Find the current station data from tickerData
     const currentStationData = tickerData.find(station => station.id === stationData.id);
     if (currentStationData) {
       setStationData(currentStationData);
@@ -160,24 +109,13 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
     }
   }, [tickerData, stationData]);
 
-  // Handle auto switch activation
   useEffect(() => {
-    const handleAutoSwitchActivated = () => {
-      if (selectedStation) {
-        onClose();
-      }
-    };
-    
+    const handleAutoSwitchActivated = () => { if (selectedStation) onClose(); };
     document.addEventListener('autoSwitchActivated', handleAutoSwitchActivated);
-    
-    return () => {
-      document.removeEventListener('autoSwitchActivated', handleAutoSwitchActivated);
-    };
+    return () => { document.removeEventListener('autoSwitchActivated', handleAutoSwitchActivated); };
   }, [selectedStation, onClose]);
 
-  const handleDetailToggle = () => {
-    setIsDetailOpen(!isDetailOpen);
-  };
+  const handleDetailToggle = () => setIsDetailOpen(!isDetailOpen);
   
   const getStatusColor = (status) => {
     switch (status) {
@@ -208,14 +146,13 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
   
   const getChartColor = (status) => {
     switch (status) {
-      case 'safe': return '#10B981'; // Green
-      case 'warning': return '#F59E0B'; // Yellow
-      case 'alert': return '#EF4444'; // Red
-      default: return '#6B7280'; // Gray
+      case 'safe': return '#10B981';
+      case 'warning': return '#F59E0B';
+      case 'alert': return '#EF4444';
+      default: return '#6B7280';
     }
   };
   
-  // Data dummy untuk sensor air
   const sensorData = {
     sensorType: "Ultrasonic Sensor",
     sensorDepth: "5 meter",
@@ -226,25 +163,13 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
     accuracy: "±2cm"
   };
   
-  // Data dummy untuk kualitas air
   const waterQualityData = {
-    pH: 7.2,
-    turbidity: 12.5,
-    temperature: 26.8,
-    dissolvedOxygen: 6.8,
-    conductivity: 450,
-    tds: 225
+    pH: 7.2, turbidity: 12.5, temperature: 26.8,
+    dissolvedOxygen: 6.8, conductivity: 450, tds: 225
   };
   
-  // Data dummy untuk informasi cuaca
   const weatherData = {
-    current: {
-      temperature: 28,
-      humidity: 78,
-      rainfall: 2.4,
-      windSpeed: 12,
-      windDirection: "Barat Daya"
-    },
+    current: { temperature: 28, humidity: 78, rainfall: 2.4, windSpeed: 12, windDirection: "Barat Daya" },
     forecast: [
       { time: "14:00", rain: 80, temp: 29 },
       { time: "17:00", rain: 60, temp: 27 },
@@ -253,16 +178,13 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
     ]
   };
   
-  // Data dummy untuk riwayat banjir
   const floodHistory = [
     { date: "12 Nov 2023", level: 4.2, duration: "3 jam" },
     { date: "5 Okt 2023", level: 3.8, duration: "2 jam" },
     { date: "18 Sep 2023", level: 4.5, duration: "4 jam" }
   ];
   
-  if (!selectedStation || !stationData) {
-    return null;
-  }
+  if (!selectedStation || !stationData) return null;
   
   return (
     <>
@@ -275,31 +197,24 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
         showDetailToggle={true}
         isDetailOpen={isDetailOpen}
         onDetailToggle={handleDetailToggle}
-        status={stationData.status} // Teruskan status ke SidebarTemplate
+        status={stationData.status}
       >
         <div className="p-5 space-y-6 pb-6">
-          {/* Status Card */}
           <div className={`p-5 rounded-xl border-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 ${getStatusBgColor(stationData.status)}`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 mb-1">Status Saat Ini</p>
-                <p className={`text-2xl font-bold ${getStatusColor(stationData.status)}`}>
-                  {getStatusText(stationData.status)}
-                </p>
+                <p className={`text-2xl font-bold ${getStatusColor(stationData.status)}`}>{getStatusText(stationData.status)}</p>
               </div>
               <div className="text-right">
-                <p className="text-4xl font-bold text-gray-900">
-                  {stationData.value.toFixed(1)}
-                </p>
+                <p className="text-4xl font-bold text-gray-900">{stationData.value.toFixed(1)}</p>
                 <p className="text-sm text-gray-500">{stationData.unit}</p>
               </div>
             </div>
           </div>
           
-          {/* Divider */}
           <div className="border-t border-gray-200"></div>
           
-          {/* Chart Section */}
           <div>
             <div className="flex items-center mb-2">
               <div className="bg-blue-100 p-2 rounded-lg mr-3">
@@ -311,23 +226,12 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
             </div>
             <p className="text-sm text-gray-500 mb-4">Data 10 menit terakhir</p>
             <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-lg hover:shadow-xl transition-shadow">
-              <Chart 
-                data={chartHistory}
-                width={380}
-                height={180}
-                showTooltip={true}
-                className="h-44"
-                canvasId="station-detail-chart"
-                status={stationData.status}
-                color={getChartColor(stationData.status)}
-              />
+              <Chart data={chartHistory} width={380} height={180} showTooltip={true} className="h-44" canvasId="station-detail-chart" status={stationData.status} color={getChartColor(stationData.status)} />
             </div>
           </div>
           
-          {/* Divider */}
           <div className="border-t border-gray-200"></div>
           
-          {/* Statistics Grid */}
           <div>
             <div className="flex items-center mb-4">
               <div className="bg-blue-100 p-2 rounded-lg mr-3">
@@ -340,23 +244,17 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                 <p className="text-sm text-gray-500 mb-1">Level Tertinggi</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {Math.max(...chartHistory).toFixed(1)}m
-                </p>
+                <p className="text-2xl font-bold text-gray-900">{Math.max(...chartHistory).toFixed(1)}m</p>
               </div>
               <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                 <p className="text-sm text-gray-500 mb-1">Level Terendah</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {Math.min(...chartHistory).toFixed(1)}m
-                </p>
+                <p className="text-2xl font-bold text-gray-900">{Math.min(...chartHistory).toFixed(1)}m</p>
               </div>
             </div>
           </div>
           
-          {/* Divider */}
           <div className="border-t border-gray-200"></div>
           
-          {/* Additional Info */}
           <div>
             <div className="flex items-center mb-4">
               <div className="bg-blue-100 p-2 rounded-lg mr-3">
@@ -405,10 +303,6 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
             </div>
           </div>
           
-          {/* Divider */}
-          <div className="border-t border-gray-200"></div>
-          
-          {/* Hint for Detail Panel - Diubah untuk lebih jelas */}
           <div className={`rounded-xl p-4 border transition-all duration-300 shadow-md ${
             stationData.status === 'alert' ? 'bg-gradient-to-r from-yellow-50 to-amber-50 border-yellow-200' : 
             stationData.status === 'warning' ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200' :
@@ -440,7 +334,6 @@ const StationDetail = ({ selectedStation, onClose, tickerData }) => {
         </div>
       </SidebarTemplate>
       
-      {/* Detail Panel */}
       <DetailPanel 
         stationData={stationData}
         sensorData={sensorData}
