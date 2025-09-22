@@ -6,7 +6,6 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markersRef = useRef([]);
-  const [waterAnimationActive, setWaterAnimationActive] = useState(false);
   const [selectedStationCoords, setSelectedStationCoords] = useState(null);
   
   // State untuk tooltip
@@ -34,7 +33,6 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
   const handleMapFocus = (focusData) => {
     if (!map.current) return;
     const { lat, lng, zoom, stationId, stationName } = focusData;
-    setWaterAnimationActive(true);
     setSelectedStationCoords([lng, lat]);
     
     map.current.flyTo({
@@ -69,8 +67,6 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
     if (!map.current || !station) return;
     const coordinates = getStationCoordinates(station.name);
     if (!coordinates) return;
-    
-    setWaterAnimationActive(true);
     setSelectedStationCoords(coordinates);
     // Fly to station
     map.current.flyTo({
@@ -263,8 +259,6 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
           // Event untuk klik marker
           markerEl.addEventListener('click', (e) => {
             e.stopPropagation(); // Mencegah event bubbling
-            setWaterAnimationActive(true);
-            setSelectedStationCoords(coordinates);
             // Animasi flyTo
             map.current.flyTo({
               center: coordinates,

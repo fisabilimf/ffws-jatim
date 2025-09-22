@@ -16,7 +16,7 @@ const DetailPanel = ({
   isAutoSwitchOn = false
 }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [activeTab, setActiveTab] = useState('sensor'); // 'sensor' | 'kualitas' | 'cuaca' | 'riwayat'
+  const [activeTab, setActiveTab] = useState('sensor'); // 'sensor' | 'cuaca' | 'monitoring' | 'riwayat'
 
   // Mengatur animasi visibility saat panel dibuka/ditutup
   useEffect(() => {
@@ -96,8 +96,8 @@ const DetailPanel = ({
               <div className="flex items-center justify-center space-x-20 text-sm">
                 {[
                   { key: 'sensor', label: 'Sensor' },
-                  { key: 'kualitas', label: 'Cuaca' },
-                  { key: 'cuaca', label: 'Monitoring' },
+                  { key: 'cuaca', label: 'Cuaca' },
+                  { key: 'monitoring', label: 'Monitoring' },
                   { key: 'riwayat', label: 'Riwayat' }
                 ].map((tab) => (
                   <button
@@ -135,8 +135,8 @@ const DetailPanel = ({
                   <h3 className="text-lg font-semibold text-gray-900">
                     {activeTab === 'sensor' && 'Perkembangan Air Sungai Aktual'}
                     {activeTab === 'riwayat' && 'Riwayat Data'}
-                    {activeTab === 'kualitas' && 'Cuaca'}
-                    {activeTab === 'cuaca' && 'Aktual & Prediksi'}
+                    {activeTab === 'cuaca' && 'Cuaca'}
+                    {activeTab === 'monitoring' && 'Aktual & Prediksi'}
                   </h3>
                   {activeTab === 'sensor' && (
                     <div className="flex items-center space-x-2">
@@ -171,7 +171,7 @@ const DetailPanel = ({
                 {activeTab === 'riwayat' && (
                   <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-600">Riwayat data akan tersedia di sini.</div>
                 )}
-                {activeTab === 'kualitas' && (
+                {activeTab === 'cuaca' && (
                   <div className="space-y-4">
                     {/* Cuaca Saat Ini */}
                     <div className="mb-3">
@@ -216,35 +216,7 @@ const DetailPanel = ({
                       </div>
                     </div>
 
-                    {/* Prakiraan Cuaca 24 Jam */}
-                    <div className="bg-white border border-gray-200 rounded-lg p-4">
-                      <h4 className="text-lg font-semibold text-gray-900 mb-3">Prakiraan Cuaca 24 Jam</h4>
-                      <div className="space-y-2">
-                        {[
-                          { time: '00:00', condition: 'Hujan Ringan', temp: '26°C', rain: '1.2mm', iconPath: 'M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z', color: 'text-blue-500' },
-                          { time: '06:00', condition: 'Berawan', temp: '25°C', rain: '0mm', iconPath: 'M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z', color: 'text-gray-500' },
-                          { time: '12:00', condition: 'Hujan Sedang', temp: '28°C', rain: '4.5mm', iconPath: 'M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z', color: 'text-blue-600' },
-                          { time: '18:00', condition: 'Hujan Lebat', temp: '27°C', rain: '8.2mm', iconPath: 'M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z', color: 'text-red-500' },
-                        ].map((forecast, index) => (
-                          <div key={index} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
-                            <div className="flex items-center gap-3">
-                              <svg className={`w-5 h-5 ${forecast.color}`} fill="currentColor" viewBox="0 0 24 24">
-                                <path d={forecast.iconPath} />
-                              </svg>
-                              <div>
-                                <div className="font-medium text-gray-900">{forecast.time}</div>
-                                <div className="text-sm text-gray-600">{forecast.condition}</div>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-4 text-sm">
-                              <div className="text-gray-600">{forecast.temp}</div>
-                              <div className="text-blue-600 font-medium">{forecast.rain}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
+                  
                     {/* Indikator Risiko Banjir */}
                     <div className="bg-white border border-gray-200 rounded-lg p-4">
                       <h4 className="text-lg font-semibold text-gray-900 mb-3">Indikator Risiko Banjir</h4>
@@ -291,7 +263,7 @@ const DetailPanel = ({
                     </div>
                   </div>
                 )}
-                {activeTab === 'cuaca' && (() => {
+                {activeTab === 'monitoring' && (() => {
                   const actual = chartHistory || [];
                   const predicted = (chartHistory || []).map((v, i) => {
                     const prev = i === 0 ? v : chartHistory[i - 1];

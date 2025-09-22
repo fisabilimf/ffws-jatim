@@ -1,8 +1,8 @@
-import React, { useMemo, useEffect, useRef } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 
 /**
  * LeveeChart
- * Visualisasi real-time penampang sungai dan tanggul dengan Canvas.
+ * Visualisasi real-time penampang sungai dan tanggul dengan SVG.
  * - Menampilkan bingkai tanggul dan level air dengan data real-time
  * - Menggunakan warna yang konsisten dengan Chart component
  * - Menampilkan trend data historis sebagai background
@@ -14,10 +14,10 @@ const LeveeChart = ({
   width = 600,
   height = 200,
   className = '',
-  historyData = [], // Data historis untuk trend background
+  
   status = 'safe' // Status untuk menentukan warna
 }) => {
-  const canvasRef = useRef(null);
+  const [animationTime, setAnimationTime] = useState(0);
 
   // Warna berdasarkan status (konsisten dengan Chart component)
   const getStatusColor = (status) => {
@@ -31,203 +31,237 @@ const LeveeChart = ({
 
   const waterColor = getStatusColor(status);
 
-  // Fungsi untuk mengkonversi nilai ke koordinat Y
-  const scaleY = (value) => {
-    const clamped = Math.max(0, Math.min(maxHeight, value));
-    const usableHeight = height - 60; // padding top dan bottom lebih besar
-    return 30 + usableHeight * (1 - clamped / maxHeight);
-  };
-
-  // Fungsi untuk mengkonversi index data ke koordinat X
-  const scaleX = (index, dataLength) => {
-    if (dataLength <= 1) return width / 2;
-    return 24 + (index / (dataLength - 1)) * (width - 48);
-  };
-
-  // Draw chart dengan Canvas
+  // Animation loop untuk gelombang air
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const interval = setInterval(() => {
+      setAnimationTime(prev => prev + 1);
+    }, 50); // 20 FPS
 
-    const ctx = canvas.getContext('2d');
-    const canvasWidth = canvas.width;
-    const canvasHeight = canvas.height;
+    return () => clearInterval(interval);
+  }, []);
 
-    // Animation loop for waves
-    let animationId;
+  // Generate path data untuk area chart
+  const generatePaths = useMemo(() => {
+    const dataPoints = 50;
+    const margin = { top: 40, right: 80, left: 60, bottom: 30 };
+    const chartWidth = width - margin.left - margin.right;
+    const chartHeight = height - margin.top - margin.bottom;
     
-    const drawChart = () => {
-      // Clear canvas
-      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-
-      // Draw grid lines with better spacing
-      ctx.strokeStyle = '#f3f4f6';
-      ctx.lineWidth = 1;
-      for (let i = 0; i <= 4; i++) {
-        const y = 30 + (canvasHeight - 60) * (i / 4);
-        ctx.beginPath();
-        ctx.moveTo(40, y);
-        ctx.lineTo(canvasWidth - 40, y);
-        ctx.stroke();
-      }
-
-      // Draw simplified levee structure with better positioning
-      const leveeTop = scaleY(maxHeight * 0.9);
-      const leveeBottom = scaleY(maxHeight * 0.1);
-      const leftSlope = 40 + (canvasWidth - 80) * 0.3;
-      const rightSlope = 40 + (canvasWidth - 80) * 0.7;
+    // Generate levee path (V-shape seperti di gambar)
+    let leveePath = '';
+    for (let i = 0; i <= dataPoints; i++) {
+      const x = margin.left + (i / dataPoints) * chartWidth;
+      const normalizedX = i / dataPoints;
       
-      // Simple levee shape - single color
-      ctx.fillStyle = '#F8FAFC'; // Very light gray
-      ctx.beginPath();
-      ctx.moveTo(40, leveeTop);
-      ctx.lineTo(leftSlope, leveeBottom);
-      ctx.lineTo(rightSlope, leveeBottom);
-      ctx.lineTo(canvasWidth - 40, leveeTop);
-      ctx.lineTo(canvasWidth - 40, canvasHeight - 30);
-      ctx.lineTo(40, canvasHeight - 30);
-      ctx.closePath();
-      ctx.fill();
-      
-      // Simple levee outline
-      ctx.strokeStyle = '#E2E8F0';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(40, leveeTop);
-      ctx.lineTo(leftSlope, leveeBottom);
-      ctx.lineTo(rightSlope, leveeBottom);
-      ctx.lineTo(canvasWidth - 40, leveeTop);
-      ctx.stroke();
-
-    // Draw historical data trend (if available) - DISABLED
-    // if (historyData && historyData.length > 1) {
-    //   ctx.strokeStyle = waterColor + '40'; // 25% opacity
-    //   ctx.lineWidth = 2;
-    //   ctx.beginPath();
-    //   
-    //   historyData.forEach((value, index) => {
-    //     const x = scaleX(index, historyData.length);
-    //     const y = scaleY(value);
-    //     
-    //     if (index === 0) {
-    //       ctx.moveTo(x, y);
-    //     } else {
-    //       ctx.lineTo(x, y);
-    //     }
-    //   });
-    //   ctx.stroke();
-    // }
-
-      // Draw current water level
-      const waterY = scaleY(currentLevel);
-      
-      // Water area fill with softer blue gradient
-      const gradient = ctx.createLinearGradient(0, waterY, 0, canvasHeight - 30);
-      // Soft light blue at surface (shallow)
-      gradient.addColorStop(0, '#B3E5FC'); // Very light blue
-      gradient.addColorStop(0.2, '#81D4FA'); // Light blue
-      gradient.addColorStop(0.4, '#4FC3F7'); // Soft blue
-      gradient.addColorStop(0.6, '#29B6F6'); // Medium light blue
-      gradient.addColorStop(0.8, '#03A9F4'); // Medium blue
-      // Soft dark blue at bottom (deep)
-      gradient.addColorStop(1, '#0277BD'); // Soft dark blue
-      
-      ctx.fillStyle = gradient;
-      ctx.fillRect(40, waterY, canvasWidth - 80, canvasHeight - 30 - waterY);
-
-      // Draw animated water waves
-      const time = Date.now() * 0.001; // Get time in seconds
-      const waveAmplitude = 3; // Height of waves
-      const waveFrequency = 0.02; // How many waves per pixel
-      const waveSpeed = 2; // Speed of wave animation
-      
-      // Wave colors based on depth - softer tones
-      const waveColors = ['#B3E5FC', '#81D4FA', '#4FC3F7']; // Soft light to medium blue
-      
-      // Draw multiple wave layers for depth
-      for (let layer = 0; layer < 3; layer++) {
-        const layerOffset = layer * 0.3;
-        const layerOpacity = 1 - (layer * 0.3);
-        const layerAmplitude = waveAmplitude * (1 - layer * 0.2);
-        
-        ctx.globalAlpha = layerOpacity * 0.8;
-        ctx.strokeStyle = waveColors[layer];
-        ctx.lineWidth = 1 + layer;
-        ctx.beginPath();
-        
-        for (let x = 40; x <= canvasWidth - 40; x += 2) {
-          const wave1 = Math.sin((x * waveFrequency) + (time * waveSpeed) + layerOffset) * layerAmplitude;
-          const wave2 = Math.sin((x * waveFrequency * 1.5) + (time * waveSpeed * 0.8) + layerOffset) * (layerAmplitude * 0.5);
-          const wave3 = Math.sin((x * waveFrequency * 0.7) + (time * waveSpeed * 1.2) + layerOffset) * (layerAmplitude * 0.3);
-          
-          const y = waterY + wave1 + wave2 + wave3;
-          
-          if (x === 40) {
-            ctx.moveTo(x, y);
-          } else {
-            ctx.lineTo(x, y);
-          }
-        }
-        ctx.stroke();
+      let leveeHeight;
+      if (normalizedX < 0.2) {
+        // Slope kiri tanggul - tinggi di kiri
+        leveeHeight = maxHeight * 0.9 + (normalizedX / 0.2) * (maxHeight * 0.1);
+      } else if (normalizedX > 0.8) {
+        // Slope kanan tanggul - tinggi di kanan
+        leveeHeight = maxHeight * 0.1 + ((normalizedX - 0.8) / 0.2) * (maxHeight * 0.9);
+      } else {
+        // Bagian tengah - rendah (V-shape)
+        const centerProgress = (normalizedX - 0.2) / 0.6;
+        leveeHeight = maxHeight * 0.9 - centerProgress * (maxHeight * 0.8);
       }
       
-      // Reset alpha
-      ctx.globalAlpha = 1;
-
-      // Water level line - softer blue color
-      ctx.strokeStyle = '#29B6F6'; // Soft medium blue
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.moveTo(40, waterY);
-      ctx.lineTo(canvasWidth - 40, waterY);
-      ctx.stroke();
+      const y = margin.top + chartHeight * (1 - leveeHeight / maxHeight);
       
-      // Add soft white outline to water level line
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 6;
-      ctx.globalAlpha = 0.6;
-      ctx.beginPath();
-      ctx.moveTo(40, waterY);
-      ctx.lineTo(canvasWidth - 40, waterY);
-      ctx.stroke();
-      ctx.globalAlpha = 1;
-
-      // Current level indicator with softer design
-      ctx.fillStyle = '#29B6F6'; // Soft medium blue
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(canvasWidth - 40 - 8, waterY, 8, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.stroke();
-      
-      // All text labels removed for clean visualization
-
-      // Continue animation loop
-      animationId = requestAnimationFrame(drawChart);
-    };
-
-    // Start animation
-    drawChart();
-
-    // Cleanup function
-    return () => {
-      if (animationId) {
-        cancelAnimationFrame(animationId);
+      if (i === 0) {
+        leveePath += `M ${x} ${y}`;
+      } else {
+        leveePath += ` L ${x} ${y}`;
       }
-    };
-  }, [currentLevel, maxHeight, width, height, waterColor, historyData, unit]);
+    }
+    
+    // Complete levee path to ground
+    leveePath += ` L ${width - margin.right} ${height - margin.bottom}`;
+    leveePath += ` L ${margin.left} ${height - margin.bottom}`;
+    leveePath += ' Z';
+    
+    // Generate water level line (horizontal dengan marker)
+    const waterLevelY = margin.top + chartHeight * (1 - currentLevel / maxHeight);
+    let waterLinePath = `M ${margin.left} ${waterLevelY}`;
+    for (let i = 1; i <= dataPoints; i++) {
+      const x = margin.left + (i / dataPoints) * chartWidth;
+      waterLinePath += ` L ${x} ${waterLevelY}`;
+    }
+    
+    return { leveePath, waterLinePath, waterLevelY };
+  }, [currentLevel, maxHeight, width, height]);
+
+  // Generate Y-axis labels
+  const yLabels = useMemo(() => {
+    const labels = [];
+    const margin = { top: 40, right: 80, left: 60, bottom: 30 };
+    const chartHeight = height - margin.top - margin.bottom;
+    
+    for (let i = 0; i <= 7; i++) {
+      const value = (i / 7) * maxHeight;
+      const y = margin.top + chartHeight * (1 - value / maxHeight);
+      labels.push({ value: value.toFixed(1), y });
+    }
+    
+    return labels;
+  }, [maxHeight, height]);
 
   return (
     <div className={className}>
-      <canvas
-        ref={canvasRef}
-        width={width}
-        height={height}
-        className="w-full rounded bg-white"
-      />
-      
-      {/* All text removed - clean visualization only */}
+      <svg width={width} height={height} className="w-full rounded bg-white">
+        <defs>
+          {/* Gradient untuk area tanggul */}
+          <linearGradient id="leveeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#F3F4F6" />
+            <stop offset="100%" stopColor="#D1D5DB" />
+          </linearGradient>
+        </defs>
+        
+        {/* Grid lines */}
+        {yLabels.map((label, index) => (
+          <line
+            key={index}
+            x1={60}
+            y1={label.y}
+            x2={width - 80}
+            y2={label.y}
+            stroke="#f3f4f6"
+            strokeDasharray="3 3"
+            strokeWidth={1}
+          />
+        ))}
+        
+        {/* Area tanggul (abu-abu) */}
+        <path
+          d={generatePaths.leveePath}
+          fill="#D1D5DB"
+          fillOpacity={0.6}
+          stroke="#9CA3AF"
+          strokeWidth={1}
+        />
+        
+        {/* Garis level air horizontal (biru muda) */}
+        <path
+          d={generatePaths.waterLinePath}
+          fill="none"
+          stroke="#87CEEB"
+          strokeWidth={3}
+        />
+        
+        {/* Marker bulat pada garis air */}
+        {Array.from({ length: 7 }, (_, i) => {
+          const x = 60 + (i / 6) * (width - 140);
+          return (
+            <circle
+              key={i}
+              cx={x}
+              cy={generatePaths.waterLevelY}
+              r={4}
+              fill="#87CEEB"
+              stroke="#ffffff"
+              strokeWidth={2}
+            />
+          );
+        })}
+        
+        {/* Y-axis labels */}
+        {yLabels.map((label, index) => (
+          <text
+            key={index}
+            x={55}
+            y={label.y + 4}
+            textAnchor="end"
+            fontSize="12"
+            fill="#6b7280"
+          >
+            {label.value}
+          </text>
+        ))}
+        
+        {/* Y-axis title */}
+        <text
+          x={20}
+          y={height / 2}
+          textAnchor="middle"
+          fontSize="12"
+          fill="#374151"
+          fontWeight="bold"
+          transform={`rotate(-90, 20, ${height / 2})`}
+        >
+          Tinggi Air (m)
+        </text>
+        
+        {/* Judul di pojok kiri atas */}
+        <text
+          x={60}
+          y={25}
+          textAnchor="start"
+          fontSize="16"
+          fill="#374151"
+          fontWeight="bold"
+        >
+          Visualisasi air dengan tanggul
+        </text>
+        
+        {/* Legend di pojok kanan atas */}
+        <g transform={`translate(${width - 70}, 20)`}>
+          {/* Legend background */}
+          <rect
+            x={0}
+            y={0}
+            width={60}
+            height={50}
+            fill="white"
+            stroke="#E5E7EB"
+            strokeWidth={1}
+            rx={4}
+          />
+          
+          {/* Legend Level Air */}
+          <line
+            x1={5}
+            y1={15}
+            x2={15}
+            y2={15}
+            stroke="#87CEEB"
+            strokeWidth={3}
+          />
+          <circle
+            cx={10}
+            cy={15}
+            r={3}
+            fill="#87CEEB"
+          />
+          <text
+            x={20}
+            y={18}
+            fontSize="10"
+            fill="#374151"
+          >
+            Level Air
+          </text>
+          
+          {/* Legend Bingkai Tanggul */}
+          <rect
+            x={5}
+            y={25}
+            width={10}
+            height={8}
+            fill="#D1D5DB"
+            fillOpacity={0.6}
+            stroke="#9CA3AF"
+            strokeWidth={1}
+          />
+          <text
+            x={20}
+            y={32}
+            fontSize="10"
+            fill="#374151"
+          >
+            Bingkai Tanggul
+          </text>
+        </g>
+      </svg>
     </div>
   );
 };
