@@ -300,8 +300,8 @@
                     @php
                         $currentPage = $rows->currentPage();
                         $lastPage = $rows->lastPage();
-                        $startPage = max(1, $currentPage - 2);
-                        $endPage = min($lastPage, $currentPage + 2);
+                        $startPage = max(1, $currentPage - 1);
+                        $endPage = min($lastPage, $currentPage + 1);
                     @endphp
 
                     {{-- First page if not in range --}}
