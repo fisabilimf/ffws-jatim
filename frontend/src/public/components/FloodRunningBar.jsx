@@ -95,6 +95,7 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
     }
     
     // Trigger custom event to stop auto switch
+    console.log('Dispatching userInteraction event from running bar');
     const event = new CustomEvent('userInteraction', { 
       detail: { source: 'runningBar', stationId: station.id }
     });
