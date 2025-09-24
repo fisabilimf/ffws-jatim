@@ -1,12 +1,13 @@
 <!-- Sidebar -->
 <aside
    class="bg-white min-h-screen flex-shrink-0 transition-transform duration-200 ease-out fixed top-0 left-0 lg:sticky lg:top-0 z-30 border-r border-gray-200 overflow-y-auto"
-   x-cloak :class="{ 
-           '-translate-x-full': !$store.sidebar.open && window.innerWidth < 1024,
-           'translate-x-0': $store.sidebar.open || window.innerWidth >= 1024,
-           'w-16': !$store.sidebar.open && window.innerWidth >= 1024,
-           'w-64': $store.sidebar.open && window.innerWidth >= 1024
-       }">
+   x-cloak
+   :class="{
+       '-translate-x-full w-0': !$store.sidebar.open && window.innerWidth < 1024,
+       'translate-x-0 w-full max-w-xs sidebar-mobile': $store.sidebar.open && window.innerWidth < 1024,
+       'w-16': !$store.sidebar.open && window.innerWidth >= 1024,
+       'w-64': $store.sidebar.open && window.innerWidth >= 1024
+   }">
 
    <!-- Logo -->
    <div class="flex items-center justify-between h-16 px-6 border-b border-gray-200">
