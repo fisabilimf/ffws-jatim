@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { determineStatus, getThresholdInfo } from '../config/stationThresholds';
-import Chart from './Chart';
+import Chart from './ui/Chart';
 
 const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarOpen = false }) => {
-  // Station coordinates - format [lng, lat] sesuai MapboxMap
+  // Station coordinates - format [lng, lat] sesuai MapboxMap (hanya 20 stasiun)
   const stationCoordinates = {
     1: [112.7508, -7.2575],    // Surabaya
     2: [112.6308, -7.9831],    // Malang
@@ -14,12 +14,17 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
     7: [112.3333, -7.1167],    // Lamongan
     8: [112.5729, -7.1554],    // Gresik
     9: [112.0483, -6.8976],    // Tuban
-    10:[111.8816, -7.1500],   // Bojonegoro
-    11:[112.2333, -7.5500],   // Jombang
-    12:[111.8833, -7.6000],   // Nganjuk
-    13:[112.0167, -7.8167],   // Kediri
-    14:[112.1667, -8.1000],   // Blitar
-    15:[111.9000, -8.0667]    // Tulungagung
+    10: [111.8816, -7.1500],   // Bojonegoro
+    11: [112.2333, -7.5500],   // Jombang
+    12: [111.8833, -7.6000],   // Nganjuk
+    13: [112.0167, -7.8167],   // Kediri
+    14: [112.1667, -8.1000],   // Blitar
+    15: [111.9000, -8.0667],   // Tulungagung
+    16: [112.7333, -7.6000],   // Bangil
+    17: [112.6833, -7.8333],   // Lawang
+    18: [112.6500, -7.9000],   // Singosari
+    19: [110.3569, -7.9133],   // Wates
+    20: [110.3739, -7.7884],   // Lempuyangan
   };
 
   const generateDetailedHistory = (currentValue) => {
@@ -35,6 +40,7 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
   };
 
   const initializeStationData = () => {
+    // Hanya 20 stasiun pertama
     const stations = [
       { id: 1, name: 'Stasiun Surabaya', value: 2.45, unit: 'm', location: 'Surabaya River' },
       { id: 2, name: 'Stasiun Malang', value: 1.85, unit: 'm', location: 'Malang City' },
@@ -50,7 +56,12 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
       { id: 12, name: 'Stasiun Nganjuk', value: 1.90, unit: 'm', location: 'Nganjuk' },
       { id: 13, name: 'Stasiun Kediri', value: 2.25, unit: 'm', location: 'Kediri' },
       { id: 14, name: 'Stasiun Blitar', value: 1.75, unit: 'm', location: 'Blitar' },
-      { id: 15, name: 'Stasiun Tulungagung', value: 2.05, unit: 'm', location: 'Tulungagung' }
+      { id: 15, name: 'Stasiun Tulungagung', value: 2.05, unit: 'm', location: 'Tulungagung' },
+      { id: 16, name: 'Stasiun Bangil', value: 1.95, unit: 'm', location: 'Bangil' },
+      { id: 17, name: 'Stasiun Lawang', value: 2.15, unit: 'm', location: 'Lawang' },
+      { id: 18, name: 'Stasiun Singosari', value: 1.75, unit: 'm', location: 'Singosari' },
+      { id: 19, name: 'Stasiun Wates', value: 2.25, unit: 'm', location: 'Wates' },
+      { id: 20, name: 'Stasiun Lempuyangan', value: 1.85, unit: 'm', location: 'Lempuyangan' },
     ];
 
     return stations.map(station => ({
@@ -62,31 +73,7 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
   };
 
   const [tickerData, setTickerData] = useState(initializeStationData());
-  const [selectedStationId, setSelectedStationId] = useState(null);
 
-  const handleStationClick = (station) => {
-    console.log('Station clicked:', station);
-    
-    setSelectedStationId(station.id);
-    
-    // Panggil langsung handleMapFocus via window.mapboxAutoFocus
-    if (window.mapboxAutoFocus) {
-      console.log('Directly calling mapboxAutoFocus');
-      window.mapboxAutoFocus({
-        lat: station.coordinates[1],
-        lng: station.coordinates[0],
-        zoom: 14,
-        stationId: station.id,
-        stationName: station.name
-      });
-    } else {
-      console.error('mapboxAutoFocus is not available');
-    }
-    
-    setTimeout(() => {
-      setSelectedStationId(null);
-    }, 3000);
-  };
 
   useEffect(() => {
     const updateTickerData = () => {
@@ -160,17 +147,9 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
             {tickerData.map((item) => (
               <div 
                 key={`first-${item.id}`} 
-                className={`flex items-center space-x-1.5 sm:space-x-2 rounded-lg px-1.5 sm:px-2 py-1 sm:py-1.5 min-w-max transition-all duration-300 cursor-pointer border border-gray-200 ${
-                  selectedStationId === item.id 
-                    ? 'bg-blue-100 border-blue-400 scale-105 shadow-md' 
-                    : 'hover:bg-gray-50 hover:scale-105'
-                }`}
-                onClick={() => handleStationClick(item)}
-                title={`Klik untuk pindah ke ${item.name.replace('Stasiun ', '')}`}
+                className="flex items-center space-x-1.5 sm:space-x-2 rounded-lg px-1.5 sm:px-2 py-1 sm:py-1.5 min-w-max border border-gray-200"
               >
-                <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${getStatusBgColor(item.status)} ${
-                  selectedStationId === item.id ? 'animate-pulse' : ''
-                }`}></div>
+                <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${getStatusBgColor(item.status)}`}></div>
                 <span className="text-xs text-gray-700 font-medium truncate max-w-12 sm:max-w-16">
                   {item.name.replace('Stasiun ', '')}
                 </span>
@@ -195,17 +174,9 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
             {tickerData.map((item) => (
               <div 
                 key={`second-${item.id}`} 
-                className={`flex items-center space-x-1.5 sm:space-x-2 rounded-lg px-1.5 sm:px-2 py-1 sm:py-1.5 min-w-max transition-all duration-300 cursor-pointer border border-gray-200 ${
-                  selectedStationId === item.id 
-                    ? 'bg-blue-100 border-blue-400 scale-105 shadow-md' 
-                    : 'hover:bg-gray-50 hover:scale-105'
-                }`}
-                onClick={() => handleStationClick(item)}
-                title={`Klik untuk pindah ke ${item.name.replace('Stasiun ', '')}`}
+                className="flex items-center space-x-1.5 sm:space-x-2 rounded-lg px-1.5 sm:px-2 py-1 sm:py-1.5 min-w-max border border-gray-200"
               >
-                <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${getStatusBgColor(item.status)} ${
-                  selectedStationId === item.id ? 'animate-pulse' : ''
-                }`}></div>
+                <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${getStatusBgColor(item.status)}`}></div>
                 <span className="text-xs text-gray-700 font-medium truncate max-w-12 sm:max-w-16">
                   {item.name.replace('Stasiun ', '')}
                 </span>
