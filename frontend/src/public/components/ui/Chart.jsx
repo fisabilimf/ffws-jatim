@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo, useCallback, useRef } from 'react';
 
 const Chart = ({ 
   data = [], 
@@ -18,9 +18,12 @@ const Chart = ({
     data: null, 
     position: 'top' // 'top' or 'bottom'
   });
+  
+  // Debounce tooltip untuk performa yang lebih baik
+  const tooltipTimeoutRef = useRef(null);
 
-  // Function to generate timestamps for chart data points
-  const generateTimestamps = (dataLength) => {
+  // Function to generate timestamps for chart data points - memoized
+  const generateTimestamps = useCallback((dataLength) => {
     const timestamps = [];
     const now = new Date();
     
@@ -31,10 +34,10 @@ const Chart = ({
     }
     
     return timestamps;
-  };
+  }, []);
 
-  // Function to calculate optimal tooltip position
-  const calculateTooltipPosition = (pointX, pointY, canvasRect) => {
+  // Function to calculate optimal tooltip position - memoized
+  const calculateTooltipPosition = useCallback((pointX, pointY, canvasRect) => {
     const tooltipHeight = 60; // Smaller tooltip height
     const tooltipWidth = 100; // Smaller tooltip width
     const margin = 8; // Smaller margin from edges
@@ -66,7 +69,7 @@ const Chart = ({
       y: tooltipY,
       position: shouldPositionBelow ? 'bottom' : 'top'
     };
-  };
+  }, []);
 
   // Draw chart
   useEffect(() => {
@@ -189,71 +192,85 @@ const Chart = ({
 
   }, [data, tooltip, showTooltip, miniMode, status, canvasId]);
 
-  // Handle mouse events for tooltip (disabled in mini mode)
-  const handleChartMouseMove = (event) => {
+  // Handle mouse events for tooltip (disabled in mini mode) - dengan debouncing
+  const handleChartMouseMove = useCallback((event) => {
     if (!showTooltip || data.length === 0 || miniMode) return;
 
-    const canvas = document.getElementById(canvasId);
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-
-    // Only show tooltip if mouse is within chart bounds
-    if (x < 0 || x > rect.width || y < 0 || y > rect.height) {
-      setTooltip({ visible: false, x: 0, y: 0, data: null });
-      return;
+    // Clear existing timeout
+    if (tooltipTimeoutRef.current) {
+      clearTimeout(tooltipTimeoutRef.current);
     }
 
-    // Calculate which data point is closest to mouse position
-    const canvasWidth = canvas.width;
-    const canvasHeight = canvas.height;
-    const pointIndex = Math.round((x / canvasWidth) * (data.length - 1));
-    
-    if (pointIndex >= 0 && pointIndex < data.length) {
-      const value = data[pointIndex];
-      const timestamps = generateTimestamps(data.length);
-      const timestamp = timestamps[pointIndex];
-      
-      // Calculate the exact position of the data point on the canvas
-      const minValue = Math.min(...data);
-      const maxValue = Math.max(...data);
-      const range = maxValue - minValue || 1;
-      
-      const pointX = (pointIndex / (data.length - 1)) * canvasWidth;
-      const pointY = canvasHeight - ((value - minValue) / range) * canvasHeight;
-      
-      // Calculate optimal tooltip position
-      const canvasRect = { width: canvasWidth, height: canvasHeight };
-      const tooltipPos = calculateTooltipPosition(pointX, pointY, canvasRect);
-      
-      // Use relative coordinates for smoother tooltip
-      const tooltipData = {
-        value: value, // Use actual data value from array
-        timestamp: timestamp,
-        index: pointIndex
-      };
+    // Debounce tooltip update
+    tooltipTimeoutRef.current = setTimeout(() => {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
 
-      setTooltip({
-        visible: true,
-        x: tooltipPos.x,
-        y: tooltipPos.y,
-        data: tooltipData,
-        position: tooltipPos.position
-      });
+      const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
 
-      // Call onDataPointHover callback if provided
-      if (onDataPointHover) {
-        onDataPointHover(tooltipData);
+      // Only show tooltip if mouse is within chart bounds
+      if (x < 0 || x > rect.width || y < 0 || y > rect.height) {
+        setTooltip({ visible: false, x: 0, y: 0, data: null });
+        return;
       }
-    }
-  };
 
-  const handleChartMouseLeave = () => {
+      // Calculate which data point is closest to mouse position
+      const canvasWidth = canvas.width;
+      const canvasHeight = canvas.height;
+      const pointIndex = Math.round((x / canvasWidth) * (data.length - 1));
+      
+      if (pointIndex >= 0 && pointIndex < data.length) {
+        const value = data[pointIndex];
+        const timestamps = generateTimestamps(data.length);
+        const timestamp = timestamps[pointIndex];
+        
+        // Calculate the exact position of the data point on the canvas
+        const minValue = Math.min(...data);
+        const maxValue = Math.max(...data);
+        const range = maxValue - minValue || 1;
+        
+        const pointX = (pointIndex / (data.length - 1)) * canvasWidth;
+        const pointY = canvasHeight - ((value - minValue) / range) * canvasHeight;
+        
+        // Calculate optimal tooltip position
+        const canvasRect = { width: canvasWidth, height: canvasHeight };
+        const tooltipPos = calculateTooltipPosition(pointX, pointY, canvasRect);
+        
+        // Use relative coordinates for smoother tooltip
+        const tooltipData = {
+          value: value, // Use actual data value from array
+          timestamp: timestamp,
+          index: pointIndex
+        };
+
+        setTooltip({
+          visible: true,
+          x: tooltipPos.x,
+          y: tooltipPos.y,
+          data: tooltipData,
+          position: tooltipPos.position
+        });
+
+        // Call onDataPointHover callback if provided
+        if (onDataPointHover) {
+          onDataPointHover(tooltipData);
+        }
+      }
+    }, 16); // ~60fps debounce
+  }, [showTooltip, data, miniMode, canvasId, generateTimestamps, calculateTooltipPosition, onDataPointHover]);
+
+  const handleChartMouseLeave = useCallback(() => {
     if (miniMode) return;
+    
+    // Clear timeout when mouse leaves
+    if (tooltipTimeoutRef.current) {
+      clearTimeout(tooltipTimeoutRef.current);
+    }
+    
     setTooltip({ visible: false, x: 0, y: 0, data: null });
-  };
+  }, [miniMode]);
 
   return (
     <div className={`relative ${className}`}>
@@ -305,4 +322,5 @@ const Chart = ({
   );
 };
 
-export default Chart;
+// Memoize component untuk mencegah re-render yang tidak perlu
+export default memo(Chart);
