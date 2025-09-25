@@ -8,6 +8,38 @@
 @section('content')
 <div class="space-y-6" x-data="modelsPage()" x-init="init()">
 
+    <!-- Filter Section -->
+    @php
+        $filterConfig = [
+            [
+                'type' => 'text',
+                'name' => 'search',
+                'label' => 'Cari Model',
+                'placeholder' => 'Cari berdasarkan nama model...'
+            ],
+            [
+                'type' => 'select',
+                'name' => 'per_page',
+                'label' => 'Per Halaman',
+                'options' => [
+                    ['value' => '10', 'label' => '10'],
+                    ['value' => '15', 'label' => '15'],
+                    ['value' => '25', 'label' => '25'],
+                    ['value' => '50', 'label' => '50'],
+                    ['value' => '100', 'label' => '100']
+                ]
+            ]
+        ];
+    @endphp
+
+    <x-filter-bar 
+        title="Filter & Pencarian Model"
+        :filters="$filterConfig"
+        :action="route('admin.mas-models.index')"
+        gridCols="md:grid-cols-2"
+        compact="true"
+    />
+
     <x-table
         title="Daftar Model"
         :headers="$tableHeaders"

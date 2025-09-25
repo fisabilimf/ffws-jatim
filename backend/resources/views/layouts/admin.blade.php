@@ -60,8 +60,8 @@
         </div>
         
         <!-- Main Content -->
-        <div class="flex-1 flex flex-col transition-all duration-300 ease-in-out lg:ml-16" x-cloak
-             :class="{ 
+        <div class="flex-1 flex flex-col transition-all duration-300 ease-in-out"
+             :class="{
                  'ml-0': window.innerWidth < 1024,
                  'lg:ml-64': $store.sidebar.open && window.innerWidth >= 1024,
                  'lg:ml-16': !$store.sidebar.open && window.innerWidth >= 1024

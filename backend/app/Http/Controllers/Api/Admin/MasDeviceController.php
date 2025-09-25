@@ -10,6 +10,28 @@ class MasDeviceController extends Controller
 {
     use ApiResponseTraits;
 
+    public function index()
+    {
+        try {
+            $devices = MasDevice::with(['riverBasin'])
+                ->select([
+                    'id',
+                    'name',
+                    'code',
+                    'latitude',
+                    'longitude',
+                    'elevation_m',
+                    'status',
+                    'mas_river_basin_id'
+                ])
+                ->get();
+
+            return $this->successResponse($devices, 'Data device berhasil diambil');
+        } catch (\Exception $e) {
+            return $this->serverErrorResponse('Gagal mengambil data device');
+        }
+    }
+
     public function show($id)
     {
         try {
@@ -31,9 +53,7 @@ class MasDeviceController extends Controller
             
             return $this->successResponse($formattedDevice, 'Device retrieved successfully');
         } catch (\Exception $e) {
-            return $this->errorResponse('Device not found', 404, [
-                'error' => $e->getMessage()
-            ]);
+            return $this->serverErrorResponse('Terjadi kesalahan saat mengambil data device');
         }
     }
 }
