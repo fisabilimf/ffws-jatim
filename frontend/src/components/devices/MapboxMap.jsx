@@ -2,11 +2,26 @@ import React, { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import MapTooltip from "./maptooltip"; // Import komponen tooltip
+import { fetchDevices } from "../../services/devices";
+
 const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange }) => {
     const mapContainer = useRef(null);
     const map = useRef(null);
     const markersRef = useRef([]);
     const [selectedStationCoords, setSelectedStationCoords] = useState(null);
+    const [devices, setDevices] = useState([]);
+
+    useEffect(() => {
+        const loadDevices = async () => {
+            try {
+                const devicesData = await fetchDevices();
+                setDevices(devicesData);
+            } catch (error) {
+                console.error("Failed to fetch devices:", error);
+            }
+        };
+        loadDevices();
+    }, []);
 
     // State untuk tooltip
     const [tooltip, setTooltip] = useState({
@@ -138,30 +153,19 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
         }
     };
     const getStationCoordinates = (stationName) => {
-        // Hanya 20 stasiun pertama
-        const coordinates = {
-            "Stasiun Surabaya": [112.7508, -7.2575],
-            "Stasiun Malang": [112.6308, -7.9831],
-            "Stasiun Sidoarjo": [112.7183, -7.4478],
-            "Stasiun Probolinggo": [113.7156, -7.7764],
-            "Stasiun Pasuruan": [112.6909, -7.6461],
-            "Stasiun Mojokerto": [112.4694, -7.4706],
-            "Stasiun Lamongan": [112.3333, -7.1167],
-            "Stasiun Gresik": [112.5729, -7.1554],
-            "Stasiun Tuban": [112.0483, -6.8976],
-            "Stasiun Bojonegoro": [111.8816, -7.15],
-            "Stasiun Jombang": [112.2333, -7.55],
-            "Stasiun Nganjuk": [111.8833, -7.6],
-            "Stasiun Kediri": [112.0167, -7.8167],
-            "Stasiun Blitar": [112.1667, -8.1],
-            "Stasiun Tulungagung": [111.9, -8.0667],
-            "Stasiun Bangil": [112.7333, -7.6],
-            "Stasiun Lawang": [112.6833, -7.8333],
-            "Stasiun Singosari": [112.65, -7.9],
-            "Stasiun Wates": [110.3569, -7.9133],
-            "Stasiun Lempuyangan": [110.3739, -7.7884],
-        };
-        return coordinates[stationName] || null;
+        console.log(`Looking for coordinates for station: "${stationName}"`);
+        if (!devices || devices.length === 0) {
+            console.log("Devices array is empty or not yet loaded.");
+            return null;
+        }
+        const device = devices.find((d) => d.name === stationName);
+        if (device && device.latitude && device.longitude) {
+            const coords = [parseFloat(device.longitude), parseFloat(device.latitude)];
+            console.log(`Found coordinates for "${stationName}":`, coords);
+            return coords;
+        }
+        console.warn(`Coordinates not found for station: "${stationName}"`);
+        return null;
     };
     // Expose handleMapFocus ke window object
     useEffect(() => {
@@ -217,7 +221,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
     }, []);
     // Update markers when tickerData changes
     useEffect(() => {
-        if (!map.current || !tickerData) return;
+        if (!map.current || !tickerData || !devices.length) return;
         // Hapus marker yang ada
         markersRef.current.forEach((marker) => {
             if (marker && marker.remove) {
@@ -292,7 +296,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
                 }
             }
         });
-    }, [tickerData]);
+    }, [tickerData, devices]);
     // Event listener untuk klik di luar tooltip
     useEffect(() => {
         const handleClickOutside = (event) => {
