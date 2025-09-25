@@ -8,6 +8,38 @@
 @section('content')
 <div class="space-y-6" x-data="riverBasinsPage()" x-init="init()">
 
+    <!-- Filter Section -->
+    @php
+        $filterConfig = [
+            [
+                'type' => 'text',
+                'name' => 'search',
+                'label' => 'Cari DAS',
+                'placeholder' => 'Cari berdasarkan nama atau kode DAS...'
+            ],
+            [
+                'type' => 'select',
+                'name' => 'per_page',
+                'label' => 'Per Halaman',
+                'options' => [
+                    ['value' => '10', 'label' => '10'],
+                    ['value' => '15', 'label' => '15'],
+                    ['value' => '25', 'label' => '25'],
+                    ['value' => '50', 'label' => '50'],
+                    ['value' => '100', 'label' => '100']
+                ]
+            ]
+        ];
+    @endphp
+
+    <x-filter-bar 
+        title="Filter & Pencarian DAS"
+        :filters="$filterConfig"
+        :action="route('admin.region.river-basins.index')"
+        gridCols="md:grid-cols-2"
+        compact="true"
+    />
+
     <x-table
         title="Daftar DAS"
         :headers="$tableHeaders"
