@@ -47,7 +47,7 @@ const MapTooltip = ({ map, station, isVisible, coordinates, onShowDetail, onClos
         </div>
         <button class="tooltip-close-btn">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
@@ -87,6 +87,20 @@ const MapTooltip = ({ map, station, isVisible, coordinates, onShowDetail, onClos
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       }
       
+      /* Reset semua button styling */
+      button {
+        background: none;
+        border: none;
+        outline: none;
+        box-shadow: none;
+      }
+      
+      button:focus {
+        outline: none;
+        border: none;
+        box-shadow: none;
+      }
+      
       .map-tooltip-content {
         padding: 12px;
         width: 240px;
@@ -109,20 +123,39 @@ const MapTooltip = ({ map, station, isVisible, coordinates, onShowDetail, onClos
       }
       
       .tooltip-close-btn {
-        background: none;
-        border: none;
+        background: none !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
         color: #9CA3AF;
         cursor: pointer;
-        padding: 2px;
-        border-radius: 4px;
+        padding: 0;
+        margin: 0;
         display: flex;
         align-items: center;
         justify-content: center;
+        width: auto;
+        height: auto;
+        font-weight: bold;
+      }
+      
+      .tooltip-close-btn svg {
+        stroke-width: 3;
+        font-weight: bold;
       }
       
       .tooltip-close-btn:hover {
-        background-color: #F3F4F6;
         color: #4B5563;
+        background: none !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+      }
+      
+      .tooltip-close-btn:focus {
+        outline: none !important;
+        border: none !important;
+        box-shadow: none !important;
       }
       
       .tooltip-level {
@@ -132,7 +165,6 @@ const MapTooltip = ({ map, station, isVisible, coordinates, onShowDetail, onClos
       .tooltip-info {
         margin-bottom: 12px;
         padding-bottom: 10px;
-        border-bottom: 1px solid #E5E7EB;
       }
       
       .tooltip-detail-btn {

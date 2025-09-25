@@ -130,6 +130,9 @@
                                         @case('value')
                                             <span class="font-mono text-sm">{{ $row->formatted_value ?? $row[$header['key']] }}</span>
                                             @break
+                                        @case('percentage')
+                                            <span class="font-mono text-sm">{{ $row->formatted_confidence ?? $row[$header['key']] }}</span>
+                                            @break
                                         @case('status')
                                             @php
                                                 $statusValue = $row->formatted_threshold_status ?? $row[$header['key']];
@@ -297,8 +300,8 @@
                     @php
                         $currentPage = $rows->currentPage();
                         $lastPage = $rows->lastPage();
-                        $startPage = max(1, $currentPage - 2);
-                        $endPage = min($lastPage, $currentPage + 2);
+                        $startPage = max(1, $currentPage - 1);
+                        $endPage = min($lastPage, $currentPage + 1);
                     @endphp
 
                     {{-- First page if not in range --}}
