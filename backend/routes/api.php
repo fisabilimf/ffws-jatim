@@ -54,6 +54,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Device routes
     Route::prefix('devices')->group(function () {
+        Route::get('/', [MasDeviceController::class, 'index']);
         Route::get('/{id}', [MasDeviceController::class, 'show']);
     });
 
