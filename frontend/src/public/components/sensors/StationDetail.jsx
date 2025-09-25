@@ -303,7 +303,7 @@ const StationDetail = ({ selectedStation, onClose, tickerData, showArrow = false
   return (
     <div className="fixed top-20 left-0 bottom-0 max-w-sm flex z-50">
       <div className="relative w-screen max-w-sm">
-        <div className="h-full flex flex-col bg-white shadow-xl rounded-r-xl overflow-hidden">
+        <div className="h-full flex flex-col bg-white shadow-2xl rounded-r-xl overflow-hidden">
           {/* Header Section */}
           <div className="px-5 py-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white">
             <div className="flex items-start justify-between">
@@ -328,7 +328,7 @@ const StationDetail = ({ selectedStation, onClose, tickerData, showArrow = false
           <div className="flex-1 overflow-y-auto bg-gray-50">
             <div className="p-5 space-y-6 pb-20">
               {/* Status Card */}
-              <div className={`p-5 rounded-xl shadow-sm ${getStatusBgColor(stationData.status)} transition-all duration-300 hover:shadow-md`}>
+              <div className={`p-5 rounded-xl shadow-sm transition-all duration-300 hover:shadow-md ${getStatusBgColor(stationData.status)}`}>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600 mb-1">Status Saat Ini</p>
@@ -360,19 +360,19 @@ const StationDetail = ({ selectedStation, onClose, tickerData, showArrow = false
                     <span className="text-sm font-medium text-gray-900 block">{addressInfo.fullAddress}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="bg-gray-50 rounded-lg p-3 transition-all duration-300 hover:bg-gray-100">
                       <span className="text-xs text-gray-500 block mb-1">Koordinat</span>
                       <span className="text-sm font-medium text-gray-900 block">{addressInfo.coordinates}</span>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="bg-gray-50 rounded-lg p-3 transition-all duration-300 hover:bg-gray-100">
                       <span className="text-xs text-gray-500 block mb-1">Ketinggian</span>
                       <span className="text-sm font-medium text-gray-900 block">{addressInfo.elevation}</span>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="bg-gray-50 rounded-lg p-3 transition-all duration-300 hover:bg-gray-100">
                       <span className="text-xs text-gray-500 block mb-1">DAS</span>
                       <span className="text-sm font-medium text-gray-900 block">{addressInfo.watershed}</span>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="bg-gray-50 rounded-lg p-3 transition-all duration-300 hover:bg-gray-100">
                       <span className="text-xs text-gray-500 block mb-1">Area Administratif</span>
                       <span className="text-sm font-medium text-gray-900 block">{addressInfo.administrativeArea}</span>
                     </div>
@@ -403,19 +403,19 @@ const StationDetail = ({ selectedStation, onClose, tickerData, showArrow = false
                       </div>
                       <div className="text-sm text-gray-600 mb-3">{sensor.description}</div>
                       <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-white rounded-lg p-2">
+                        <div className="bg-white rounded-lg p-2 transition-all duration-300 hover:bg-gray-50">
                           <span className="text-xs text-gray-500 block">Model:</span>
                           <span className="text-sm font-medium text-gray-900 block">{sensor.model}</span>
                         </div>
-                        <div className="bg-white rounded-lg p-2">
+                        <div className="bg-white rounded-lg p-2 transition-all duration-300 hover:bg-gray-50">
                           <span className="text-xs text-gray-500 block">Baterai:</span>
                           <span className="text-sm font-medium text-gray-900 block">{sensor.batteryLevel}</span>
                         </div>
-                        <div className="bg-white rounded-lg p-2">
+                        <div className="bg-white rounded-lg p-2 transition-all duration-300 hover:bg-gray-50">
                           <span className="text-xs text-gray-500 block">Instalasi:</span>
                           <span className="text-sm font-medium text-gray-900 block">{sensor.installationDate}</span>
                         </div>
-                        <div className="bg-white rounded-lg p-2">
+                        <div className="bg-white rounded-lg p-2 transition-all duration-300 hover:bg-gray-50">
                           <span className="text-xs text-gray-500 block">Kalibrasi:</span>
                           <span className="text-sm font-medium text-gray-900 block">{sensor.lastCalibration}</span>
                         </div>
