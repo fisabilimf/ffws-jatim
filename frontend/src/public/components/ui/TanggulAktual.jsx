@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { AreaChart, Area, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid, ReferenceLine, Legend } from 'recharts';
 import { getStationThreshold } from '../../config/stationThresholds';
-import { getStatusColor, getStatusText } from '../../utils/statusUtils';
+import { getStatusColor, getStatusText } from '../../../utils/statusUtils';
 
 /*Komponen untuk menampilkan perkembangan air sungai aktual*/
 const RiverDevelopmentChart = ({ 

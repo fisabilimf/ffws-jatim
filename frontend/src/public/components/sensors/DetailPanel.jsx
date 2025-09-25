@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getStatusText } from '../../utils/statusUtils';
+import { getStatusText } from '../../../utils/statusUtils';
 import MonitoringChart from '../ui/MonitoringDualLinet';
 import TanggulAktual from '../ui/TanggulAktual';
 import PredictionChart from '../ui/TanggulPrediksi';
