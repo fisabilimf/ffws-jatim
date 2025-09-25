@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import SidebarTemplate from '../SidebarTemplate';
-import { getStatusColor, getStatusBgColor, getStatusText } from '../../utils/statusUtils';
+import { getStatusColor, getStatusBgColor, getStatusText } from '../../../utils/statusUtils';
 
 const StationDetail = ({ selectedStation, onClose, tickerData, showArrow = false, onArrowToggle, isDetailPanelOpen = false, onCloseDetailPanel }) => {
   const [stationData, setStationData] = useState(null);
