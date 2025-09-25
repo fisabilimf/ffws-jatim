@@ -1,5 +1,4 @@
 import React, { useState, useRef, useCallback, memo, lazy, Suspense, useEffect } from "react";
-import { useAppContext } from "@/hooks/useAppContext";
 
 // Lazy load komponen yang tidak critical untuk initial load
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
@@ -12,7 +11,6 @@ const DetailPanel = lazy(() => import("@components/sensors/DetailPanel"));
 const AutoSwitchToggle = lazy(() => import("@components/common/AutoSwitchToggle"));
 
 const Layout = ({ children }) => {
-    const { testData, loading, error } = useAppContext();
     const [tickerData, setTickerData] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedStation, setSelectedStation] = useState(null);
@@ -21,15 +19,6 @@ const Layout = ({ children }) => {
     const [currentStationIndex, setCurrentStationIndex] = useState(0);
     const [isAutoSwitchOn, setIsAutoSwitchOn] = useState(false);
     const mapRef = useRef(null);
-
-    useEffect(() => {
-        if (testData) {
-            console.log("Data from context:", testData);
-        }
-        if (error) {
-            console.error("Error from context:", error);
-        }
-    }, [testData, error]);
 
     // Memoize event handlers untuk mencegah re-render yang tidak perlu
     const handleSearch = useCallback((query) => {

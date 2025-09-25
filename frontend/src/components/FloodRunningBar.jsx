@@ -1,31 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import { determineStatus, getThresholdInfo } from "@/config/stationThresholds";
 import Chart from "@/components/common/Chart";
+import { fetchDevices } from "@/services/devices";
 
 const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarOpen = false }) => {
-    // Station coordinates - format [lng, lat] sesuai MapboxMap (hanya 20 stasiun)
-    const stationCoordinates = {
-        1: [112.7508, -7.2575], // Surabaya
-        2: [112.6308, -7.9831], // Malang
-        3: [112.7183, -7.4478], // Sidoarjo
-        4: [113.7156, -7.7764], // Probolinggo
-        5: [112.6909, -7.6461], // Pasuruan
-        6: [112.4694, -7.4706], // Mojokerto
-        7: [112.3333, -7.1167], // Lamongan
-        8: [112.5729, -7.1554], // Gresik
-        9: [112.0483, -6.8976], // Tuban
-        10: [111.8816, -7.15], // Bojonegoro
-        11: [112.2333, -7.55], // Jombang
-        12: [111.8833, -7.6], // Nganjuk
-        13: [112.0167, -7.8167], // Kediri
-        14: [112.1667, -8.1], // Blitar
-        15: [111.9, -8.0667], // Tulungagung
-        16: [112.7333, -7.6], // Bangil
-        17: [112.6833, -7.8333], // Lawang
-        18: [112.65, -7.9], // Singosari
-        19: [110.3569, -7.9133], // Wates
-        20: [110.3739, -7.7884], // Lempuyangan
-    };
+    const [tickerData, setTickerData] = useState([]);
 
     const generateDetailedHistory = (currentValue) => {
         const history = [];
@@ -39,47 +17,46 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
         return history;
     };
 
-    const initializeStationData = () => {
-        // Hanya 20 stasiun pertama
-        const stations = [
-            { id: 1, name: "Stasiun Surabaya", value: 2.45, unit: "m", location: "Surabaya River" },
-            { id: 2, name: "Stasiun Malang", value: 1.85, unit: "m", location: "Malang City" },
-            { id: 3, name: "Stasiun Sidoarjo", value: 3.2, unit: "m", location: "Sidoarjo" },
-            { id: 4, name: "Stasiun Probolinggo", value: 1.65, unit: "m", location: "Probolinggo" },
-            { id: 5, name: "Stasiun Pasuruan", value: 2.1, unit: "m", location: "Pasuruan" },
-            { id: 6, name: "Stasiun Mojokerto", value: 2.75, unit: "m", location: "Mojokerto" },
-            { id: 7, name: "Stasiun Lamongan", value: 1.95, unit: "m", location: "Lamongan" },
-            { id: 8, name: "Stasiun Gresik", value: 3.45, unit: "m", location: "Gresik" },
-            { id: 9, name: "Stasiun Tuban", value: 2.3, unit: "m", location: "Tuban" },
-            { id: 10, name: "Stasiun Bojonegoro", value: 1.8, unit: "m", location: "Bojonegoro" },
-            { id: 11, name: "Stasiun Jombang", value: 2.15, unit: "m", location: "Jombang" },
-            { id: 12, name: "Stasiun Nganjuk", value: 1.9, unit: "m", location: "Nganjuk" },
-            { id: 13, name: "Stasiun Kediri", value: 2.25, unit: "m", location: "Kediri" },
-            { id: 14, name: "Stasiun Blitar", value: 1.75, unit: "m", location: "Blitar" },
-            { id: 15, name: "Stasiun Tulungagung", value: 2.05, unit: "m", location: "Tulungagung" },
-            { id: 16, name: "Stasiun Bangil", value: 1.95, unit: "m", location: "Bangil" },
-            { id: 17, name: "Stasiun Lawang", value: 2.15, unit: "m", location: "Lawang" },
-            { id: 18, name: "Stasiun Singosari", value: 1.75, unit: "m", location: "Singosari" },
-            { id: 19, name: "Stasiun Wates", value: 2.25, unit: "m", location: "Wates" },
-            { id: 20, name: "Stasiun Lempuyangan", value: 1.85, unit: "m", location: "Lempuyangan" },
-        ];
+    useEffect(() => {
+        const initializeStationData = (devices) => {
+            const initialStations = devices.map((device) => {
+                const initialValue = parseFloat((Math.random() * 4.5 + 0.5).toFixed(2));
+                return {
+                    id: device.id,
+                    name: device.name,
+                    value: initialValue,
+                    unit: "m",
+                    location: device.river_basin ? device.river_basin.name : "Unknown",
+                    coordinates: [parseFloat(device.longitude), parseFloat(device.latitude)],
+                    status: "safe", // Default status
+                    history: generateDetailedHistory(initialValue),
+                };
+            });
+            setTickerData(initialStations);
+        };
 
-        return stations.map((station) => ({
-            ...station,
-            coordinates: stationCoordinates[station.id],
-            status: determineStatus(station.value, station.name),
-            history: generateDetailedHistory(station.value),
-        }));
-    };
+        const loadInitialData = async () => {
+            try {
+                const devicesData = await fetchDevices();
+                if (devicesData && devicesData.length > 0) {
+                    initializeStationData(devicesData);
+                }
+            } catch (error) {
+                console.error("Failed to fetch devices for running bar:", error);
+            }
+        };
 
-    const [tickerData, setTickerData] = useState(initializeStationData());
+        loadInitialData();
+    }, []);
 
     useEffect(() => {
+        if (tickerData.length === 0) return;
+
         const updateTickerData = () => {
             setTickerData((prev) =>
                 prev.map((item) => {
                     let newValue = Math.max(0.5, Math.min(5, item.value + (Math.random() - 0.5) * 0.2));
-                    const newStatus = determineStatus(newValue, item.name);
+                    const newStatus = "safe"; // Default status
                     const newHistory = [...item.history.slice(1), newValue];
                     return {
                         ...item,
@@ -93,10 +70,10 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
 
         const interval = setInterval(updateTickerData, 3000);
         return () => clearInterval(interval);
-    }, []);
+    }, [tickerData]);
 
     useEffect(() => {
-        if (onDataUpdate && tickerData) {
+        if (onDataUpdate && tickerData && tickerData.length > 0) {
             onDataUpdate(tickerData);
         }
     }, [tickerData, onDataUpdate]);
@@ -135,6 +112,9 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
     };
 
     // Hitung durasi animasi berdasarkan jumlah data
+    if (tickerData.length === 0) {
+        return null; // or a loading state
+    }
     const animationDuration = tickerData.length * 4; // 4 detik per item
 
     return (
