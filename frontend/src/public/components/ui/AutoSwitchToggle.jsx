@@ -105,20 +105,40 @@ const AutoSwitchToggle = ({
   
   return (
     <div className="flex items-center justify-between w-full">
-      <span className="text-xs sm:text-sm font-semibold text-gray-800">Auto Switch</span>
+      <div className="flex items-center gap-2">
+        <span className="text-xs sm:text-sm font-semibold text-gray-800">Auto Switch</span>
+        {isPlaying && (
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          </div>
+        )}
+      </div>
+      
+      {/* iOS/macOS Style Toggle */}
       <button
         onClick={togglePlayPause}
         disabled={!hasData}
-        className={`relative inline-flex items-center transition-colors focus:outline-none select-none w-14 h-8 rounded-full shadow ${
-          isPlaying ? 'bg-green-500' : 'bg-gray-300'
-        } ${!hasData ? 'opacity-50 cursor-not-allowed' : ''}`}
+        className={`relative inline-flex items-center transition-all duration-200 ease-in-out focus:outline-none select-none ${
+          !hasData ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+        }`}
         title={isPlaying ? 'Pause Auto Switch' : 'Start Auto Switch'}
       >
-        <span
-          className={`inline-block w-6 h-6 transform bg-white rounded-full shadow transition-transform ${
-            isPlaying ? 'translate-x-6' : 'translate-x-1'
-          }`}
-        />
+        {/* Toggle Track */}
+        <div className={`relative w-11 h-6 rounded-full transition-all duration-200 ease-in-out ${
+          isPlaying 
+            ? 'bg-green-500 shadow-inner' 
+            : 'bg-gray-300 shadow-inner'
+        }`}>
+          {/* Toggle Thumb */}
+          <div className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full transition-all duration-200 ease-in-out ${
+            isPlaying ? 'translate-x-5' : 'translate-x-0'
+          }`}>
+            {/* Thumb dengan gradient dan shadow seperti iOS */}
+            <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white via-gray-50 to-gray-200 shadow-sm border border-gray-200"></div>
+            {/* Inner highlight */}
+            <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/80 to-transparent"></div>
+          </div>
+        </div>
       </button>
     </div>
   );

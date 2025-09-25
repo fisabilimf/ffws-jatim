@@ -73,37 +73,7 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
   };
 
   const [tickerData, setTickerData] = useState(initializeStationData());
-  const [selectedStationId, setSelectedStationId] = useState(null);
 
-  const handleStationClick = (station) => {
-    console.log('Station clicked:', station);
-    
-    setSelectedStationId(station.id);
-    
-    // Panggil langsung handleMapFocus via window.mapboxAutoFocus
-    if (window.mapboxAutoFocus) {
-      console.log('Directly calling mapboxAutoFocus');
-      window.mapboxAutoFocus({
-        lat: station.coordinates[1],
-        lng: station.coordinates[0],
-        zoom: 14,
-        stationId: station.id,
-        stationName: station.name
-      });
-    } else {
-      console.error('mapboxAutoFocus is not available');
-    }
-    
-    // Trigger custom event to stop auto switch
-    const event = new CustomEvent('userInteraction', { 
-      detail: { source: 'runningBar', stationId: station.id }
-    });
-    document.dispatchEvent(event);
-    
-    setTimeout(() => {
-      setSelectedStationId(null);
-    }, 3000);
-  };
 
   useEffect(() => {
     const updateTickerData = () => {
@@ -177,17 +147,9 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
             {tickerData.map((item) => (
               <div 
                 key={`first-${item.id}`} 
-                className={`flex items-center space-x-1.5 sm:space-x-2 rounded-lg px-1.5 sm:px-2 py-1 sm:py-1.5 min-w-max transition-all duration-300 cursor-pointer border border-gray-200 ${
-                  selectedStationId === item.id 
-                    ? 'bg-blue-100 border-blue-400 scale-105 shadow-md' 
-                    : 'hover:bg-gray-50 hover:scale-105'
-                }`}
-                onClick={() => handleStationClick(item)}
-                title={`Klik untuk pindah ke ${item.name.replace('Stasiun ', '')}`}
+                className="flex items-center space-x-1.5 sm:space-x-2 rounded-lg px-1.5 sm:px-2 py-1 sm:py-1.5 min-w-max border border-gray-200"
               >
-                <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${getStatusBgColor(item.status)} ${
-                  selectedStationId === item.id ? 'animate-pulse' : ''
-                }`}></div>
+                <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${getStatusBgColor(item.status)}`}></div>
                 <span className="text-xs text-gray-700 font-medium truncate max-w-12 sm:max-w-16">
                   {item.name.replace('Stasiun ', '')}
                 </span>
@@ -212,17 +174,9 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
             {tickerData.map((item) => (
               <div 
                 key={`second-${item.id}`} 
-                className={`flex items-center space-x-1.5 sm:space-x-2 rounded-lg px-1.5 sm:px-2 py-1 sm:py-1.5 min-w-max transition-all duration-300 cursor-pointer border border-gray-200 ${
-                  selectedStationId === item.id 
-                    ? 'bg-blue-100 border-blue-400 scale-105 shadow-md' 
-                    : 'hover:bg-gray-50 hover:scale-105'
-                }`}
-                onClick={() => handleStationClick(item)}
-                title={`Klik untuk pindah ke ${item.name.replace('Stasiun ', '')}`}
+                className="flex items-center space-x-1.5 sm:space-x-2 rounded-lg px-1.5 sm:px-2 py-1 sm:py-1.5 min-w-max border border-gray-200"
               >
-                <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${getStatusBgColor(item.status)} ${
-                  selectedStationId === item.id ? 'animate-pulse' : ''
-                }`}></div>
+                <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${getStatusBgColor(item.status)}`}></div>
                 <span className="text-xs text-gray-700 font-medium truncate max-w-12 sm:max-w-16">
                   {item.name.replace('Stasiun ', '')}
                 </span>
