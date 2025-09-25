@@ -8,6 +8,56 @@
 @section('content')
 <div class="space-y-6" x-data="devicesPage()" x-init="init()">
 
+    <!-- Filter Section -->
+    @php
+        $filterConfig = [
+            [
+                'type' => 'text',
+                'name' => 'search',
+                'label' => 'Cari Device',
+                'placeholder' => 'Cari berdasarkan nama atau kode device...'
+            ],
+            [
+                'type' => 'select',
+                'name' => 'river_basin_id',
+                'label' => 'DAS',
+                'empty_option' => 'Semua DAS',
+                'options' => $riverBasins->map(function($basin) {
+                    return ['value' => $basin['value'], 'label' => $basin['label']];
+                })->toArray()
+            ],
+            [
+                'type' => 'select',
+                'name' => 'status',
+                'label' => 'Status',
+                'empty_option' => 'Semua Status',
+                'options' => [
+                    ['value' => 'active', 'label' => 'Aktif'],
+                    ['value' => 'inactive', 'label' => 'Non-aktif']
+                ]
+            ],
+            [
+                'type' => 'select',
+                'name' => 'per_page',
+                'label' => 'Per Halaman',
+                'options' => [
+                    ['value' => '10', 'label' => '10'],
+                    ['value' => '15', 'label' => '15'],
+                    ['value' => '25', 'label' => '25'],
+                    ['value' => '50', 'label' => '50'],
+                    ['value' => '100', 'label' => '100']
+                ]
+            ]
+        ];
+    @endphp
+
+    <x-filter-bar 
+        title="Filter & Pencarian Device"
+        :filters="$filterConfig"
+        :action="route('admin.devices.index')"
+        gridCols="md:grid-cols-4"
+    />
+
     <x-table
         title="Daftar Device"
         :headers="$tableHeaders"

@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\MasDeviceController;
 use App\Http\Controllers\Admin\MasSensorController;
 use App\Http\Controllers\Admin\MasModelController;
 use App\Http\Controllers\Admin\DataActualController;
+use App\Http\Controllers\Admin\DataPredictionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -106,6 +107,17 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         Route::get('/{dataActual}/edit', [DataActualController::class, 'edit'])->name('edit');
         Route::put('/{dataActual}', [DataActualController::class, 'update'])->name('update');
         Route::delete('/{dataActual}', [DataActualController::class, 'destroy'])->name('destroy');
+    });
+
+    // Data Predictions
+    Route::prefix('data_predictions')->name('data_predictions.')->group(function () {
+        Route::get('/', [DataPredictionController::class, 'index'])->name('index');
+        Route::get('/create', [DataPredictionController::class, 'create'])->name('create');
+        Route::post('/', [DataPredictionController::class, 'store'])->name('store');
+        Route::get('/{dataPrediction}', [DataPredictionController::class, 'show'])->name('show');
+        Route::get('/{dataPrediction}/edit', [DataPredictionController::class, 'edit'])->name('edit');
+        Route::put('/{dataPrediction}', [DataPredictionController::class, 'update'])->name('update');
+        Route::delete('/{dataPrediction}', [DataPredictionController::class, 'destroy'])->name('destroy');
     });
 
     // Profile & Account

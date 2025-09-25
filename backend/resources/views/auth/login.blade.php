@@ -31,6 +31,14 @@
         transform: translateY(-2px);
         box-shadow: 0 10px 25px rgba(71, 85, 105, 0.3);
     }
+
+    /* Tambahan untuk padding mobile */
+    @media (max-width: 640px) {
+        .mobile-padding {
+            padding-left: 1.25rem !important; /* px-5 */
+            padding-right: 1.25rem !important;
+        }
+    }
 </style>
 @endpush
 
@@ -41,19 +49,19 @@
         <div class="absolute inset-0" style="background-image: radial-gradient(circle, rgba(255,255,255,0.3) 1px, transparent 1px); background-size: 20px 20px;"></div>
     </div>
 
-    <div class="relative min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-md w-full">
+    <div class="relative min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 mobile-padding">
+        <div class="max-w-xs sm:max-w-md w-full">
             <!-- Logo Section -->
             <div class="text-center mb-4">
                 <div class="mx-auto h-20 w-auto mb-4 flex items-center justify-center">
                     <img src="{{ asset('assets/images/PUSDAJATIM.png') }}" alt="PUSDA JATIM"
                         class="h-20 w-auto object-contain">
                 </div>
-                <h1 class="text-2xl font-bold text-gray-800">Dinas PU Sumber Daya Air<br>Provinsi Jawa Timur</h1>
+                <h1 class="text-2xl font-bold text-gray-800">Sistem Peramalan dan Peringatan Banjir</h1>
             </div>
 
             <!-- Login Card -->
-            <div class="glass-effect rounded-2xl shadow-2xl p-6">
+            <div class="glass-effect rounded-2xl shadow-2xl p-4 sm:p-6">
                 <form class="space-y-6" action="{{ route('login') }}" method="POST">
                     @csrf
 
@@ -135,7 +143,7 @@
             <!-- Footer -->
             <div class="text-center mt-8">
                 <p class="text-gray-500 text-xs">
-                    © 2024 PUSDA JATIM. Semua hak dilindungi.
+                    © {{ date('Y') }} PUSDA JATIM. Semua hak dilindungi.
                 </p>
             </div>
         </div>
