@@ -9,6 +9,7 @@ const FloodRunningBar = lazy(() => import("@components/FloodRunningBar"));
 const StationDetail = lazy(() => import("@components/sensors/StationDetail"));
 const DetailPanel = lazy(() => import("@components/sensors/DetailPanel"));
 const AutoSwitchToggle = lazy(() => import("@components/common/AutoSwitchToggle"));
+const FilterControl = lazy(() => import("@components/common/FilterControl"));
 
 const Layout = ({ children }) => {
     const [tickerData, setTickerData] = useState(null);
@@ -59,6 +60,12 @@ const Layout = ({ children }) => {
 
     const handleCloseDetailPanel = useCallback(() => {
         setIsDetailPanelOpen(false);
+    }, []);
+
+    const handleLayerToggle = useCallback((layerId, enabled) => {
+        console.log(`Layer ${layerId} toggled: ${enabled}`);
+        // Implementasi logic untuk toggle layer map
+        // Bisa dikomunikasikan dengan MapboxMap component
     }, []);
 
     const handleAutoSwitch = useCallback((station, index) => {
@@ -181,6 +188,17 @@ const Layout = ({ children }) => {
                     stationData={selectedStation}
                     chartHistory={selectedStation?.history || []}
                     isAutoSwitchOn={isAutoSwitchOn}
+                />
+            </Suspense>
+
+            {/* Independent Filter Control */}
+            <Suspense fallback={<div className="fixed top-4 right-4 w-12 h-12 bg-white/80 rounded-full animate-pulse"></div>}>
+                <FilterControl
+                    tickerData={tickerData}
+                    onStationChange={handleStationChange}
+                    currentStationIndex={currentStationIndex}
+                    onAutoSwitchToggle={handleAutoSwitchToggle}
+                    onLayerToggle={handleLayerToggle}
                 />
             </Suspense>
         </div>
