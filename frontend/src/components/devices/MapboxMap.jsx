@@ -80,9 +80,27 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
     // Handler untuk auto switch dari toggle
     const handleAutoSwitch = (station, index) => {
         if (!map.current || !station) return;
-        const coordinates = getStationCoordinates(station.name);
-        if (!coordinates) return;
+        
+        let coordinates = null;
+        
+        // Check if station has direct coordinates
+        if (station.coordinates && Array.isArray(station.coordinates)) {
+            coordinates = station.coordinates;
+        } else if (station.latitude && station.longitude) {
+            coordinates = [parseFloat(station.longitude), parseFloat(station.latitude)];
+        } else {
+            // Fallback to searching by name
+            coordinates = getStationCoordinates(station.name);
+        }
+        
+        if (!coordinates) {
+            console.warn("No coordinates found for station:", station);
+            return;
+        }
+        
+        console.log("Auto switching to station:", station.name, "at coordinates:", coordinates);
         setSelectedStationCoords(coordinates);
+        
         // Fly to station
         map.current.flyTo({
             center: coordinates,
@@ -94,6 +112,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
             easing: (t) => t,
             essential: true,
         });
+        
         // Munculkan tooltip dengan jeda kecil
         setTimeout(() => {
             setTooltip({
@@ -184,7 +203,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
                 delete window.mapboxAutoSwitch;
             }
         };
-    }, [tickerData]);
+    }, [tickerData, devices]);
     // Initialize map
     useEffect(() => {
         if (!mapboxgl.accessToken) {
