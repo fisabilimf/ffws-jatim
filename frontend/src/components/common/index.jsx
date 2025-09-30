@@ -1,9 +1,9 @@
 export { default as AutoSwitchToggle } from "./AutoSwitchToggle.jsx";
 export { default as Chart } from "./Chart.jsx";
 export { default as DualLineChart } from "./DualLineChart.jsx";
-export { default as FilterControl } from "./FilterControl.jsx";
 export { default as FloatingLegend } from "./FloatingLegend.jsx";
 export { default as GoogleMapsSearchbar } from "./GoogleMapsSearchbar.jsx";
 export { default as MonitoringDualLinet } from "./MonitoringDualLinet.jsx";
 export { default as TanggulAktual } from "./TanggulAktual.jsx";
 export { default as TanggulPrediksi } from "./TanggulPrediksi.jsx";
+export { default as FilterPanel } from "./FilterPanel.jsx";

@@ -9,7 +9,7 @@ const FloodRunningBar = lazy(() => import("@components/FloodRunningBar"));
 const StationDetail = lazy(() => import("@components/sensors/StationDetail"));
 const DetailPanel = lazy(() => import("@components/sensors/DetailPanel"));
 const AutoSwitchToggle = lazy(() => import("@components/common/AutoSwitchToggle"));
-const FilterControl = lazy(() => import("@components/common/FilterControl"));
+const FilterPanel = lazy(() => import("@components/common/FilterPanel"));
 
 const Layout = ({ children }) => {
     const [tickerData, setTickerData] = useState(null);
@@ -20,6 +20,7 @@ const Layout = ({ children }) => {
     const [currentStationIndex, setCurrentStationIndex] = useState(0);
     const [isAutoSwitchOn, setIsAutoSwitchOn] = useState(false);
     const mapRef = useRef(null);
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
 
     // Memoize event handlers untuk mencegah re-render yang tidak perlu
     const handleSearch = useCallback((query) => {
@@ -138,21 +139,23 @@ const Layout = ({ children }) => {
                 />
             </Suspense>
 
-            {/* Bottom-right stack container for AutoSwitch and Legend */}
-            <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 z-10 space-y-2">
-                {/* Auto Switch Card */}
-                <div className="w-64 bg-gradient-to-r from-white/95 to-white/90 backdrop-blur-sm rounded-xl shadow-xl p-3 sm:p-4 border border-gray-200/50">
-                    <Suspense fallback={<div className="h-16 bg-gray-200 rounded animate-pulse"></div>}>
-                        <AutoSwitchToggle
-                            tickerData={tickerData}
-                            onStationChange={handleStationChange}
-                            currentStationIndex={currentStationIndex}
-                            onAutoSwitchToggle={handleAutoSwitchToggle}
-                        />
-                    </Suspense>
-                </div>
+            {/* Top-right container for Filter button */}
+            <div className="absolute top-4 right-4 z-[80]">
+                <button
+                    onClick={() => setIsFilterOpen(true)}
+                    className="relative inline-flex items-center justify-center w-12 h-12 rounded-full shadow-xl hover:bg-gray-100 transition-colors isolate focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                    title="Buka Filter"
+                    aria-label="Buka Filter"
+                >
+                    <span aria-hidden="true" className="absolute inset-0 rounded-full bg-white ring-1 ring-gray-200 shadow-xl"></span>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="relative z-10 w-6 h-6 text-blue-600 mix-blend-normal pointer-events-none">
+                        <path d="M22 3H2l8 9v7l4 2v-9l8-9z"></path>
+                    </svg>
+                </button>
+            </div>
 
-                {/* Floating Legend */}
+            {/* Bottom-right container for Floating Legend only */}
+            <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 z-10">
                 <Suspense fallback={<div className="h-20 bg-white/80 rounded animate-pulse"></div>}>
                     <FloatingLegend />
                 </Suspense>
@@ -191,15 +194,49 @@ const Layout = ({ children }) => {
                 />
             </Suspense>
 
-            {/* Independent Filter Control */}
-            <Suspense fallback={<div className="fixed top-4 right-4 w-12 h-12 bg-white/80 rounded-full animate-pulse"></div>}>
-                <FilterControl
-                    tickerData={tickerData}
-                    onStationChange={handleStationChange}
-                    currentStationIndex={currentStationIndex}
-                    onAutoSwitchToggle={handleAutoSwitchToggle}
-                    onLayerToggle={handleLayerToggle}
-                />
+            {/* Right-side Filter Panel */}
+            <Suspense fallback={<div className="fixed right-0 top-0 h-full w-80 bg-white shadow-lg animate-pulse"></div>}>
+                <FilterPanel
+                    isOpen={isFilterOpen}
+                    onClose={() => setIsFilterOpen(false)}
+                    title="Filter"
+                    subtitle="Pengaturan tampilan & Auto Switch"
+                >
+                    <div className="space-y-6">
+                        {/* Auto Switch Section */}
+                        <section className="p-4 rounded-xl border border-gray-200 bg-white shadow-sm">
+                            <h4 className="text-sm font-semibold text-gray-700 mb-3">Auto Switch</h4>
+                            <div className="border-t border-gray-100 pt-3">
+                                <AutoSwitchToggle
+                                    tickerData={tickerData}
+                                    onStationChange={handleStationChange}
+                                    currentStationIndex={currentStationIndex}
+                                    onAutoSwitchToggle={handleAutoSwitchToggle}
+                                />
+                            </div>
+                        </section>
+
+                        {/* Placeholder for other filters */}
+                        <section className="p-4 rounded-xl border border-gray-200 bg-white shadow-sm">
+                            <h4 className="text-sm font-semibold text-gray-700 mb-3">Layer Peta</h4>
+                            <div className="space-y-2 text-sm text-gray-600">
+                                <div className="flex items-center justify-between">
+                                    <span>Elevasi Muka Air</span>
+                                    <input type="checkbox" className="toggle toggle-sm" onChange={(e) => {
+                                        // integrate with map layer toggle when available
+                                        // handleLayerToggle('waterLevel', e.target.checked)
+                                    }} />
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span>Curah Hujan</span>
+                                    <input type="checkbox" className="toggle toggle-sm" onChange={(e) => {
+                                        // handleLayerToggle('rainfall', e.target.checked)
+                                    }} />
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </FilterPanel>
             </Suspense>
         </div>
     );
