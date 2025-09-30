@@ -1,11 +1,14 @@
-import React from 'react'
-import Layout from './public/layout/Layout'
-import './App.css'
+import React from "react";
+import { AppProvider } from "@/contexts/AppContext";
+import Layout from "@components/layout/Layout.jsx";
+import "@/assets/App.css";
 
 function App() {
-  return (
-    <Layout />
-  )
+    return (
+        <AppProvider>
+            <Layout />
+        </AppProvider>
+    );
 }
 
-export default App
+export default App;

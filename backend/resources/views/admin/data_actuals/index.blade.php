@@ -109,63 +109,62 @@
     </div>
 
     <!-- Filter Section -->
-    <x-admin.card title="Filter Data">
-        <form method="GET" action="{{ route('admin.data-actuals.index') }}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            <x-admin.form-input 
-                type="select"
-                name="sensor_id" 
-                label="Sensor" 
-                placeholder="Semua Sensor"
-                :value="request('sensor_id')"
-                :options="$sensors->map(function($sensor) { return ['value' => $sensor->id, 'label' => $sensor->sensor_code . ' - ' . $sensor->parameter]; })->toArray()"
-            />
-
-            <x-admin.form-input 
-                type="select"
-                name="threshold_status" 
-                label="Status Threshold" 
-                placeholder="Semua Status"
-                :value="request('threshold_status')"
-                :options="[
+    @php
+        $filterConfig = [
+            [
+                'type' => 'select',
+                'name' => 'sensor_id',
+                'label' => 'Sensor',
+                'empty_option' => 'Semua Sensor',
+                'options' => $sensors->map(function($sensor) { 
+                    return [
+                        'value' => $sensor->id, 
+                        'label' => $sensor->sensor_code . ' - ' . $sensor->parameter
+                    ]; 
+                })->toArray()
+            ],
+            [
+                'type' => 'select',
+                'name' => 'threshold_status',
+                'label' => 'Status Threshold',
+                'empty_option' => 'Semua Status',
+                'options' => [
                     ['value' => 'safe', 'label' => 'Aman'],
                     ['value' => 'warning', 'label' => 'Waspada'],
                     ['value' => 'danger', 'label' => 'Bahaya']
-                ]"
-            />
+                ]
+            ],
+            [
+                'type' => 'select',
+                'name' => 'river_basin_id',
+                'label' => 'Daerah Aliran Sungai',
+                'empty_option' => 'Semua DAS',
+                'options' => $riverBasins->map(function($basin) { 
+                    return [
+                        'value' => $basin->id, 
+                        'label' => $basin->name
+                    ]; 
+                })->toArray()
+            ],
+            [
+                'type' => 'date',
+                'name' => 'date_from',
+                'label' => 'Dari Tanggal'
+            ],
+            [
+                'type' => 'date',
+                'name' => 'date_to',
+                'label' => 'Sampai Tanggal'
+            ]
+        ];
+    @endphp
 
-            <x-admin.form-input 
-                type="select"
-                name="river_basin_id" 
-                label="Daerah Aliran Sungai" 
-                placeholder="Semua DAS"
-                :value="request('river_basin_id')"
-                :options="$riverBasins->map(function($basin) { return ['value' => $basin->id, 'label' => $basin->name]; })->toArray()"
-            />
-
-            <x-admin.form-input 
-                type="date" 
-                name="date_from" 
-                label="Dari Tanggal" 
-                :value="request('date_from')"
-            />
-
-            <x-admin.form-input 
-                type="date" 
-                name="date_to" 
-                label="Sampai Tanggal" 
-                :value="request('date_to')"
-            />
-
-            <div class="lg:col-span-5 flex justify-end space-x-3">
-                <x-admin.button variant="outline" size="md" href="{{ route('admin.data-actuals.index') }}">
-                    Reset Filter
-                </x-admin.button>
-                <x-admin.button variant="primary" size="md" type="submit">
-                    Terapkan Filter
-                </x-admin.button>
-            </div>
-        </form>
-    </x-admin.card>
+    <x-filter-bar 
+        title="Filter Data Actuals"
+        :filters="$filterConfig"
+        :action="route('admin.data-actuals.index')"
+        gridCols="md:grid-cols-5"
+    />
 
     <!-- Data Table -->
     <x-table 

@@ -1,12 +1,13 @@
 <!-- Sidebar -->
 <aside
    class="bg-white min-h-screen flex-shrink-0 transition-transform duration-200 ease-out fixed top-0 left-0 lg:sticky lg:top-0 z-30 border-r border-gray-200 overflow-y-auto"
-   x-cloak :class="{ 
-           '-translate-x-full': !$store.sidebar.open && window.innerWidth < 1024,
-           'translate-x-0': $store.sidebar.open || window.innerWidth >= 1024,
-           'w-16': !$store.sidebar.open && window.innerWidth >= 1024,
-           'w-64': $store.sidebar.open && window.innerWidth >= 1024
-       }">
+   x-cloak
+   :class="{
+       '-translate-x-full w-0': !$store.sidebar.open && window.innerWidth < 1024,
+       'translate-x-0 w-full max-w-xs sidebar-mobile': $store.sidebar.open && window.innerWidth < 1024,
+       'w-16': !$store.sidebar.open && window.innerWidth >= 1024,
+       'w-64': $store.sidebar.open && window.innerWidth >= 1024
+   }">
 
    <!-- Logo -->
    <div class="flex items-center justify-between h-16 px-6 border-b border-gray-200">
@@ -130,6 +131,18 @@
                   :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
                <span
                   :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Models</span>
+            </a>
+
+            <!-- Data Predictions -->
+            <a href="{{ route('admin.data_predictions.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative
+                                                                        {{ request()->routeIs('admin.data_predictions.*')
+   ? 'active'
+   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}"
+               :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
+               <i class="fas fa-chart-simple text-base"
+                  :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
+               <span
+                  :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Data Predictions</span>
             </a>
 
             <!-- Region Heading -->
