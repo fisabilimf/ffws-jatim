@@ -8,7 +8,7 @@ const FloatingLegend = lazy(() => import("@components/common/FloatingLegend"));
 const FloodRunningBar = lazy(() => import("@components/FloodRunningBar"));
 const StationDetail = lazy(() => import("@components/sensors/StationDetail"));
 const DetailPanel = lazy(() => import("@components/sensors/DetailPanel"));
-const AutoSwitchToggle = lazy(() => import("@components/common/AutoSwitchToggle"));
+
 
 const Layout = ({ children }) => {
     const [tickerData, setTickerData] = useState(null);
@@ -134,15 +134,8 @@ const Layout = ({ children }) => {
             {/* Bottom-right stack container for AutoSwitch and Legend */}
             <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 z-10 space-y-2">
                 {/* Auto Switch Card */}
-                <div className="w-64 bg-gradient-to-r from-white/95 to-white/90 backdrop-blur-sm rounded-xl shadow-xl p-3 sm:p-4 border border-gray-200/50">
-                    <Suspense fallback={<div className="h-16 bg-gray-200 rounded animate-pulse"></div>}>
-                        <AutoSwitchToggle
-                            tickerData={tickerData}
-                            onStationChange={handleStationChange}
-                            currentStationIndex={currentStationIndex}
-                            onAutoSwitchToggle={handleAutoSwitchToggle}
-                        />
-                    </Suspense>
+                <div className="">
+                    
                 </div>
 
                 {/* Floating Legend */}
