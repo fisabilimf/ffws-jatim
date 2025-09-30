@@ -2,8 +2,7 @@ import React from 'react';
 
 const FloatingLegend = () => {
   return (
-    <div className="fixed bottom-6 right-1   p-2  space-x-4">
-      <h3 className="text-xs font-semibold mr-2"></h3>
+    <div className="fixed bottom-5 right-2 z-30   p-3 flex items-center space-x-4">
       <div className="flex items-center space-x-3">
         <div className="flex items-center space-x-1">
           <div className="w-3 h-3 rounded-full bg-green-500"></div>

@@ -316,7 +316,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
       bearing: 0,
     });
 
-    map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
+    // Hanya menambahkan ScaleControl tanpa NavigationControl (zoom in/out)
     map.current.addControl(new mapboxgl.ScaleControl(), "bottom-left");
 
     map.current.on("zoom", () => {

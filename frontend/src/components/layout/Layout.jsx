@@ -9,7 +9,6 @@ const FloodRunningBar = lazy(() => import("@components/FloodRunningBar"));
 const StationDetail = lazy(() => import("@components/sensors/StationDetail"));
 const DetailPanel = lazy(() => import("@components/sensors/DetailPanel"));
 
-
 const Layout = ({ children }) => {
     const [tickerData, setTickerData] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
@@ -59,6 +58,12 @@ const Layout = ({ children }) => {
 
     const handleCloseDetailPanel = useCallback(() => {
         setIsDetailPanelOpen(false);
+    }, []);
+
+    const handleLayerToggle = useCallback((layerId, enabled) => {
+        console.log(`Layer ${layerId} toggled: ${enabled}`);
+        // Implementasi logic untuk toggle layer map
+        // Bisa dikomunikasikan dengan MapboxMap component
     }, []);
 
     const handleAutoSwitch = useCallback((station, index) => {
@@ -175,6 +180,12 @@ const Layout = ({ children }) => {
                     chartHistory={selectedStation?.history || []}
                     isAutoSwitchOn={isAutoSwitchOn}
                 />
+            </Suspense>
+
+            {/* Independent Filter Control */}
+            <Suspense fallback={<div className="fixed top-4 right-4 w-12 h-12 bg-white/80 rounded-full animate-pulse"></div>}>
+                
+               
             </Suspense>
         </div>
     );
