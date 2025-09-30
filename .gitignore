@@ -64,3 +64,6 @@ temp-forecasting/
 temp-backend/
 temp-frontend/
 backup_*/
+
+/raspy/
+/new_models/
