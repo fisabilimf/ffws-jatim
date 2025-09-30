@@ -204,7 +204,6 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
             bearing: -17.6,
             antialias: true,
         });
-        map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
         map.current.addControl(new mapboxgl.ScaleControl(), "bottom-left");
         // Tambahkan event listener untuk drag
         map.current.on("dragstart", () => {
