@@ -3,9 +3,9 @@ import React, { useState, useRef, useCallback, memo, lazy, Suspense, useEffect }
 // Lazy load komponen yang tidak critical untuk initial load
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const GoogleMapsSearchbar = lazy(() => import("@components/common/GoogleMapsSearchbar"));
-const MapboxMap = lazy(() => import("@components/devices/MapboxMap"));
+const MapboxMap = lazy(() => import("@/components/MapboxMap"));
 const FloatingLegend = lazy(() => import("@components/common/FloatingLegend"));
-const FloodRunningBar = lazy(() => import("@components/FloodRunningBar"));
+const FloodRunningBar = lazy(() => import("@/components/common/FloodRunningBar"));
 const StationDetail = lazy(() => import("@components/sensors/StationDetail"));
 const DetailPanel = lazy(() => import("@components/sensors/DetailPanel"));
 const AutoSwitchToggle = lazy(() => import("@components/common/AutoSwitchToggle"));
@@ -134,7 +134,7 @@ const Layout = ({ children }) => {
             {/* Bottom-right stack container for AutoSwitch and Legend */}
             <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 z-10 space-y-2">
                 {/* Auto Switch Card */}
-                <div className="w-64 bg-gradient-to-r from-white/95 to-white/90 backdrop-blur-sm rounded-xl shadow-xl p-3 sm:p-4 border border-gray-200/50">
+                <div className="w-80 bg-gradient-to-r from-white/95 to-white/90 backdrop-blur-sm rounded-xl shadow-xl p-3 sm:p-4 border border-gray-200/50">
                     <Suspense fallback={<div className="h-16 bg-gray-200 rounded animate-pulse"></div>}>
                         <AutoSwitchToggle
                             tickerData={tickerData}

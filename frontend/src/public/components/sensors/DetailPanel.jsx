@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getStatusText } from '../../../utils/statusUtils';
+import { getStatusText } from '../../utils/statusUtils';
 import MonitoringChart from '../ui/MonitoringDualLinet';
 import TanggulAktual from '../ui/TanggulAktual';
 import PredictionChart from '../ui/TanggulPrediksi';
@@ -49,6 +49,13 @@ const DetailPanel = ({
   // Tambahkan CSS untuk animasi smooth underline
   useEffect(() => {
     const style = document.createElement('style');
+    style.id = 'detail-panel-animations'; // Add ID to prevent duplicates
+    
+    // Check if style already exists
+    if (document.getElementById('detail-panel-animations')) {
+      return;
+    }
+    
     style.textContent = `
       @keyframes underlineSlideIn {
         0% {
@@ -64,7 +71,21 @@ const DetailPanel = ({
         }
       }
       
-      @keyframes dotPopIn {
+      @keyframes underlineSlideOut {
+        0% {
+          transform: translateX(-50%) scaleX(1);
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+        100% {
+          transform: translateX(-50%) scaleX(0);
+          opacity: 0;
+        }
+      }
+      
+      @keyframes dotFadeIn {
         0% {
           transform: translateX(-50%) scale(0);
           opacity: 0;
@@ -75,18 +96,51 @@ const DetailPanel = ({
         }
       }
       
+      @keyframes dotFadeOut {
+        0% {
+          transform: translateX(-50%) scale(1);
+          opacity: 1;
+        }
+        100% {
+          transform: translateX(-50%) scale(0);
+          opacity: 0;
+        }
+      }
+      
       .underline-active {
         animation: underlineSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
       }
       
-      .dot-hover {
-        animation: dotPopIn 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      .underline-inactive {
+        animation: underlineSlideOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      }
+      
+      .dot-show {
+        animation: dotFadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      }
+      
+      .dot-hide {
+        animation: dotFadeOut 0.15s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      }
+      
+      /* Prevent flickering during transitions */
+      .tab-transition-container {
+        will-change: transform, opacity;
+      }
+      
+      .tab-button-stable {
+        backface-visibility: hidden;
+        transform: translateZ(0);
+        will-change: transform, opacity;
       }
     `;
     document.head.appendChild(style);
     
     return () => {
-      document.head.removeChild(style);
+      const existingStyle = document.getElementById('detail-panel-animations');
+      if (existingStyle) {
+        document.head.removeChild(existingStyle);
+      }
     };
   }, []);
 
@@ -101,16 +155,24 @@ const DetailPanel = ({
   // Handler untuk close dengan animasi
   const handleClose = () => {
     setIsVisible(false);
+    setIsNavbarVisible(false); // Hide navbar immediately
     setTimeout(() => {
       onClose();
     }, 300); // Sama dengan durasi animasi
   };
 
-  // Handler untuk tab click dengan delay
+  // Handler untuk tab click dengan delay dan proper state management
   const handleTabClick = (tabKey) => {
-    if (isTabChanging) return; // Prevent multiple clicks during transition
+    if (isTabChanging || tabKey === activeTab) return; // Prevent multiple clicks and same tab
     
     setIsTabChanging(true);
+    
+    // Immediate feedback for current tab (remove active state)
+    const currentActiveElement = document.querySelector('.underline-active');
+    if (currentActiveElement) {
+      currentActiveElement.classList.remove('underline-active');
+      currentActiveElement.classList.add('underline-inactive');
+    }
     
     // Delay sebelum mengubah tab
     setTimeout(() => {
@@ -119,9 +181,17 @@ const DetailPanel = ({
       // Delay setelah mengubah tab untuk reset state
       setTimeout(() => {
         setIsTabChanging(false);
-      }, 300);
+      }, 100); // Reduced delay for smoother transition
     }, 150); // 150ms delay sebelum tab berubah
   };
+
+  // Reset tab when panel closes
+  useEffect(() => {
+    if (!isOpen) {
+      setActiveTab('sensor'); // Reset to default tab
+      setIsTabChanging(false);
+    }
+  }, [isOpen]);
 
   // Tidak render jika panel tidak dibuka atau data tidak ada
   if (!isOpen) return null;
@@ -190,8 +260,9 @@ const DetailPanel = ({
               <div className="text-xs text-gray-600 font-medium">Update {new Date().toLocaleTimeString('id-ID')}</div>
             </div>
           </div>
-          {/* Navigation tabs dengan grey styling dan slide delay */}
-          <div className={`mt-6 transition-all duration-500 ease-out ${
+          
+          {/* Navigation tabs dengan improved animation handling */}
+          <div className={`mt-6 tab-transition-container transition-all duration-500 ease-out ${
             isNavbarVisible 
               ? 'opacity-100 translate-y-0' 
               : 'opacity-0 translate-y-4'
@@ -203,20 +274,35 @@ const DetailPanel = ({
                     key={tab.key}
                     onClick={() => handleTabClick(tab.key)}
                     disabled={isTabChanging}
-                    className={`relative py-4 px-4 transition-all duration-500 ease-out rounded-lg shadow-sm group ${
+                    className={`relative py-4 px-4 tab-button-stable transition-all duration-300 ease-out rounded-lg shadow-sm group ${
                       activeTab === tab.key 
                         ? 'text-gray-800 font-semibold bg-gradient-to-r from-gray-200 to-gray-300 shadow-md' 
-                        : 'text-gray-600 font-medium hover:text-gray-800'
+                        : 'text-gray-600 font-medium hover:text-gray-800 hover:bg-gray-50'
                     } ${isTabChanging ? 'opacity-70 cursor-wait' : 'cursor-pointer'}`}
                     role="tab"
                     aria-selected={activeTab === tab.key}
                   >
                     <span className="relative z-10 whitespace-nowrap">{tab.label}</span>
-                    {/* Active indicator - line for active, dot for inactive on hover */}
+                    
+                    {/* Improved Active/Inactive indicators */}
                     {activeTab === tab.key ? (
-                      <div className="absolute bottom-0 left-1/2 w-8 h-1 bg-gradient-to-r from-gray-600 to-gray-700 rounded-full shadow-sm underline-active" />
+                      <div 
+                        key={`active-${tab.key}`}
+                        className="absolute bottom-0 left-1/2 w-8 h-1 bg-gradient-to-r from-gray-600 to-gray-700 rounded-full shadow-sm underline-active" 
+                      />
                     ) : (
-                      <div className="absolute bottom-0 left-1/2 w-1.5 h-1.5 bg-gray-400 rounded-full opacity-0 group-hover:opacity-100 group-hover:dot-hover transition-all duration-300 ease-out" />
+                      <div 
+                        key={`inactive-${tab.key}`}
+                        className={`absolute bottom-0 left-1/2 w-1.5 h-1.5 bg-gray-400 rounded-full transition-all duration-200 ease-out ${
+                          isNavbarVisible 
+                            ? 'opacity-0 group-hover:opacity-100 group-hover:dot-show group-hover:scale-100' 
+                            : 'opacity-0 scale-0'
+                        }`}
+                        style={{
+                          transform: 'translateX(-50%)',
+                          transitionDelay: isNavbarVisible ? '0ms' : '0ms'
+                        }}
+                      />
                     )}
                   </button>
                 ))}
@@ -227,7 +313,7 @@ const DetailPanel = ({
 
         {/* Konten Panel - Layout yang lebih rapi */}
         <div className="flex-1 overflow-y-auto p-6">
-          <div className={`space-y-6 transition-all duration-500 ease-out ${
+          <div className={`space-y-6 transition-all duration-400 ease-out ${
             isTabChanging 
               ? 'opacity-50 scale-95' 
               : 'opacity-100 scale-100'
@@ -301,9 +387,7 @@ const DetailPanel = ({
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div className="text-center p-3 bg-yellow-50 rounded-lg shadow-sm">
                             <div className="flex justify-center mb-2">
-                              <svg className="w-6 h-6 text-yellow-600" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
-                              </svg>
+                              <i className="fa-solid fa-triangle-exclamation text-yellow-600"></i>
                             </div>
                             <div className="text-sm font-medium text-yellow-800">Risiko Sedang</div>
                             <div className="text-xs text-yellow-600 mt-1">Curah hujan tinggi</div>

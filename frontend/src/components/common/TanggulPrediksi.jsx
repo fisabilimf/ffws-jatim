@@ -155,18 +155,7 @@ const PredictionChart = ({ stationData, chartHistory = [], width = 560, height =
                             <Tooltip content={<CustomTooltip />} />
                             <Legend verticalAlign="top" height={36} wrapperStyle={{ paddingBottom: "10px" }} />
 
-                            {/* Area tanggul (abu-abu) dengan sisi miring landai */}
-                            <Area
-                                type="monotone"
-                                dataKey="levee"
-                                fill="url(#leveeGradientPred)"
-                                fillOpacity={0.7}
-                                stroke="#9CA3AF"
-                                strokeWidth={2}
-                                name="Bingkai Tanggul"
-                            />
-
-                            {/* Area visual air prediksi berwarna merah */}
+                            {/* Area visual air prediksi berwarna merah - di belakang layer tanggul */}
                             <Area
                                 type="monotone"
                                 dataKey="predicted"
@@ -176,6 +165,17 @@ const PredictionChart = ({ stationData, chartHistory = [], width = 560, height =
                                 strokeWidth={2}
                                 strokeDasharray="5 5"
                                 name="Prediksi"
+                            />
+
+                            {/* Area tanggul (abu-abu) dengan sisi miring landai - di depan layer air */}
+                            <Area
+                                type="monotone"
+                                dataKey="levee"
+                                fill="url(#leveeGradientPred)"
+                                fillOpacity={0.7}
+                                stroke="#9CA3AF"
+                                strokeWidth={2}
+                                name="Bingkai Tanggul"
                             />
                         </AreaChart>
                     </ResponsiveContainer>
