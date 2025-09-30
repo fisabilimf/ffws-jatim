@@ -1,8 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, lazy, Suspense } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import MapTooltip from "./maptooltip"; // Import komponen tooltip
-import { fetchDevices } from "../../services/devices";
+import { fetchDevices } from "../services/devices";
+
+// Lazy load MapTooltip untuk optimasi bundle
+const MapTooltip = lazy(() => import("./devices/maptooltip"));
 
 const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange }) => {
     const mapContainer = useRef(null);
@@ -153,18 +155,18 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
         }
     };
     const getStationCoordinates = (stationName) => {
-        console.log(`Looking for coordinates for station: "${stationName}"`);
+        // console.log(`Looking for coordinates for station: "${stationName}"`);
         if (!devices || devices.length === 0) {
-            console.log("Devices array is empty or not yet loaded.");
+            // console.log("Devices array is empty or not yet loaded.");
             return null;
         }
         const device = devices.find((d) => d.name === stationName);
         if (device && device.latitude && device.longitude) {
             const coords = [parseFloat(device.longitude), parseFloat(device.latitude)];
-            console.log(`Found coordinates for "${stationName}":`, coords);
+            // console.log(`Found coordinates for "${stationName}":`, coords);
             return coords;
         }
-        console.warn(`Coordinates not found for station: "${stationName}"`);
+        // console.warn(`Coordinates not found for station: "${stationName}"`);
         return null;
     };
     // Expose handleMapFocus ke window object
@@ -317,14 +319,16 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
     return (
         <div className="w-full h-screen overflow-hidden relative z-0">
             <div ref={mapContainer} className="w-full h-full relative z-0" />
-            <MapTooltip
-                map={map.current}
-                station={tooltip.station}
-                isVisible={tooltip.visible}
-                coordinates={tooltip.coordinates}
-                onShowDetail={handleShowDetail}
-                onClose={handleCloseTooltip}
-            />
+            <Suspense fallback={null}>
+                <MapTooltip
+                    map={map.current}
+                    station={tooltip.station}
+                    isVisible={tooltip.visible}
+                    coordinates={tooltip.coordinates}
+                    onShowDetail={handleShowDetail}
+                    onClose={handleCloseTooltip}
+                />
+            </Suspense>
         </div>
     );
 };

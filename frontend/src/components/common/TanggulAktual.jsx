@@ -65,7 +65,7 @@ const RiverDevelopmentChart = ({ stationData, chartHistory = [], width = 560, he
     }
 
     const chartData = useMemo(() => {
-        const waterLevel = stationData.value || 0.4; // Default 0.4m (antara 0.3-0.5m)
+        const waterLevel = stationData.value || 0.2; // Default 0.4m (antara 0.3-0.5m)
 
         // Data tanggul V-shape
         const leveeData = [
@@ -192,26 +192,26 @@ const RiverDevelopmentChart = ({ stationData, chartHistory = [], width = 560, he
                             <Tooltip content={<CustomTooltip />} />
                             <Legend verticalAlign="top" height={36} wrapperStyle={{ paddingBottom: "10px" }} />
 
-                            {/* Area tanggul (abu-abu) dengan sisi miring landai */}
-                            <Area
-                                type="monotone"
-                                dataKey="levee"
-                                fill="url(#leveeGradient)"
-                                fillOpacity={0.7}
-                                stroke="#9CA3AF"
-                                strokeWidth={2}
-                                name="Bingkai Tanggul"
-                            />
-
-                            {/* Area visual air berwarna biru */}
+                            {/* Area visual air berwarna biru - di belakang layer tanggul */}
                             <Area
                                 type="monotone"
                                 dataKey="water"
                                 fill="url(#waterGradient)"
                                 fillOpacity={0.8}
                                 stroke="#87CEEB"
-                                strokeWidth={2}
+                                strokeWidth={0.5}
                                 name="Level Air"
+                            />
+
+                            {/* Area tanggul (abu-abu) dengan sisi miring landai - di depan layer air */}
+                            <Area
+                                type="monotone"
+                                dataKey="levee"
+                                fill="url(#leveeGradient)"
+                                fillOpacity={1}
+                                stroke="#9CA3AF"
+                                strokeWidth={2}
+                                name="Bingkai Tanggul"
                             />
                         </AreaChart>
                     </ResponsiveContainer>
