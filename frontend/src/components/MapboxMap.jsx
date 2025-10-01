@@ -280,16 +280,18 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
     useEffect(() => {
         // Pastikan kita tidak memindahkan fungsi ketika devices atau tickerData berubah
         // Sebagai gantinya kita akan mengakses devices dan tickerData terbaru melalui fungsi
-        if (!window.mapboxAutoSwitch) {
-            console.log("Setting mapboxAutoSwitch function on window object");
-            
-            window.mapboxAutoSwitch = (device, index) => {
+        console.log("=== REGISTERING MAPBOX AUTO SWITCH FUNCTION ===");
+        console.log("Map instance available:", !!map.current);
+        console.log("Devices available:", devices.length);
+        
+        // Always re-register the function to ensure it's up to date
+        window.mapboxAutoSwitch = (device, index) => {
                 const deviceName = device?.name || device?.device_name || device?.station_name;
                 console.log("MapboxMap: mapboxAutoSwitch called with device:", deviceName, "index:", index);
                 
                 try {
                     // Validasi input yang lebih ketat
-                    if (device) {
+                    if (!device) {
                         console.error("Error: Device is undefined or null");
                         // Dispatch error event untuk notifikasi ke parent
                         document.dispatchEvent(new CustomEvent('autoSwitchError', {
@@ -318,12 +320,19 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
                     }
                     
                     // Validasi koordinat sebelum memanggil handleAutoSwitch
-                    const hasValidCoordinates = device.coordinates || 
-                        (device.latitude && device.longitude) || 
-                        getStationCoordinates(deviceName);
+                    const hasDirectCoordinates = device.coordinates && Array.isArray(device.coordinates) && device.coordinates.length === 2;
+                    const hasLatLng = device.latitude && device.longitude && 
+                        !isNaN(parseFloat(device.latitude)) && !isNaN(parseFloat(device.longitude));
+                    const hasLookupCoordinates = getStationCoordinates(deviceName);
+                    
+                    const hasValidCoordinates = hasDirectCoordinates || hasLatLng || hasLookupCoordinates;
                     
                     if (!hasValidCoordinates) {
                         console.error("Error: No valid coordinates found for device:", deviceName);
+                        console.log("Device data:", device);
+                        console.log("Direct coordinates:", device.coordinates);
+                        console.log("Lat/Lng:", device.latitude, device.longitude);
+                        console.log("Lookup coordinates:", hasLookupCoordinates);
                         document.dispatchEvent(new CustomEvent('autoSwitchError', {
                             detail: { 
                                 error: 'No valid coordinates found',
@@ -361,12 +370,12 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
                         }));
                 }
             };
-        }
         
         // Log untuk debugging
         console.log("Window mapboxAutoSwitch status:", typeof window.mapboxAutoSwitch === 'function' ? "Available" : "Not available");
         console.log("Available devices:", devices.length);
         console.log("Available ticker data:", tickerData?.length || 0);
+        console.log("=== MAPBOX AUTO SWITCH FUNCTION REGISTERED ===");
         
         return () => {
             // Jangan hapus fungsi mapboxAutoSwitch pada setiap perubahan dependencies
