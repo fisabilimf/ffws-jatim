@@ -14,14 +14,19 @@ export const fetchWithAuth = async (endpoint, options = {}) => {
         ...options.headers,
     };
 
+    const fullUrl = `${API_BASE_URL}${endpoint}`;
+
     try {
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
+        const response = await fetch(fullUrl, { ...options, headers });
+        
         if (!response.ok) {
-            throw new Error("Network response was not ok");
+            const errorText = await response.text();
+            throw new Error(`Network response was not ok: ${response.status} - ${errorText}`);
         }
-        return response.json();
+        
+        const data = await response.json();
+        return data;
     } catch (error) {
-        console.error(`There was a problem with the fetch operation for endpoint ${endpoint}:`, error);
         throw error;
     }
 };

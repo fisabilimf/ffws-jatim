@@ -1,7 +1,6 @@
 import React, { useState, useRef, useCallback, memo, lazy, Suspense, useEffect } from "react";
 
 // Lazy load komponen yang tidak critical untuk initial load
-const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const GoogleMapsSearchbar = lazy(() => import("@components/common/GoogleMapsSearchbar"));
 const MapboxMap = lazy(() => import("@/components/MapboxMap"));
 const FloatingLegend = lazy(() => import("@components/common/FloatingLegend"));
@@ -32,15 +31,23 @@ const Layout = ({ children }) => {
     }, []);
 
     const handleAutoSwitchToggle = useCallback((isOn) => {
-        setIsAutoSwitchOn(isOn);
-        // If auto switch is turned off, close sidebar
-        if (!isOn) {
-            setIsSidebarOpen(false);
-            setSelectedStation(null);
-        } else {
-            // Jika auto switch diaktifkan, tutup detail panel
-            setIsDetailPanelOpen(false);
-        }
+        console.log('Layout: Auto switch toggle requested:', isOn);
+        
+        // Debounce untuk mencegah rapid state changes
+        const timeoutId = setTimeout(() => {
+            setIsAutoSwitchOn(isOn);
+            
+            // If auto switch is turned off, close sidebar
+            if (!isOn) {
+                setIsSidebarOpen(false);
+                setSelectedStation(null);
+            } else {
+                // Jika auto switch diaktifkan, tutup detail panel
+                setIsDetailPanelOpen(false);
+            }
+        }, 50);
+        
+        return () => clearTimeout(timeoutId);
     }, []);
 
     const handleCloseStationDetail = useCallback(() => {
@@ -76,19 +83,38 @@ const Layout = ({ children }) => {
     }, []);
 
     const handleStationChange = useCallback(
-        (station, index) => {
-            setCurrentStationIndex(index);
-            // Buka panel detail saat auto switch
-            setSelectedStation(station);
-            setIsSidebarOpen(true);
-            // Tutup detail panel jika auto switch sedang berjalan
-            if (isAutoSwitchOn) {
-                setIsDetailPanelOpen(false);
+        (device, index) => {
+            const deviceName = device?.name || device?.device_name || device?.station_name;
+            console.log('Layout: Device change requested:', deviceName, 'index:', index);
+            
+            // Validasi input
+            if (!device || index === undefined) {
+                console.warn('Layout: Invalid device or index provided');
+                return;
             }
-            // Trigger map auto switch
+            
+            // Update state dengan debouncing untuk mencegah rapid changes
+            const timeoutId = setTimeout(() => {
+                setCurrentStationIndex(index);
+                // Buka panel detail saat auto switch
+                setSelectedStation(device);
+                setIsSidebarOpen(true);
+                // Tutup detail panel jika auto switch sedang berjalan
+                if (isAutoSwitchOn) {
+                    setIsDetailPanelOpen(false);
+                }
+            }, 10);
+            
+            // Trigger map auto switch (tidak perlu debounce karena ini external call)
             if (window.mapboxAutoSwitch) {
-                window.mapboxAutoSwitch(station, index);
+                try {
+                    window.mapboxAutoSwitch(device, index);
+                } catch (error) {
+                    console.error('Layout: Error calling mapboxAutoSwitch:', error);
+                }
             }
+            
+            return () => clearTimeout(timeoutId);
         },
         [isAutoSwitchOn]
     );
@@ -148,6 +174,8 @@ const Layout = ({ children }) => {
                             onStationChange={handleStationChange}
                             currentStationIndex={currentStationIndex}
                             onAutoSwitchToggle={handleAutoSwitchToggle}
+                            isAutoSwitchOn={isAutoSwitchOn} // Controlled state
+                            fetchInterval={15000} // Fetch data device setiap 15 detik
                         />
                     </Suspense>
                 </div>

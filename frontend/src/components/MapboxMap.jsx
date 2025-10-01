@@ -17,6 +17,8 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
         const loadDevices = async () => {
             try {
                 const devicesData = await fetchDevices();
+                console.log('MapboxMap: Fetched devices:', devicesData?.length || 0);
+                console.log('MapboxMap: First device structure:', devicesData?.[0]);
                 setDevices(devicesData);
             } catch (error) {
                 console.error("Failed to fetch devices:", error);
@@ -80,12 +82,72 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
         }, 800);
     };
     // Handler untuk auto switch dari toggle
-    const handleAutoSwitch = (station, index) => {
-        if (!map.current || !station) return;
-        const coordinates = getStationCoordinates(station.name);
-        if (!coordinates) return;
+    const handleAutoSwitch = (device, index) => {
+        console.log(`handleAutoSwitch called with device: ${device?.name || device?.device_name || device?.station_name || 'undefined'}, index: ${index}`);
+        
+        if (!map.current || !device) {
+            console.warn("Map or device not available for auto switch");
+            return;
+        }
+        
+        let coordinates = null;
+        
+        try {
+            // Check if device has direct coordinates
+            if (device.coordinates && Array.isArray(device.coordinates)) {
+                coordinates = device.coordinates;
+                console.log("Using direct coordinates from device object:", coordinates);
+            } else if (device.latitude && device.longitude) {
+                coordinates = [parseFloat(device.longitude), parseFloat(device.latitude)];
+                console.log("Using lat/lng from device object:", coordinates);
+            } else {
+                // Fallback to searching by name
+                const deviceName = device.name || device.device_name || device.station_name;
+                coordinates = getStationCoordinates(deviceName);
+                console.log("Looked up coordinates by name:", coordinates);
+            }
+            
+            if (!coordinates) {
+                const deviceName = device.name || device.device_name || device.station_name;
+                console.warn("No coordinates found for device:", deviceName);
+                
+                // Coba lakukan pencarian lebih agresif berdasarkan nama
+                const deviceLowerName = deviceName.toLowerCase();
+                // Log semua perangkat untuk debug
+                console.log("Attempting fuzzy match with devices:", devices.map(d => d.name || d.device_name || d.station_name));
+                
+                const matchedDevice = devices.find(d => {
+                    const dName = d.name || d.device_name || d.station_name;
+                    return dName.toLowerCase() === deviceLowerName || 
+                           dName.toLowerCase().includes(deviceLowerName) || 
+                           deviceLowerName.includes(dName.toLowerCase());
+                });
+                
+                if (matchedDevice && matchedDevice.latitude && matchedDevice.longitude) {
+                    coordinates = [parseFloat(matchedDevice.longitude), parseFloat(matchedDevice.latitude)];
+                    console.log("Found coordinates through fuzzy matching:", coordinates);
+                } else {
+                    console.error("Still could not find coordinates after fuzzy matching");
+                    
+                    // Jika tidak ada koordinat ditemukan, gunakan koordinat default
+                    if (devices.length > 0 && devices[0].latitude && devices[0].longitude) {
+                        coordinates = [parseFloat(devices[0].longitude), parseFloat(devices[0].latitude)];
+                        console.log("Using first device coordinates as fallback:", coordinates);
+                    } else {
+                        return;
+                    }
+                }
+            }
+        } catch (error) {
+            console.error("Error processing device coordinates:", error);
+            return;
+        }
+        
+        const deviceName = device.name || device.device_name || device.station_name;
+        console.log("Auto switching to device:", deviceName, "at coordinates:", coordinates, "index:", index);
         setSelectedStationCoords(coordinates);
-        // Fly to station
+        
+        // Fly to device
         map.current.flyTo({
             center: coordinates,
             zoom: 12,
@@ -96,14 +158,20 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
             easing: (t) => t,
             essential: true,
         });
+        
         // Munculkan tooltip dengan jeda kecil
         setTimeout(() => {
             setTooltip({
                 visible: true,
-                station: station,
+                station: device, // Keep as station for tooltip compatibility
                 coordinates: coordinates,
             });
         }, 800);
+        
+        // Jika fungsi onStationChange tersedia, panggil dengan device saat ini
+        if (onStationChange) {
+            onStationChange(device, index);
+        }
     };
     // Handler untuk menampilkan detail sidebar dari tooltip
     const handleShowDetail = (station) => {
@@ -160,13 +228,43 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
             // console.log("Devices array is empty or not yet loaded.");
             return null;
         }
-        const device = devices.find((d) => d.name === stationName);
+        
+        // Pertama coba pencarian yang tepat - cek berbagai field name
+        let device = devices.find((d) => 
+            d.name === stationName || 
+            d.device_name === stationName || 
+            d.station_name === stationName
+        );
+        
+        // Jika tidak ditemukan, coba pencarian case-insensitive
+        if (!device) {
+            device = devices.find((d) => 
+                (d.name && d.name.toLowerCase() === stationName.toLowerCase()) ||
+                (d.device_name && d.device_name.toLowerCase() === stationName.toLowerCase()) ||
+                (d.station_name && d.station_name.toLowerCase() === stationName.toLowerCase())
+            );
+        }
+        
+        // Jika masih tidak ditemukan, coba pencarian parsial
+        if (!device) {
+            device = devices.find((d) => {
+                const name = d.name || d.device_name || d.station_name;
+                if (!name) return false;
+                return name.toLowerCase().includes(stationName.toLowerCase()) || 
+                       stationName.toLowerCase().includes(name.toLowerCase());
+            });
+        }
+        
         if (device && device.latitude && device.longitude) {
             const coords = [parseFloat(device.longitude), parseFloat(device.latitude)];
-            // console.log(`Found coordinates for "${stationName}":`, coords);
+            const deviceName = device.name || device.device_name || device.station_name;
+            console.log(`Found coordinates for "${stationName}":`, coords);
+            console.log(`Matched to device: "${deviceName}"`);
             return coords;
         }
-        // console.warn(`Coordinates not found for station: "${stationName}"`);
+        
+        console.warn(`Coordinates not found for station: "${stationName}"`);
+        console.log("Available devices:", devices.map(d => d.name || d.device_name || d.station_name || 'unnamed').join(", "));
         return null;
     };
     // Expose handleMapFocus ke window object
@@ -178,15 +276,114 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
             }
         };
     }, [tickerData]);
-    // Expose handleAutoSwitch ke window object
+    // Expose handleAutoSwitch ke window object dengan error handling yang robust
     useEffect(() => {
-        window.mapboxAutoSwitch = handleAutoSwitch;
+        // Pastikan kita tidak memindahkan fungsi ketika devices atau tickerData berubah
+        // Sebagai gantinya kita akan mengakses devices dan tickerData terbaru melalui fungsi
+        if (!window.mapboxAutoSwitch) {
+            console.log("Setting mapboxAutoSwitch function on window object");
+            
+            window.mapboxAutoSwitch = (device, index) => {
+                const deviceName = device?.name || device?.device_name || device?.station_name;
+                console.log("MapboxMap: mapboxAutoSwitch called with device:", deviceName, "index:", index);
+                
+                try {
+                    // Validasi input yang lebih ketat
+                    if (device) {
+                        console.error("Error: Device is undefined or null");
+                        // Dispatch error event untuk notifikasi ke parent
+                        document.dispatchEvent(new CustomEvent('autoSwitchError', {
+                            detail: { 
+                                error: 'Device is undefined or null',
+                                type: 'validation_error',
+                                device: device,
+                                index: index
+                            }
+                        }));
+                        return;
+                    }
+                    
+                    if (!map.current) {
+                        console.error("Error: Map is not initialized yet");
+                        // Dispatch error event untuk notifikasi ke parent
+                        document.dispatchEvent(new CustomEvent('autoSwitchError', {
+                            detail: { 
+                                error: 'Map is not initialized yet',
+                                type: 'map_not_ready',
+                                device: device,
+                                index: index
+                            }
+                        }));
+                        return;
+                    }
+                    
+                    // Validasi koordinat sebelum memanggil handleAutoSwitch
+                    const hasValidCoordinates = device.coordinates || 
+                        (device.latitude && device.longitude) || 
+                        getStationCoordinates(deviceName);
+                    
+                    if (!hasValidCoordinates) {
+                        console.error("Error: No valid coordinates found for device:", deviceName);
+                        document.dispatchEvent(new CustomEvent('autoSwitchError', {
+                            detail: { 
+                                error: 'No valid coordinates found',
+                                type: 'coordinate_error',
+                                device: device,
+                                index: index
+                            }
+                        }));
+                        return;
+                    }
+                    
+                    // Akses devices terbaru langsung dari state
+                    handleAutoSwitch(device, index);
+                    
+                    // Dispatch success event
+                    document.dispatchEvent(new CustomEvent('autoSwitchSuccess', {
+                        detail: { 
+                            device: device,
+                            index: index,
+                            timestamp: Date.now()
+                        }
+                    }));
+                    
+                } catch (error) {
+                    console.error("Unexpected error in mapboxAutoSwitch:", error);
+                    // Dispatch error event untuk notifikasi ke parent
+                        document.dispatchEvent(new CustomEvent('autoSwitchError', {
+                            detail: { 
+                                error: error.message,
+                                type: 'unexpected_error',
+                                device: device,
+                                index: index,
+                                stack: error.stack
+                            }
+                        }));
+                }
+            };
+        }
+        
+        // Log untuk debugging
+        console.log("Window mapboxAutoSwitch status:", typeof window.mapboxAutoSwitch === 'function' ? "Available" : "Not available");
+        console.log("Available devices:", devices.length);
+        console.log("Available ticker data:", tickerData?.length || 0);
+        
+        return () => {
+            // Jangan hapus fungsi mapboxAutoSwitch pada setiap perubahan dependencies
+            // Hanya hapus ketika komponen unmount
+            // Ini akan ditangani di useEffect cleanup level teratas
+        };
+    }, [devices, tickerData]);
+    
+    // Pastikan membersihkan window.mapboxAutoSwitch saat komponen unmount
+    useEffect(() => {
         return () => {
             if (window.mapboxAutoSwitch) {
                 delete window.mapboxAutoSwitch;
+                console.log("mapboxAutoSwitch function removed from window object during unmount");
             }
         };
-    }, [tickerData]);
+    }, []);
     // Initialize map
     useEffect(() => {
         if (!mapboxgl.accessToken) {
@@ -205,14 +402,24 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
             antialias: true,
         });
         map.current.addControl(new mapboxgl.ScaleControl(), "bottom-left");
-        // Tambahkan event listener untuk drag
-        map.current.on("dragstart", () => {
+        
+        // Tambahkan event listener untuk interaksi peta
+        const emitUserInteraction = (source) => {
+            console.log(`Map interaction detected: ${source}`);
             // Trigger custom event to stop auto switch
             const event = new CustomEvent("userInteraction", {
-                detail: { source: "mapDrag" },
+                detail: { source: source },
             });
             document.dispatchEvent(event);
-        });
+        };
+        
+        // Tambahkan event listener untuk drag
+        map.current.on("dragstart", () => emitUserInteraction("mapDrag"));
+        // Tambahkan event listener untuk zoom
+        map.current.on("zoomstart", () => emitUserInteraction("mapZoom"));
+        // Tambahkan event listener untuk click pada peta (bukan marker)
+        map.current.on("click", () => emitUserInteraction("mapClick"));
+        
         return () => {
             if (map.current) {
                 map.current.remove();
@@ -220,6 +427,50 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus, onStationChange })
             }
         };
     }, []);
+    // Listen for auto switch events
+    useEffect(() => {
+        const handleAutoSwitchActivated = (event) => {
+            console.log("MapboxMap: Auto switch activated event received", event.detail);
+            
+            // Verifikasi apakah window.mapboxAutoSwitch berfungsi
+            if (typeof window.mapboxAutoSwitch !== 'function') {
+                console.error("WARNING: mapboxAutoSwitch function not available when auto switch activated");
+                
+                // Re-register fungsi jika hilang
+                if (map.current) {
+                    console.log("Re-registering mapboxAutoSwitch function");
+                    window.mapboxAutoSwitch = (station, index) => {
+                        console.log("Re-registered mapboxAutoSwitch called with:", station?.name);
+                        handleAutoSwitch(station, index);
+                    };
+                }
+            }
+            
+            // Kirim event konfirmasi kembali ke AutoSwitchToggle
+            document.dispatchEvent(
+                new CustomEvent("mapboxReadyForAutoSwitch", {
+                    detail: { 
+                        ready: true, 
+                        devicesCount: devices.length,
+                        hasMapInstance: !!map.current
+                    }
+                })
+            );
+        };
+        
+        const handleAutoSwitchDeactivated = (event) => {
+            console.log("MapboxMap: Auto switch deactivated event received", event.detail);
+        };
+        
+        document.addEventListener("autoSwitchActivated", handleAutoSwitchActivated);
+        document.addEventListener("autoSwitchDeactivated", handleAutoSwitchDeactivated);
+        
+        return () => {
+            document.removeEventListener("autoSwitchActivated", handleAutoSwitchActivated);
+            document.removeEventListener("autoSwitchDeactivated", handleAutoSwitchDeactivated);
+        };
+    }, [devices]);
+    
     // Update markers when tickerData changes
     useEffect(() => {
         if (!map.current || !tickerData || !devices.length) return;

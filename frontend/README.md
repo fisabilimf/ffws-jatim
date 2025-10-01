@@ -44,19 +44,19 @@ npm run preview
 
 ```
 src/
-├── public/
-│   ├── components/          # Komponen UI
-│   │   ├── ui/             # Komponen chart, toggle, legend
-│   │   ├── sensors/        # Detail panel, station detail
-│   │   └── devices/        # Mapbox map, tooltip
-│   ├── config/             # Konfigurasi stasiun
-│   ├── layout/             # Layout utama
-│   └── pages/              # Halaman aplikasi
-├── utils/                  # Utility functions
-│   ├── statusUtils.js      # Status color & text helpers
-│   ├── optimizationConfig.js
-│   └── performanceMonitor.js
-└── main.jsx               # Entry point
+├── components/             # Komponen UI
+│   ├── common/            # Komponen umum (chart, toggle, legend)
+│   ├── sensors/           # Detail panel, station detail
+│   ├── devices/           # Mapbox map, tooltip
+│   └── layout/            # Layout utama
+├── pages/                 # Halaman aplikasi
+├── hooks/                 # Custom React hooks
+├── contexts/              # React contexts
+├── services/              # API services
+├── utils/                 # Utility functions
+│   └── statusUtils.js     # Status color & text helpers
+├── assets/                # Static assets
+└── main.jsx              # Entry point
 ```
 
 ## 🎨 Design System
@@ -77,7 +77,7 @@ src/
 ### Mapbox Setup
 1. Daftar di [Mapbox](https://account.mapbox.com/)
 2. Dapatkan access token
-3. Update token di `src/public/components/devices/MapboxMap.jsx`
+3. Update token di `src/components/MapboxMap.jsx`
 
 ### Environment Variables
 ```bash
