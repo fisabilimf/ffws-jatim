@@ -37,71 +37,71 @@
 
     <!-- Statistik Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
             <div class="p-6">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
                         <i class="fas fa-database text-blue-600"></i>
                     </div>
                     <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-600">Total Data</p>
-                        <p class="text-2xl font-semibold text-gray-900">{{ number_format($stats['total_data']) }}</p>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Data</p>
+                        <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ number_format($stats['total_data']) }}</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
             <div class="p-6">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
                         <i class="fas fa-check-circle text-green-600"></i>
                     </div>
                     <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-600">Status Aman</p>
-                        <p class="text-2xl font-semibold text-gray-900">{{ number_format($stats['safe_count']) }}</p>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Status Aman</p>
+                        <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ number_format($stats['safe_count']) }}</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
             <div class="p-6">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
                         <i class="fas fa-exclamation-triangle text-yellow-600"></i>
                     </div>
                     <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-600">Status Waspada</p>
-                        <p class="text-2xl font-semibold text-gray-900">{{ number_format($stats['warning_count']) }}</p>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Status Waspada</p>
+                        <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ number_format($stats['warning_count']) }}</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
             <div class="p-6">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
                         <i class="fas fa-exclamation-circle text-red-600"></i>
                     </div>
                     <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-600">Status Bahaya</p>
-                        <p class="text-2xl font-semibold text-gray-900">{{ number_format($stats['danger_count']) }}</p>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Status Bahaya</p>
+                        <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ number_format($stats['danger_count']) }}</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
             <div class="p-6">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
                         <i class="fas fa-calendar-day text-purple-600"></i>
                     </div>
                     <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-600">Data Hari Ini</p>
-                        <p class="text-2xl font-semibold text-gray-900">{{ number_format($stats['today_data']) }}</p>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Data Hari Ini</p>
+                        <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ number_format($stats['today_data']) }}</p>
                     </div>
                 </div>
             </div>
