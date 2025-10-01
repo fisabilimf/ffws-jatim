@@ -9,26 +9,24 @@
     <!-- Action Buttons -->
     <div class="flex justify-between items-center">
         <div class="flex items-center space-x-4">
-            <a href="{{ route('admin.data-actuals.index') }}" 
-               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <x-admin.button href="{{ route('admin.data-actuals.index') }}" variant="outline">
                 <i class="fas fa-arrow-left mr-2"></i>
                 Kembali
-            </a>
+            </x-admin.button>
         </div>
         <div class="flex items-center space-x-2">
-            <button onclick="openEditModal({{ $dataActual->id }})" 
-                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <x-admin.button type="button" variant="primary" onclick="openEditModal({{ $dataActual->id }})">
                 <i class="fas fa-edit mr-2"></i>
                 Edit
-            </button>
+            </x-admin.button>
             <form action="{{ route('admin.data-actuals.destroy', $dataActual) }}" method="POST" class="inline delete-form" 
                   data-confirm-delete="Data actual ini akan dihapus. Lanjutkan?">
                 @csrf
                 @method('DELETE')
-                <button type="submit" 
-                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                <x-admin.button type="submit" variant="danger">
                     <i class="fas fa-trash mr-2"></i>
                     Hapus
+                </x-admin.button>
                 </button>
             </form>
         </div>
@@ -174,48 +172,35 @@
             @endif
         </x-admin.card>
     </div>
-
     <!-- Related Data -->
     @if($relatedData->count() > 0)
-        <x-admin.card title="Data Terkait dari Sensor yang Sama">
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nilai</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Diterima</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @foreach($relatedData as $related)
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    #{{ $related->id }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    <span class="font-mono">{{ number_format($related->value, 2) }}</span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $related->getThresholdStatusBadgeClass() }}">
-                                        {{ $related->getThresholdStatusLabel() }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ $related->received_at->format('d/m/Y H:i') }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <a href="{{ route('admin.data-actuals.show', $related) }}" 
-                                       class="text-indigo-600 hover:text-indigo-900">Detail</a>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </x-admin.card>
+        <x-table
+            title="Data Terkait dari Sensor yang Sama"
+            :headers="[
+                ['key' => 'id', 'label' => 'ID'],
+                ['key' => 'value', 'label' => 'Nilai', 'format' => 'value'],
+                ['key' => 'threshold_status', 'label' => 'Status', 'format' => 'status'],
+                ['key' => 'received_at', 'label' => 'Diterima', 'format' => 'date'],
+                ['key' => 'actions', 'label' => 'Aksi', 'format' => 'actions']
+            ]"
+            :rows="$relatedData->map(function($related) {
+                return [
+                    'id' => '#' . $related->id,
+                    'value' => $related->value,
+                    'threshold_status' => $related->threshold_status,
+                    'received_at' => $related->received_at,
+                    'actions' => [
+                        [
+                            'type' => 'view',
+                            'label' => 'Detail',
+                            'url' => route('admin.data-actuals.show', $related),
+                            'icon' => 'eye'
+                        ]
+                    ]
+                ];
+            })"
+            class="mt-4"
+        />
     @endif
 </div>
 
