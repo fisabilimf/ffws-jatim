@@ -79,63 +79,94 @@ export const useAutoSwitch = ({
       dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'SET_ERROR', payload: null });
       
-      console.log(`Fetching device data (attempt ${retryCount + 1}/${maxRetries + 1})`);
+      console.log(`=== FETCHING DEVICE DATA ===`);
+      console.log(`Attempt ${retryCount + 1}/${maxRetries + 1}`);
       
       const devices = await fetchDevices();
+      
+      console.log('Raw API response:', devices);
       
       if (!devices || !Array.isArray(devices)) {
         throw new Error('Invalid device data received from API');
       }
       
+      console.log(`API returned ${devices.length} devices`);
+      
       // Validasi struktur data devices
       const validDevices = devices.filter(device => {
         const hasName = device && (device.name || device.device_name || device.station_name);
-        const hasCoordinates = device && (device.latitude && device.longitude) || device.coordinates;
-        return hasName && hasCoordinates;
+        const hasCoordinates = device && ((device.latitude && device.longitude) || device.coordinates);
+        const isValid = hasName && hasCoordinates;
+        
+        if (!isValid) {
+          console.log('Invalid device filtered out:', {
+            name: device?.name || device?.device_name || device?.station_name,
+            hasName,
+            hasCoordinates,
+            coordinates: device?.coordinates,
+            latitude: device?.latitude,
+            longitude: device?.longitude
+          });
+        }
+        
+        return isValid;
       });
       
       console.log(`Successfully fetched ${devices.length} devices`);
       console.log(`Valid devices: ${validDevices.length}`);
-      console.log('Devices data structure:', devices.slice(0, 2)); // Log first 2 devices for structure
+      console.log('Sample valid devices:', validDevices.slice(0, 2));
       
       if (validDevices.length === 0) {
         throw new Error('No valid devices found - all devices missing name or coordinates');
       }
       
       dispatch({ type: 'SET_DEVICES_DATA', payload: validDevices });
+      console.log('Device data stored in state successfully');
+      console.log('=== DEVICE DATA FETCH COMPLETED ===');
       
     } catch (error) {
-      console.error(`Error fetching device data (attempt ${retryCount + 1}):`, error);
+      console.error(`=== DEVICE DATA FETCH ERROR ===`);
+      console.error(`Attempt ${retryCount + 1} failed:`, error);
       
       if (retryCount < maxRetries) {
-        console.log(`Retrying in ${(retryCount + 1) * 2} seconds...`);
+        const retryDelay = (retryCount + 1) * 2000;
+        console.log(`Retrying in ${retryDelay}ms...`);
         setTimeout(() => {
           fetchDeviceData(retryCount + 1);
-        }, (retryCount + 1) * 2000);
+        }, retryDelay);
       } else {
+        console.error(`All ${maxRetries + 1} attempts failed`);
         dispatch({ type: 'SET_ERROR', payload: `Failed to fetch devices after ${maxRetries + 1} attempts: ${error.message}` });
       }
+      console.error('=== END DEVICE DATA FETCH ERROR ===');
     } finally {
       if (retryCount === 0 || retryCount === maxRetries) {
         dispatch({ type: 'SET_LOADING', payload: false });
+        console.log('Loading state set to false');
       }
     }
   }, []);
   
   // Tick function untuk cycling through devices dengan error handling yang robust
   const tick = useCallback(() => {
-    if (!state.isPlaying) return;
+    if (!state.isPlaying) {
+      console.log('Tick skipped - auto switch not playing');
+      return;
+    }
     
     dispatch({ type: 'INCREMENT_TICK' });
     
-    console.log('Tick function called - devicesData length:', devicesDataRef.current.length);
-    console.log('Tick function called - tickerData length:', tickerDataRef.current?.length || 0);
+    console.log('=== AUTO SWITCH TICK ===');
+    console.log('Tick counter:', state.tickCounter + 1);
+    console.log('Current index:', state.currentIndex);
+    console.log('Devices data length:', devicesDataRef.current.length);
+    console.log('Ticker data length:', tickerDataRef.current?.length || 0);
     
     const dataSource = devicesDataRef.current.length > 0 
       ? devicesDataRef.current 
       : tickerDataRef.current;
     
-    console.log('Using data source for tick:', dataSource === devicesDataRef.current ? 'devices' : 'tickerData');
+    console.log('Using data source:', dataSource === devicesDataRef.current ? 'devices' : 'tickerData');
     console.log('Data source length:', dataSource?.length || 0);
     
     if (!dataSource || dataSource.length === 0) {
@@ -147,8 +178,10 @@ export const useAutoSwitch = ({
     const nextIndex = (state.currentIndex + 1) % dataSource.length;
     const nextDevice = dataSource[nextIndex];
     
-    console.log('Next device:', nextDevice?.name || nextDevice?.device_name || nextDevice?.station_name || 'undefined', 'at index:', nextIndex);
-    console.log('Next device data:', nextDevice);
+    console.log('Next device name:', nextDevice?.name || nextDevice?.device_name || nextDevice?.station_name || 'undefined');
+    console.log('Next device index:', nextIndex);
+    console.log('Next device coordinates:', nextDevice?.coordinates || `${nextDevice?.latitude}, ${nextDevice?.longitude}`);
+    console.log('Next device full data:', nextDevice);
     
     if (!nextDevice) {
       console.error('Next device is undefined at index:', nextIndex);
@@ -159,49 +192,65 @@ export const useAutoSwitch = ({
     dispatch({ type: 'SET_CURRENT_INDEX', payload: nextIndex });
     
     // Call mapboxAutoSwitch dengan retry mechanism
-    if (typeof window.mapboxAutoSwitch === 'function' && nextDevice) {
+    if (typeof window.mapboxAutoSwitch === 'function') {
+      console.log('Calling mapboxAutoSwitch function...');
       try {
         window.mapboxAutoSwitch(nextDevice, nextIndex);
+        console.log('mapboxAutoSwitch called successfully');
       } catch (error) {
         console.error('Error switching map:', error);
         dispatch({ type: 'SET_ERROR', payload: `Map switch error: ${error.message}` });
         
         // Retry mechanism - coba lagi setelah delay singkat
+        console.log('Retrying mapboxAutoSwitch in 1 second...');
         setTimeout(() => {
           if (typeof window.mapboxAutoSwitch === 'function') {
             try {
+              console.log('Retrying mapboxAutoSwitch...');
               window.mapboxAutoSwitch(nextDevice, nextIndex);
+              console.log('Retry successful');
               dispatch({ type: 'SET_ERROR', payload: null }); // Clear error on retry success
             } catch (retryError) {
               console.error('Retry failed:', retryError);
               dispatch({ type: 'SET_ERROR', payload: `Retry failed: ${retryError.message}` });
             }
+          } else {
+            console.error('mapboxAutoSwitch function not available for retry');
           }
         }, 1000);
       }
     } else {
-      console.warn('mapboxAutoSwitch function not available');
+      console.warn('mapboxAutoSwitch function not available on window object');
       dispatch({ type: 'SET_ERROR', payload: 'Map function not available' });
     }
     
     // Notify parent
     if (onStationChange) {
       try {
+        console.log('Notifying parent component...');
         onStationChange(nextDevice, nextIndex);
+        console.log('Parent notification successful');
       } catch (error) {
         console.error('Error notifying parent:', error);
         dispatch({ type: 'SET_ERROR', payload: `Parent notification error: ${error.message}` });
       }
     }
-  }, [state.isPlaying, state.currentIndex, onStationChange]);
+    
+    console.log('=== END AUTO SWITCH TICK ===');
+  }, [state.isPlaying, state.currentIndex, state.tickCounter, onStationChange]);
   
   // Start auto switch
   const startAutoSwitch = useCallback(async () => {
-    if (intervalRef.current) return;
+    if (intervalRef.current) {
+      console.log('Auto switch already running, skipping start');
+      return;
+    }
     
-    console.log('Starting auto switch...');
-    console.log('Current devices data:', state.devicesData?.length || 0);
-    console.log('Current ticker data:', tickerDataRef.current?.length || 0);
+    console.log('=== STARTING AUTO SWITCH ===');
+    console.log('Current devices data length:', state.devicesData?.length || 0);
+    console.log('Current ticker data length:', tickerDataRef.current?.length || 0);
+    console.log('Current index:', state.currentIndex);
+    console.log('MapboxAutoSwitch available:', typeof window.mapboxAutoSwitch === 'function');
     
     // Pastikan devices data sudah di-fetch sebelum memulai
     if (state.devicesData.length === 0) {
@@ -210,6 +259,7 @@ export const useAutoSwitch = ({
         await fetchDeviceData();
         // Tunggu sebentar untuk state update
         await new Promise(resolve => setTimeout(resolve, 100));
+        console.log('Device data fetch completed');
       } catch (error) {
         console.error('Failed to fetch devices before starting:', error);
       }
@@ -221,6 +271,7 @@ export const useAutoSwitch = ({
     
     console.log('Using data source:', dataSource === state.devicesData ? 'devices' : 'tickerData');
     console.log('Data source length:', dataSource?.length || 0);
+    console.log('Data source sample:', dataSource?.slice(0, 2));
     
     if (!dataSource || dataSource.length === 0) {
       console.warn('Cannot start: No data available');
@@ -229,33 +280,51 @@ export const useAutoSwitch = ({
     }
     
     // Start fetch interval
+    console.log('Starting fetch interval with interval:', fetchInterval);
     fetchIntervalRef.current = setInterval(() => {
+      console.log('Fetch interval triggered - fetching device data');
       fetchDeviceData();
     }, fetchInterval);
     
     // Immediately switch to first device (no delay)
     const firstDevice = dataSource[state.currentIndex];
+    console.log('First device for immediate switch:', firstDevice?.name || firstDevice?.device_name || firstDevice?.station_name);
+    console.log('First device coordinates:', firstDevice?.coordinates || `${firstDevice?.latitude}, ${firstDevice?.longitude}`);
+    
     if (firstDevice && typeof window.mapboxAutoSwitch === 'function') {
       try {
+        console.log('Performing immediate switch...');
         window.mapboxAutoSwitch(firstDevice, state.currentIndex);
-        console.log(`Immediate switch to: ${firstDevice.name || firstDevice.device_name || firstDevice.station_name}`);
+        console.log(`Immediate switch successful to: ${firstDevice.name || firstDevice.device_name || firstDevice.station_name}`);
       } catch (error) {
         console.error('Immediate switch error:', error);
+        dispatch({ type: 'SET_ERROR', payload: `Immediate switch error: ${error.message}` });
       }
+    } else {
+      console.warn('Cannot perform immediate switch - missing device or mapboxAutoSwitch function');
+      if (!firstDevice) console.warn('First device is missing');
+      if (typeof window.mapboxAutoSwitch !== 'function') console.warn('mapboxAutoSwitch function not available');
     }
     
     // Start main interval with fresh timing
+    console.log('Starting main interval with interval:', interval);
     intervalRef.current = setInterval(() => {
+      console.log('Interval triggered - checking if should tick');
       if (!state.isPlaying) {
+        console.log('Auto switch stopped, clearing interval');
         clearInterval(intervalRef.current);
         intervalRef.current = null;
         return;
       }
+      console.log('Calling tick function...');
       tick();
     }, interval);
     
     dispatch({ type: 'SET_PLAYING', payload: true });
     dispatch({ type: 'RESET_TICK' });
+    
+    console.log('Auto switch started successfully');
+    console.log('=== AUTO SWITCH STARTED ===');
     
     // Dispatch event
     document.dispatchEvent(
@@ -479,7 +548,10 @@ export const useAutoSwitch = ({
   useEffect(() => {
     const syncTimeout = setTimeout(() => {
       if (isAutoSwitchOn !== state.isPlaying) {
-        console.log(`Syncing external state: isAutoSwitchOn=${isAutoSwitchOn}, isPlaying=${state.isPlaying}`);
+        console.log(`=== SYNCING EXTERNAL STATE ===`);
+        console.log(`isAutoSwitchOn: ${isAutoSwitchOn}`);
+        console.log(`state.isPlaying: ${state.isPlaying}`);
+        console.log(`state.isPaused: ${state.isPaused}`);
         
         if (isAutoSwitchOn && !state.isPlaying) {
           console.log('Starting auto switch from external state');
@@ -488,11 +560,12 @@ export const useAutoSwitch = ({
           console.log('Stopping auto switch from external state');
           stopAutoSwitch();
         }
+        console.log('=== EXTERNAL STATE SYNC COMPLETED ===');
       }
     }, 100); // Debounce 100ms untuk mencegah rapid state changes
     
     return () => clearTimeout(syncTimeout);
-  }, [isAutoSwitchOn, state.isPlaying, startAutoSwitch, stopAutoSwitch]);
+  }, [isAutoSwitchOn, state.isPlaying, state.isPaused, startAutoSwitch, stopAutoSwitch]);
   
   // Initial fetch
   useEffect(() => {
@@ -502,11 +575,13 @@ export const useAutoSwitch = ({
   // Listen for auto switch errors from MapboxMap
   useEffect(() => {
     const handleAutoSwitchError = (event) => {
-      console.error('Auto switch error received:', event.detail);
+      console.error('=== AUTO SWITCH ERROR RECEIVED ===');
+      console.error('Error details:', event.detail);
       dispatch({ type: 'SET_ERROR', payload: event.detail.error });
       
       // Jika error adalah map_not_ready, coba restart setelah delay
       if (event.detail.type === 'map_not_ready') {
+        console.log('Map not ready error - scheduling retry in 2 seconds');
         setTimeout(() => {
           if (state.isPlaying && !state.isPaused) {
             console.log('Retrying auto switch after map ready');
@@ -514,20 +589,26 @@ export const useAutoSwitch = ({
           }
         }, 2000);
       }
+      console.error('=== END AUTO SWITCH ERROR ===');
     };
     
     const handleAutoSwitchSuccess = (event) => {
-      console.log('Auto switch success:', event.detail);
+      console.log('=== AUTO SWITCH SUCCESS ===');
+      console.log('Success details:', event.detail);
       // Clear any previous errors on success
       if (state.error) {
+        console.log('Clearing previous error on success');
         dispatch({ type: 'SET_ERROR', payload: null });
       }
+      console.log('=== END AUTO SWITCH SUCCESS ===');
     };
     
+    console.log('Registering auto switch event listeners');
     document.addEventListener('autoSwitchError', handleAutoSwitchError);
     document.addEventListener('autoSwitchSuccess', handleAutoSwitchSuccess);
     
     return () => {
+      console.log('Removing auto switch event listeners');
       document.removeEventListener('autoSwitchError', handleAutoSwitchError);
       document.removeEventListener('autoSwitchSuccess', handleAutoSwitchSuccess);
     };

@@ -1,5 +1,8 @@
 /* Admin Panel Custom Styles */
 
+/* Import theme styles */
+@import './theme.css';
+
 [x-cloak] { display: none !important; }
 
 /* SweetAlert2 Toast Custom Styles */

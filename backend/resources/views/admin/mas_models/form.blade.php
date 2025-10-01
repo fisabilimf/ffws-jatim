@@ -7,17 +7,11 @@
 
 @section('content')
 <div class="space-y-6">
-    <div class="bg-white shadow rounded-lg">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-medium text-gray-900">
-                {{ $isEdit ? 'Form Edit Model' : 'Form Tambah Model' }}
-            </h3>
-            <p class="mt-1 text-sm text-gray-500">
-                {{ $isEdit ? 'Edit informasi model prediksi' : 'Isi form di bawah ini untuk menambah model prediksi baru' }}
-            </p>
-        </div>
+    <x-admin.card 
+        title="{{ $isEdit ? 'Form Edit Model' : 'Form Tambah Model' }}" 
+        subtitle="{{ $isEdit ? 'Edit informasi model prediksi' : 'Isi form di bawah ini untuk menambah model prediksi baru' }}">
         
-        <form action="{{ $isEdit ? route('admin.mas-models.update', $model->id) : route('admin.mas-models.store') }}" method="POST" class="p-6 space-y-6">
+        <form action="{{ $isEdit ? route('admin.mas-models.update', $model->id) : route('admin.mas-models.store') }}" method="POST" class="space-y-6">
             @csrf
             @if($isEdit)
                 @method('PUT')
@@ -110,18 +104,17 @@
                 />
             </div>
             
-            <div class="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200">
-                <a href="{{ route('admin.mas-models.index') }}" 
-                   class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            <div class="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-600">
+                <x-admin.button href="{{ route('admin.mas-models.index') }}" variant="outline">
                     <i class="fas fa-arrow-left -ml-1 mr-2"></i>
                     Kembali
-                </a>
+                </x-admin.button>
                 <x-admin.button type="submit" variant="primary">
                     <i class="fas fa-save -ml-1 mr-2"></i>
                     {{ $isEdit ? 'Update Model' : 'Simpan Model' }}
                 </x-admin.button>
             </div>
         </form>
-    </div>
+    </x-admin.card>
 </div>
 @endsection
