@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import * as turf from '@turf/turf';
 
 const VectorTilesAPI = ({ map, isVisible, coordinates, mapLoaded }) => {
     // Fungsi untuk mengubah warna air di area hijau
@@ -52,56 +53,115 @@ const VectorTilesAPI = ({ map, isVisible, coordinates, mapLoaded }) => {
                 }
             }, 'safe-areas-border'); // Tempatkan sebelum border
 
-            // Ambil semua fitur air yang ada di dalam safe area menggunakan query
-            const bounds = safeAreaData.geometry.coordinates[0];
-            const sw = [bounds[0][0], bounds[2][1]]; // Southwest corner
-            const ne = [bounds[2][0], bounds[0][1]]; // Northeast corner
-            
-            // Query semua fitur air di dalam bbox safe area
-            const waterFeatures = map.queryRenderedFeatures(
-                map.project(sw),
-                map.project(ne),
-                { 
-                    layers: ['water'], // Cari di layer 'water' yang berisi semua jenis air
-                    sourceLayer: 'water' // Source layer untuk fitur air
-                }
+            // Cari layer air di peta - gunakan 'water-layer' yang sudah kita buat
+            const waterLayer = map.getStyle().layers.find(layer => 
+                layer.id === 'water-layer' || 
+                (layer.type === 'fill' && 
+                 layer['source-layer'] === 'water' && 
+                 layer.filter && layer.filter.includes('river'))
             );
+            
+            if (!waterLayer) {
+                console.warn('Water layer not found. Available layers:', 
+                    map.getStyle().layers.map(l => l.id));
+                return;
+            }
 
-            // Filter fitur yang benar-benar di dalam safe area
-            const featuresInSafeArea = waterFeatures.filter(feature => {
-                // Cek apakah fitur berada di dalam safe area
-                const coords = feature.geometry.coordinates;
-                
-                if (feature.geometry.type === 'Polygon') {
-                    // Untuk polygon, cek apakah titik tengah berada di dalam safe area
-                    const polygonCoords = coords[0];
-                    const centerPoint = getPolygonCenter(polygonCoords);
-                    return isPointInPolygon(centerPoint, safeAreaData.geometry.coordinates[0]);
-                } else if (feature.geometry.type === 'LineString') {
-                    // Untuk garis, cek apakah titik tengah berada di dalam safe area
-                    const midIndex = Math.floor(coords.length / 2);
-                    const midPoint = coords[midIndex];
-                    return isPointInPolygon(midPoint, safeAreaData.geometry.coordinates[0]);
-                } else if (feature.geometry.type === 'MultiLineString') {
-                    // Untuk multi garis, cek apakah salah satu titik tengah berada di dalam safe area
-                    return coords.some(line => {
-                        const midIndex = Math.floor(line.length / 2);
-                        const midPoint = line[midIndex];
-                        return isPointInPolygon(midPoint, safeAreaData.geometry.coordinates[0]);
-                    });
-                } else if (feature.geometry.type === 'MultiPolygon') {
-                    // Untuk multi polygon, cek apakah salah satu titik tengah berada di dalam safe area
-                    return coords.some(polygon => {
-                        const polygonCoords = polygon[0];
-                        const centerPoint = getPolygonCenter(polygonCoords);
-                        return isPointInPolygon(centerPoint, safeAreaData.geometry.coordinates[0]);
-                    });
+            console.log('Found water layer:', waterLayer.id);
+
+            // Dapatkan sumber data layer air
+            const waterSource = waterLayer.source;
+            const waterSourceLayer = waterLayer['source-layer'];
+
+            // Hitung bounding box dari safe area
+            const bounds = safeAreaData.geometry.coordinates[0];
+            const bbox = [
+                Math.min(...bounds.map(coord => coord[0])),
+                Math.min(...bounds.map(coord => coord[1])),
+                Math.max(...bounds.map(coord => coord[0])),
+                Math.max(...bounds.map(coord => coord[1]))
+            ];
+
+            // Coba beberapa pendekatan untuk mendapatkan fitur air
+            let waterFeatures = [];
+            
+            // Pendekatan 1: querySourceFeatures
+            try {
+                waterFeatures = map.querySourceFeatures(waterSource, {
+                    sourceLayer: waterSourceLayer,
+                    filter: ['any', 
+                        ['==', '$type', 'Polygon'],
+                        ['==', '$type', 'MultiPolygon']
+                    ],
+                    bounds: bbox
+                });
+                console.log(`Found ${waterFeatures.length} water features using querySourceFeatures`);
+            } catch (e) {
+                console.warn('Error with querySourceFeatures:', e);
+            }
+            
+            // Pendekatan 2: queryRenderedFeatures jika pendekatan 1 gagal
+            if (waterFeatures.length === 0) {
+                try {
+                    const sw = [bbox[0], bbox[1]];
+                    const ne = [bbox[2], bbox[3]];
+                    
+                    waterFeatures = map.queryRenderedFeatures(
+                        map.project(sw),
+                        map.project(ne),
+                        { 
+                            layers: [waterLayer.id],
+                            filter: ['any', 
+                                ['==', '$type', 'Polygon'],
+                                ['==', '$type', 'MultiPolygon']
+                            ]
+                        }
+                    );
+                    console.log(`Found ${waterFeatures.length} water features using queryRenderedFeatures`);
+                } catch (e) {
+                    console.warn('Error with queryRenderedFeatures:', e);
                 }
-                
-                return false;
-            });
+            }
 
-            // Update sumber data dengan fitur yang di dalam safe area
+            // Siapkan array untuk fitur hasil potongan
+            const featuresInSafeArea = [];
+
+            // Buat polygon dari safe area untuk digunakan dalam operasi spasial
+            const safeAreaPolygon = turf.polygon(safeAreaData.geometry.coordinates);
+
+            // Loop melalui setiap fitur air dan potong dengan safe area
+            for (const feature of waterFeatures) {
+                try {
+                    // Handle MultiPolygon
+                    if (feature.geometry.type === 'MultiPolygon') {
+                        for (const polygonCoords of feature.geometry.coordinates) {
+                            const polygonFeature = turf.polygon(polygonCoords, feature.properties);
+                            
+                            // Cek apakah fitur berpotongan dengan safe area
+                            if (turf.booleanIntersects(polygonFeature, safeAreaPolygon)) {
+                                // Jika berpotongan, tambahkan fitur asli
+                                featuresInSafeArea.push(polygonFeature);
+                            }
+                        }
+                    } 
+                    // Handle Polygon
+                    else if (feature.geometry.type === 'Polygon') {
+                        const polygonFeature = turf.polygon(feature.geometry.coordinates, feature.properties);
+                        
+                        // Cek apakah fitur berpotongan dengan safe area
+                        if (turf.booleanIntersects(polygonFeature, safeAreaPolygon)) {
+                            // Jika berpotongan, tambahkan fitur asli
+                            featuresInSafeArea.push(polygonFeature);
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Error processing feature:', e);
+                }
+            }
+
+            console.log(`Found ${featuresInSafeArea.length} water features in safe area`);
+
+            // Update sumber data dengan fitur yang sudah dipotong
             map.getSource('water-in-safe-area-source').setData({
                 type: 'FeatureCollection',
                 features: featuresInSafeArea
@@ -114,7 +174,7 @@ const VectorTilesAPI = ({ map, isVisible, coordinates, mapLoaded }) => {
         }
     };
 
-    // Fungsi helper untuk mendapatkan titik tengah polygon
+    // Fungsi helper untuk mendapatkan titik tengah polygon (tetap dipertahankan untuk keperluan lain)
     const getPolygonCenter = (coords) => {
         let x = 0;
         let y = 0;
@@ -128,9 +188,8 @@ const VectorTilesAPI = ({ map, isVisible, coordinates, mapLoaded }) => {
         return [x / n, y / n];
     };
 
-    // Fungsi helper untuk mengecek apakah titik berada di dalam polygon
+    // Fungsi helper untuk mengecek apakah titik berada di dalam polygon (tetap dipertahankan untuk keperluan lain)
     const isPointInPolygon = (point, polygon) => {
-        // Ray casting algorithm
         let inside = false;
         for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
             const xi = polygon[i][0], yi = polygon[i][1];

@@ -15,12 +15,25 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
   const [devices, setDevices] = useState([]);
   const [selectedStation, setSelectedStation] = useState(null);
   const [selectedStationCoords, setSelectedStationCoords] = useState(null);
+  const [safeAreaCoords, setSafeAreaCoords] = useState(null);
   const [tooltip, setTooltip] = useState({ visible: false, station: null, coordinates: null });
   const [zoomLevel, setZoomLevel] = useState(8);
   const [riverLayerActive, setRiverLayerActive] = useState(false);
   const [showWaterEffect, setShowWaterEffect] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [showFilterSidebar, setShowFilterSidebar] = useState(false);
+  const [autoSwitchActive, setAutoSwitchActive] = useState(false);
+  const [currentStationIndex, setCurrentStationIndex] = useState(0);
+
+  // Debug log
+  useEffect(() => {
+    console.log("MapboxMap state:", { 
+        autoSwitchActive, 
+        currentStationIndex,
+        selectedStation: selectedStation?.name,
+        tickerDataLength: tickerData?.length 
+    });
+  }, [autoSwitchActive, currentStationIndex, selectedStation, tickerData]);
 
   useEffect(() => {
     const loadDevices = async () => {
@@ -96,16 +109,20 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     };
   };
 
-  const activateRiverLayer = () => {
-    if (!map.current || !selectedStationCoords || !mapLoaded) return;
+  const activateRiverLayer = (coords = null) => {
+    const center = coords || selectedStationCoords;
+    if (!map.current || !center || !mapLoaded) return;
 
     setShowWaterEffect(false);
 
-    const safeArea = createRectangleAroundPoint(selectedStationCoords, 5, 5);
+    const safeArea = createRectangleAroundPoint(center, 5, 5);
     const safeAreas = {
         type: 'FeatureCollection',
         features: [safeArea]
     };
+
+    // Simpan koordinat area aman untuk digunakan di VectorTilesAPI
+    setSafeAreaCoords(safeArea.geometry.coordinates);
 
     try {
         if (map.current.getSource('safe-areas')) {
@@ -201,6 +218,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
 
       setRiverLayerActive(false);
       setShowWaterEffect(false);
+      setSafeAreaCoords(null);
     } catch (error) {
       console.error("Error deactivating river layer:", error);
     }
@@ -227,8 +245,12 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     const { lat, lng, zoom, stationId } = focusData;
     const coords = [lng, lat];
 
-    deactivateRiverLayer();
-    setShowWaterEffect(false);
+    // Hanya nonaktifkan river layer jika auto switch tidak aktif
+    if (!autoSwitchActive) {
+      deactivateRiverLayer();
+      setShowWaterEffect(false);
+    }
+    
     setSelectedStationCoords(coords);
 
     const station = tickerData.find((s) => s.id === stationId);
@@ -274,7 +296,24 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
 
   // Handle station change dari AutoSwitchToggle
   const handleStationChange = (station, index) => {
+    console.log("handleStationChange called with:", { station, index });
+    
     if (station && station.latitude && station.longitude) {
+      const coords = [station.longitude, station.latitude];
+      
+      // Update current station index
+      setCurrentStationIndex(index);
+      
+      // Set selected station dan koordinat
+      setSelectedStation(station);
+      setSelectedStationCoords(coords);
+      
+      // Jika auto switch aktif, aktifkan river layer juga
+      if (autoSwitchActive) {
+        activateRiverLayer(coords);
+      }
+      
+      // Pindahkan peta ke stasiun
       handleMapFocus({
         lat: station.latitude,
         lng: station.longitude,
@@ -287,6 +326,12 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
   // Handle auto switch toggle
   const handleAutoSwitchToggle = (isActive) => {
     console.log("Auto switch toggled:", isActive);
+    setAutoSwitchActive(isActive);
+    
+    // Jika auto switch diaktifkan dan ada stasiun yang dipilih, aktifkan river layer
+    if (isActive && selectedStationCoords) {
+      activateRiverLayer();
+    }
   };
 
   useEffect(() => {
@@ -406,9 +451,19 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
 
           markerEl.addEventListener("click", (e) => {
             e.stopPropagation();
+            
+            // Matikan auto switch saat user mengklik marker secara manual
+            if (autoSwitchActive) {
+              setAutoSwitchActive(false);
+            }
+            
             deactivateRiverLayer();
             setSelectedStation(station);
             setSelectedStationCoords(coordinates);
+
+            // Update current station index
+            const index = tickerData.findIndex(s => s.id === station.id);
+            setCurrentStationIndex(index);
 
             map.current.flyTo({
               center: coordinates,
@@ -432,7 +487,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
         }
       }
     });
-  }, [tickerData, devices]);
+  }, [tickerData, devices, autoSwitchActive]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -460,8 +515,9 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
         onClose={() => setShowFilterSidebar(false)}
         tickerData={tickerData}
         onStationChange={handleStationChange}
-        currentStationIndex={selectedStation ? tickerData.findIndex(s => s.id === selectedStation.id) : 0}
+        currentStationIndex={currentStationIndex}
         onAutoSwitchToggle={handleAutoSwitchToggle}
+        autoSwitchActive={autoSwitchActive}
       />
 
       {selectedStationCoords && !riverLayerActive && zoomLevel > 10 && mapLoaded && (
@@ -508,7 +564,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
         <VectorTilesAPI
           map={map.current}
           isVisible={showWaterEffect}
-          coordinates={selectedStationCoords}
+          coordinates={safeAreaCoords}
           mapLoaded={mapLoaded}
         />
       )}
