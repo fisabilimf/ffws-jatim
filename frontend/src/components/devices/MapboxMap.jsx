@@ -7,6 +7,12 @@ import { fetchDevices } from "../../services/devices";
 import VectorTilesAPI from "./VectorTilesAPI";
 import BottomFilter from "./BottomFilter";
 import FilterSidebar from "./FilterSidebar";
+import CoordinatesPopup from "./CoordinatesPopup";
+
+// Set access token di luar komponen
+if (!mapboxgl.accessToken) {
+  mapboxgl.accessToken = "pk.eyJ1IjoiZGl0b2ZhdGFoaWxsYWgxIiwiYSI6ImNtZjNveGloczAwNncya3E1YzdjcTRtM3MifQ.kIf5rscGYOzvvBcZJ41u8g";
+}
 
 const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
   const mapContainer = useRef(null);
@@ -24,6 +30,8 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
   const [showFilterSidebar, setShowFilterSidebar] = useState(false);
   const [autoSwitchActive, setAutoSwitchActive] = useState(false);
   const [currentStationIndex, setCurrentStationIndex] = useState(0);
+  const [clickedCoordinates, setClickedCoordinates] = useState(null);
+  const [showCoordinatesPopup, setShowCoordinatesPopup] = useState(false);
 
   // Debug log
   useEffect(() => {
@@ -334,6 +342,25 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
     }
   };
 
+  // Fungsi untuk menangani klik pada peta
+  const handleMapClick = (e) => {
+    // Hentikan propagasi jika yang diklik adalah marker
+    if (e.originalEvent && e.originalEvent.target && 
+        e.originalEvent.target.closest('.custom-marker')) {
+      return;
+    }
+    
+    // Set koordinat yang diklik
+    setClickedCoordinates(e.lngLat);
+    setShowCoordinatesPopup(true);
+  };
+
+  // Fungsi untuk menutup popup koordinat
+  const handleCloseCoordinatesPopup = () => {
+    setShowCoordinatesPopup(false);
+    setClickedCoordinates(null);
+  };
+
   useEffect(() => {
     window.mapboxAutoFocus = handleMapFocus;
     return () => {
@@ -344,59 +371,62 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
   }, [tickerData]);
 
   useEffect(() => {
-    if (!mapboxgl.accessToken) {
-      mapboxgl.accessToken = "pk.eyJ1IjoiZGl0b2ZhdGFoaWxsYWgxIiwiYSI6ImNtZjNveGloczAwNncya3E1YzdjcTRtM3MifQ.kIf5rscGYOzvvBcZJ41u8g";
-    }
-    
     if (map.current) return;
 
     if (!mapContainer.current) return;
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: "mapbox://styles/mapbox/outdoors-v12",
-      center: [112.5, -7.5],
-      zoom: 8,
-      pitch: 0,
-      bearing: 0,
-    });
+    try {
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: "mapbox://styles/mapbox/outdoors-v12",
+        center: [112.5, -7.5],
+        zoom: 8,
+        pitch: 0,
+        bearing: 0,
+      });
 
-    // Hanya menambahkan ScaleControl tanpa NavigationControl (zoom in/out)
-    map.current.addControl(new mapboxgl.ScaleControl(), "bottom-left");
+      // Hanya menambahkan ScaleControl tanpa NavigationControl (zoom in/out)
+      map.current.addControl(new mapboxgl.ScaleControl(), "bottom-left");
 
-    map.current.on("zoom", () => {
-      if (map.current) {
-        setZoomLevel(map.current.getZoom());
-      }
-    });
-
-    map.current.on('load', () => {
-      setTimeout(() => {
-        try {
-          if (!map.current.getLayer('water-layer')) {
-            map.current.addLayer({
-              id: 'water-layer',
-              type: 'fill',
-              source: 'composite',
-              'source-layer': 'water',
-              filter: [
-                'all',
-                ['==', 'class', 'river']
-              ],
-              paint: {
-                'fill-color': '#1E90FF',
-                'fill-opacity': 0.5,
-              }
-            });
-          }
-          
-          setMapLoaded(true);
-        } catch (error) {
-          console.error('Error adding water layer:', error);
-          setMapLoaded(true);
+      map.current.on("zoom", () => {
+        if (map.current) {
+          setZoomLevel(map.current.getZoom());
         }
-      }, 1000);
-    });
+      });
+
+      map.current.on('load', () => {
+        setTimeout(() => {
+          try {
+            if (!map.current.getLayer('water-layer')) {
+              map.current.addLayer({
+                id: 'water-layer',
+                type: 'fill',
+                source: 'composite',
+                'source-layer': 'water',
+                filter: [
+                  'all',
+                  ['==', 'class', 'river']
+                ],
+                paint: {
+                  'fill-color': '#1E90FF',
+                  'fill-opacity': 0.5,
+                }
+              });
+            }
+            
+            setMapLoaded(true);
+          } catch (error) {
+            console.error('Error adding water layer:', error);
+            setMapLoaded(true);
+          }
+        }, 1000);
+      });
+
+      // Tambahkan event listener untuk klik pada peta
+      map.current.on('click', handleMapClick);
+    } catch (error) {
+      console.error('Error initializing map:', error);
+    }
 
     return () => {
       if (map.current) {
@@ -456,6 +486,9 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
             if (autoSwitchActive) {
               setAutoSwitchActive(false);
             }
+            
+            // Tutup popup koordinat jika ada
+            setShowCoordinatesPopup(false);
             
             deactivateRiverLayer();
             setSelectedStation(station);
@@ -569,11 +602,29 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
         />
       )}
 
-      <style>{`
+      {/* Tambahkan komponen CoordinatesPopup */}
+      {showCoordinatesPopup && clickedCoordinates && (
+        <CoordinatesPopup 
+          map={map.current} 
+          coordinates={clickedCoordinates}
+          onClose={handleCloseCoordinatesPopup}
+        />
+      )}
+
+      <style jsx>{`
         @keyframes alert-pulse {
           0% { transform: scale(1); opacity: 0.7; }
           50% { transform: scale(1.5); opacity: 0.3; }
           100% { transform: scale(1); opacity: 0.7; }
+        }
+        
+        .mapboxgl-popup-content {
+          border-radius: 8px;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .coordinates-popup .mapboxgl-popup-content {
+          padding: 0;
         }
       `}</style>
 
