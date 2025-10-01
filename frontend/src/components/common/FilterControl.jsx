@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { X, Filter, Layers, ToggleLeft, ToggleRight, Keyboard, Sliders } from "lucide-react";
-import AutoSwitchToggle from "./AutoSwitchToggle";
 
 const FilterControl = ({
     tickerData,
@@ -151,19 +150,16 @@ const FilterControl = ({
                         <div className="flex-1 overflow-y-auto">
                             {activeTab === "controls" && (
                                 <div className="p-4 space-y-6">
-                                    {/* Auto Switch Section */}
+                                    {/* Auto Switch Section - Removed duplicate instance */}
                                     <div className="space-y-3">
                                         <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                                             <ToggleRight className="w-4 h-4 text-blue-600" />
                                             Station Auto Switch
                                         </h3>
                                         <div className="bg-gray-50 rounded-lg p-3">
-                                            <AutoSwitchToggle
-                                                tickerData={tickerData}
-                                                onStationChange={onStationChange}
-                                                currentStationIndex={currentStationIndex}
-                                                onAutoSwitchToggle={onAutoSwitchToggle}
-                                            />
+                                            <div className="text-sm text-gray-600 text-center py-4">
+                                                Auto Switch control is available in the bottom-right corner of the map.
+                                            </div>
                                         </div>
                                     </div>
 

@@ -1,177 +1,170 @@
-import React, { useState, useEffect, useRef } from "react";
-import { fetchDevices } from "@/services/devices";        
+import React, { useEffect } from "react";
+import { useAutoSwitch } from "@/hooks/useAutoSwitch";
+
 const AutoSwitchToggle = ({
     tickerData,
-    onDeviceChange,
-    currentDeviceIndex,
+    onStationChange,
+    currentStationIndex,
     onAutoSwitchToggle,
     interval = 5000,
+    fetchInterval = 10000,
+    isAutoSwitchOn = false,
 }) => {
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const [apiData, setApiData] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const intervalRef = useRef(null);
-
-    // Fetch data from API
-    const fetchData = async () => {
-        try {
-            setLoading(true);
-            const data = await fetchDevices();
-            console.log(data);
-            setApiData(data.data || []);
-        } catch (error) {
-            console.error("Error fetching devices data:", error);
-            setApiData([]);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Load data on component mount
+    const {
+        isPlaying,
+        currentIndex,
+        devicesData,
+        isLoadingDevices,
+        error,
+        tickCounter,
+        isUserInteracting,
+        isPaused,
+        pauseAutoSwitch,
+        resumeAutoSwitch,
+        togglePlayPause,
+        hasData
+    } = useAutoSwitch({
+        tickerData,
+        onStationChange,
+        interval,
+        fetchInterval,
+        isAutoSwitchOn
+    });
+    // Sync dengan external currentStationIndex
     useEffect(() => {
-        fetchData();
-    }, []);
-
-    useEffect(() => {
-        // Function to handle the interval logic
-        const tick = async () => {
-            // Use API data if available, fallback to tickerData
-            const dataSource = apiData.length > 0 ? apiData : tickerData;
-            
-            if (!dataSource || dataSource.length === 0) {
-                // Try to fetch fresh data if no data available
-                if (apiData.length === 0) {
-                    await fetchData();
-                }
-                return;
-            }
-
-            setCurrentIndex((prevIndex) => {
-                const nextIndex = (prevIndex + 1) % dataSource.length;
-                const nextDevice = dataSource[nextIndex];
-
-                if (onDeviceChange) {
-                    onDeviceChange(nextDevice, nextIndex);
-                }
-
-                return nextIndex;
-            });
-        };
-
-        if (isPlaying) {
-            intervalRef.current = setInterval(tick, interval);
-
-            // Dispatch event when auto switch starts
-            document.dispatchEvent(
-                new CustomEvent("autoSwitchActivated", {
-                    detail: { active: true },
-                })
-            );
-        } else {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-                intervalRef.current = null;
-            }
-
-            // Dispatch event when auto switch stops
-            document.dispatchEvent(
-                new CustomEvent("autoSwitchDeactivated", {
-                    detail: { active: false },
-                })
-            );
+        if (currentStationIndex !== undefined && currentStationIndex !== currentIndex) {
+            // Logic untuk sync dengan external index jika diperlukan
         }
+    }, [currentStationIndex, currentIndex]);
 
-        // Cleanup function to clear the interval when the component unmounts or dependencies change
-        return () => {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-            }
-        };
-    }, [isPlaying, tickerData, apiData, interval, onDeviceChange]); // Dependency updated
-
-    // Start auto switch
-    const startAutoSwitch = async () => {
-        // Ensure we have data before starting
-        if (apiData.length === 0 && (!tickerData || tickerData.length === 0)) {
-            await fetchData();
-        }
-        setIsPlaying(true);
-    };
-
-    // Stop auto switch
-    const stopAutoSwitch = () => {
-        setIsPlaying(false);
-    };
-
-    // Toggle play/pause
-    const togglePlayPause = async () => {
-        const newIsPlaying = !isPlaying;
-        
-        // If starting and no data available, fetch data first
-        if (newIsPlaying && apiData.length === 0 && (!tickerData || tickerData.length === 0)) {
-            await fetchData();
+    // Handle toggle dengan notifikasi ke parent
+    const handleToggle = () => {
+        if (!hasData) {
+            console.warn("Button disabled - no data available");
+            return;
         }
         
-        setIsPlaying(newIsPlaying);
+        // Toggle internal state
+        togglePlayPause();
+        
+        // Notify parent dengan status yang tepat
         if (onAutoSwitchToggle) {
-            onAutoSwitchToggle(newIsPlaying);
+            if (isPlaying && !isPaused) {
+                // Sedang playing, akan di-stop
+                onAutoSwitchToggle(false);
+            } else if (!isPlaying) {
+                // Tidak playing, akan di-start
+                onAutoSwitchToggle(true);
+            }
+            // Jika paused, tidak perlu notify parent karena ini auto resume
         }
     };
-
-    useEffect(() => {
-        if (currentDeviceIndex !== undefined && currentDeviceIndex !== currentIndex) {
-            setCurrentIndex(currentDeviceIndex);
-        }
-    }, [currentDeviceIndex]); // Dependency updated
 
     // Add event listener for user interactions
     useEffect(() => {
         const handleUserInteraction = (event) => {
-            if (isPlaying) {
-                console.log("User interaction detected, stopping auto switch:", event.detail);
-                stopAutoSwitch();
+            if (isPlaying && !isPaused) {
+                console.log("User interaction detected, pausing auto switch:", event.detail);
+                // Pause instead of stop completely
+                pauseAutoSwitch();
             }
         };
 
-        // Listen for custom event from other components
         document.addEventListener("userInteraction", handleUserInteraction);
-
-        // Cleanup
+        
         return () => {
             document.removeEventListener("userInteraction", handleUserInteraction);
         };
-    }, [isPlaying]);
-
-    // Selalu render komponen; nonaktifkan toggle jika tidak ada data
-    const hasData = (apiData && apiData.length > 0) || (tickerData && tickerData.length > 0);
+    }, [isPlaying, isPaused, pauseAutoSwitch]);
 
     return (
-        <div className="flex items-center justify-between w-full">
+        <div className="auto-switch-component flex items-center justify-between w-full">
             <div className="flex items-center gap-2">
-                <span className="text-sm sm:text-base lg:text-lg font-semibold text-gray-800">Auto Switch Device</span> {/* Updated UI text */}
-                {loading && (
+                <span className="text-xs sm:text-sm font-semibold text-gray-800">
+                    Auto Switch
+                </span>
+                
+                {isLoadingDevices && (
                     <div className="flex items-center gap-1">
                         <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                        <span className="text-xs text-gray-500">Loading...</span>
+                        <span className="text-xs text-blue-600">Loading...</span>
                     </div>
                 )}
-                {isPlaying && !loading && (
+                
+                {error && (
+                    <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                        <span className="text-xs text-red-600">
+                            Connection Error
+                        </span>
+                    </div>
+                )}
+                
+                {!hasData && !isLoadingDevices && !error && (
+                    <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                        <span className="text-xs text-gray-500">No data</span>
+                    </div>
+                )}
+                
+                {isPlaying && !isPaused && (
                     <div className="flex items-center gap-1">
                         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                        <span className="text-xs text-green-600">Running</span>
+                        <span className="text-xs text-green-600 font-medium">
+                            Running
+                        </span>
+                        {devicesData && devicesData.length > 0 && (
+                            <span className="text-xs text-green-500">
+                                ({devicesData.length})
+                            </span>
+                        )}
+                    </div>
+                )}
+                
+                {isPlaying && isPaused && (
+                    <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+                        <span className="text-xs text-yellow-600 font-medium">
+                            Paused
+                        </span>
+                    </div>
+                )}
+                
+                {isUserInteracting && !isPlaying && (
+                    <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                        <span className="text-xs text-red-600 font-medium">
+                            Stopped
+                        </span>
+                    </div>
+                )}
+                
+                {!isPlaying && !isUserInteracting && hasData && (
+                    <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                        <span className="text-xs text-gray-500 font-medium">
+                            Ready
+                        </span>
                     </div>
                 )}
             </div>
 
             {/* macOS Style Toggle */}
             <button
-                onClick={togglePlayPause}
+                onClick={handleToggle}
                 disabled={!hasData}
                 className={`relative inline-flex items-center transition-all duration-200 ease-in-out focus:outline-none select-none ${
                     !hasData ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
                 }`}
-                title={isPlaying ? "Pause Auto Switch" : "Start Auto Switch"}
+                title={
+                    !hasData 
+                        ? "No data available"
+                        : !isPlaying 
+                            ? `Start Auto Switch (${devicesData?.length || tickerData?.length || 0} devices)` 
+                            : isPaused 
+                                ? "Resume Auto Switch"
+                                : "Stop Auto Switch"
+                }
             >
                 {/* Toggle Track */}
                 <div
