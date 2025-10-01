@@ -8,14 +8,23 @@ const FilterSidebar = ({
     tickerData, 
     onStationChange, 
     currentStationIndex, 
-    onAutoSwitchToggle 
+    onAutoSwitchToggle,
+    autoSwitchActive
 }) => {
+    // Debug log
+    console.log("FilterSidebar rendered with:", { 
+        isVisible, 
+        currentStationIndex, 
+        autoSwitchActive,
+        tickerDataLength: tickerData?.length 
+    });
+
     return (
         <div 
             className={`fixed top-20 right-0 h-[calc(100vh-9rem)] w-full md:w-90 bg-white shadow-xl transform transition-transform duration-300 ease-in-out ${
                 isVisible ? 'translate-x-0' : 'translate-x-full'
             }`}
-            style={{ zIndex: 9999 }} // Tambahkan z-index tinggi di sini
+            style={{ zIndex: 9999 }}
         >
             <div className="p-4 border-b border-gray-200 flex justify-between items-center">
                 <h2 className="text-xl font-semibold text-gray-800">Filter Peta</h2>
@@ -32,13 +41,19 @@ const FilterSidebar = ({
             <div className="p-4 overflow-y-auto h-[calc(100%-4rem)]">
                 {/* Auto Switch Toggle Section */}
                 <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
-                    <h3 className="font-medium text-blue-800 mb-3"></h3>
+                    <h3 className="font-medium text-blue-800 mb-3">Auto Switch Stasiun</h3>
                     <AutoSwitchToggle
                         tickerData={tickerData}
                         onStationChange={onStationChange}
                         currentStationIndex={currentStationIndex}
                         onAutoSwitchToggle={onAutoSwitchToggle}
+                        isPlaying={autoSwitchActive}
                     />
+                    <div className="mt-2 text-xs text-blue-600">
+                        {autoSwitchActive 
+                            ? `Stasiun aktif: ${tickerData?.[currentStationIndex]?.name || 'N/A'} (${currentStationIndex + 1}/${tickerData?.length || 0})` 
+                            : 'Auto switch dinonaktifkan'}
+                    </div>
                 </div>
                 
                 <div className="space-y-4">
@@ -118,7 +133,7 @@ const FilterSidebar = ({
                         </div>
                     </div>
                     
-                    <button className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-black rounded-md transition-colors shadow-sm">
+                    <button className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors shadow-sm">
                         Terapkan Filter
                     </button>
                 </div>
