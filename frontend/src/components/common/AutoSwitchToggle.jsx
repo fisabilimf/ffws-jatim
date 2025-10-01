@@ -103,6 +103,11 @@ const AutoSwitchToggle = ({
             if (isPlaying) {
                 console.log("User interaction detected, stopping auto switch:", event.detail);
                 stopAutoSwitch();
+                // Ensure FilterPanel button remains visible
+                const filterButton = document.querySelector('[aria-label="Buka Filter"]');
+                if (filterButton) {
+                    filterButton.style.backgroundColor = "white"; // Reset background color
+                }
             }
         };
 
