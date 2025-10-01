@@ -1,78 +1,32 @@
-[1mdiff --cc frontend/src/components/MapboxMap.jsx[m
-[1mindex d82b815,bb17233..0000000[m
-[1m--- a/frontend/src/components/MapboxMap.jsx[m
-[1m+++ b/frontend/src/components/MapboxMap.jsx[m
-[36m@@@ -155,18 -215,37 +217,37 @@@[m [mconst MapboxMap = ({ tickerData, onStat[m
-          }[m
-      };[m
-      const getStationCoordinates = (stationName) => {[m
-[31m -        console.log(`Looking for coordinates for station: "${stationName}"`);[m
-[32m +        // console.log(`Looking for coordinates for station: "${stationName}"`);[m
-          if (!devices || devices.length === 0) {[m
-[31m -            console.log("Devices array is empty or not yet loaded.");[m
-[32m +            // console.log("Devices array is empty or not yet loaded.");[m
-              return null;[m
-          }[m
-[31m-         const device = devices.find((d) => d.name === stationName);[m
-[32m+         [m
-[32m+         // Pertama coba pencarian yang tepat[m
-[32m+         let device = devices.find((d) => d.name === stationName);[m
-[32m+         [m
-[32m+         // Jika tidak ditemukan, coba pencarian case-insensitive[m
-[32m+         if (!device) {[m
-[32m+             device = devices.find((d) => d.name.toLowerCase() === stationName.toLowerCase());[m
-[32m+         }[m
-[32m+         [m
-[32m+         // Jika masih tidak ditemukan, coba pencarian parsial[m
-[32m+         if (!device) {[m
-[32m+             device = devices.find((d) => [m
-[32m+                 d.name.toLowerCase().includes(stationName.toLowerCase()) || [m
-[32m+                 stationName.toLowerCase().includes(d.name.toLowerCase())[m
-[32m+             );[m
-[32m+         }[m
-[32m+         [m
-          if (device && device.latitude && device.longitude) {[m
-              const coords = [parseFloat(device.longitude), parseFloat(device.latitude)];[m
-[31m-             // console.log(`Found coordinates for "${stationName}":`, coords);[m
-[32m+             console.log(`Found coordinates for "${stationName}":`, coords);[m
-[32m+             console.log(`Matched to device: "${device.name}"`);[m
-              return coords;[m
-          }[m
-[31m-         // console.warn(`Coordinates not found for station: "${stationName}"`);[m
-[32m+         [m
-[32m+         console.warn(`Coordinates not found for station: "${stationName}"`);[m
-[32m+         console.log("Available devices:", devices.map(d => d.name).join(", "));[m
-          return null;[m
-      };[m
-      // Expose handleMapFocus ke window object[m
-[36m@@@ -204,15 -321,26 +323,25 @@@[m
-              bearing: -17.6,[m
-              antialias: true,[m
-          });[m
-[31m -        map.current.addControl(new mapboxgl.NavigationControl(), "top-right");[m
-          map.current.addControl(new mapboxgl.ScaleControl(), "bottom-left");[m
-[31m-         // Tambahkan event listener untuk drag[m
-[31m-         map.current.on("dragstart", () => {[m
-[32m+         [m
-[32m+         // Tambahkan event listener untuk interaksi peta[m
-[32m+         const emitUserInteraction = (source) => {[m
-[32m+             console.log(`Map interaction detected: ${source}`);[m
-              // Trigger custom event to stop auto switch[m
-              const event = new CustomEvent("userInteraction", {[m
-[31m-                 detail: { source: "mapDrag" },[m
-[32m+                 detail: { source: source },[m
-              });[m
-              document.dispatchEvent(event);[m
-[31m-         });[m
-[32m+         };[m
-[32m+         [m
-[32m+         // Tambahkan event listener untuk drag[m
-[32m+         map.current.on("dragstart", () => emitUserInteraction("mapDrag"));[m
-[32m+         // Tambahkan event listener untuk zoom[m
-[32m+         map.current.on("zoomstart", () => emitUserInteraction("mapZoom"));[m
-[32m+         // Tambahkan event listener untuk click pada peta (bukan marker)[m
-[32m+         map.current.on("click", () => emitUserInteraction("mapClick"));[m
-[32m+         [m
-          return () => {[m
-              if (map.current) {[m
-                  map.current.remove();[m
+
+                   SSUUMMMMAARRYY OOFF LLEESSSS CCOOMMMMAANNDDSS
+
+      Commands marked with * may be preceded by a number, _N.
+      Notes in parentheses indicate the behavior if _N is given.
+      A key preceded by a caret indicates the Ctrl key; thus ^K is ctrl-K.
+
+  h  H                 Display this help.
+  q  :q  Q  :Q  ZZ     Exit.
+ ---------------------------------------------------------------------------
+
+                           MMOOVVIINNGG
+
+  e  ^E  j  ^N  CR  *  Forward  one line   (or _N lines).
+  y  ^Y  k  ^K  ^P  *  Backward one line   (or _N lines).
+  ESC-j             *  Forward  one file line (or _N file lines).
+  ESC-k             *  Backward one file line (or _N file lines).
+  f  ^F  ^V  SPACE  *  Forward  one window (or _N lines).
+  b  ^B  ESC-v      *  Backward one window (or _N lines).
+  z                 *  Forward  one window (and set window to _N).
+  w                 *  Backward one window (and set window to _N).
+  ESC-SPACE         *  Forward  one window, but don't stop at end-of-file.
+  ESC-b             *  Backward one window, but don't stop at beginning-of-file.
+  d  ^D             *  Forward  one half-window (and set half-window to _N).
+  u  ^U             *  Backward one half-window (and set half-window to _N).
+  ESC-)  RightArrow *  Right one half screen width (or _N positions).
+  ESC-(  LeftArrow  *  Left  one half screen width (or _N positions).
+  ESC-}  ^RightArrow   Right to last column displayed.
+  ESC-{  ^LeftArrow    Left  to first column.
+  F                    Forward forever; like "tail -f".
+  ESC-F                Like F but stop when search pattern is found.
+  r  ^R  ^L            Repaint screen.
