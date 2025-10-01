@@ -39,25 +39,37 @@ const AutoSwitchToggle = ({
 
     // Handle toggle dengan notifikasi ke parent
     const handleToggle = () => {
+        console.log("=== AUTO SWITCH TOGGLE CLICKED ===");
+        console.log("hasData:", hasData);
+        console.log("isPlaying:", isPlaying);
+        console.log("isPaused:", isPaused);
+        console.log("devicesData length:", devicesData?.length || 0);
+        console.log("tickerData length:", tickerData?.length || 0);
+        console.log("error:", error);
+        
         if (!hasData) {
             console.warn("Button disabled - no data available");
             return;
         }
         
         // Toggle internal state
+        console.log("Calling togglePlayPause...");
         togglePlayPause();
         
         // Notify parent dengan status yang tepat
         if (onAutoSwitchToggle) {
             if (isPlaying && !isPaused) {
                 // Sedang playing, akan di-stop
+                console.log("Notifying parent: STOP auto switch");
                 onAutoSwitchToggle(false);
             } else if (!isPlaying) {
                 // Tidak playing, akan di-start
+                console.log("Notifying parent: START auto switch");
                 onAutoSwitchToggle(true);
             }
             // Jika paused, tidak perlu notify parent karena ini auto resume
         }
+        console.log("=== AUTO SWITCH TOGGLE COMPLETED ===");
     };
 
     // Add event listener for user interactions

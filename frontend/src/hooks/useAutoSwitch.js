@@ -626,6 +626,17 @@ export const useAutoSwitch = ({
     };
   }, []);
   
+  // Log state untuk debugging
+  console.log('=== USE AUTO SWITCH STATE ===');
+  console.log('isPlaying:', state.isPlaying);
+  console.log('isPaused:', state.isPaused);
+  console.log('devicesData length:', state.devicesData?.length || 0);
+  console.log('tickerData length:', tickerData?.length || 0);
+  console.log('hasData:', (state.devicesData && state.devicesData.length > 0) || (tickerData && tickerData.length > 0));
+  console.log('error:', state.error);
+  console.log('isLoadingDevices:', state.isLoadingDevices);
+  console.log('=== END USE AUTO SWITCH STATE ===');
+
   return {
     ...state,
     startAutoSwitch,
