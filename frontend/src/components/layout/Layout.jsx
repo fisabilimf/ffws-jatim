@@ -31,24 +31,30 @@ const Layout = ({ children }) => {
     }, []);
 
     const handleAutoSwitchToggle = useCallback((isOn) => {
-        console.log('Layout: Auto switch toggle requested:', isOn);
+        console.log('=== LAYOUT: AUTO SWITCH TOGGLE REQUESTED ===');
+        console.log('Requested state:', isOn);
+        console.log('Current isAutoSwitchOn:', isAutoSwitchOn);
+        console.log('Current tickerData length:', tickerData?.length || 0);
         
         // Debounce untuk mencegah rapid state changes
         const timeoutId = setTimeout(() => {
+            console.log('Setting isAutoSwitchOn to:', isOn);
             setIsAutoSwitchOn(isOn);
             
             // If auto switch is turned off, close sidebar
             if (!isOn) {
+                console.log('Auto switch OFF - closing sidebar');
                 setIsSidebarOpen(false);
                 setSelectedStation(null);
             } else {
+                console.log('Auto switch ON - closing detail panel');
                 // Jika auto switch diaktifkan, tutup detail panel
                 setIsDetailPanelOpen(false);
             }
         }, 50);
         
         return () => clearTimeout(timeoutId);
-    }, []);
+    }, [isAutoSwitchOn, tickerData]);
 
     const handleCloseStationDetail = useCallback(() => {
         setSelectedStation(null);
