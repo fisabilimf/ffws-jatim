@@ -19,7 +19,7 @@
     <!-- Additional CSS -->
     @stack('styles')
 </head>
-<body class="font-sans antialiased bg-gray-50 no-transitions" 
+<body class="font-sans antialiased main-layout no-transitions transition-colors duration-300" 
       x-data="{}" 
       x-init="
           // Initialize Alpine store for sidebar state
@@ -71,15 +71,15 @@
             @include('admin.components.topnav')
             
             <!-- Page Content -->
-            <main class="flex-1 overflow-y-auto bg-gray-50 p-6">
+            <main class="flex-1 overflow-y-auto main-content p-6 transition-colors duration-300">
                 <!-- Page Header -->
                 @hasSection('page-header')
                     @yield('page-header')
                 @else
                     <div class="mb-6">
-                        <h1 class="text-2xl font-semibold text-gray-900">@yield('page-title', 'Dashboard')</h1>
+                        <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">@yield('page-title', 'Dashboard')</h1>
                         @hasSection('page-description')
-                            <p class="mt-2 text-sm text-gray-600">@yield('page-description')</p>
+                            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">@yield('page-description')</p>
                         @endif
                     </div>
                 @endif

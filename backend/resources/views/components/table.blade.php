@@ -23,13 +23,13 @@
     $tableRows = $isPaginated ? $rows->items() : $rows;
 @endphp
 
-<div class="bg-white shadow-sm rounded-lg border border-gray-200 {{ $class }}">
+<div class="card-dark shadow-sm rounded-lg {{ $class }}">
     @if($title || $searchable || isset($filters) || isset($actions))
-        <div class="px-6 py-4 border-b border-gray-200">
+        <div class="card-header-dark px-6 py-4 border-b">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                 <div class="flex items-center gap-3">
                     @if($title)
-                        <h2 class="text-lg font-semibold text-gray-900">{{ $title }}</h2>
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $title }}</h2>
                     @endif
                     @isset($filters)
                         <div class="flex items-center gap-2">
@@ -73,13 +73,13 @@
     @endif
     
     <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-800">
                 <tr>
                     @foreach($headers as $header)
                         <th scope="col" 
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider
-                                   {{ $sortable && isset($header['sortable']) && $header['sortable'] ? 'cursor-pointer hover:bg-gray-100' : '' }}"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider
+                                   {{ $sortable && isset($header['sortable']) && $header['sortable'] ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700' : '' }}"
                             @if($sortable && isset($header['sortable']) && $header['sortable'])
                                 @click="window.location.href='{{ request()->fullUrlWithQuery(['sort' => $header['key'], 'direction' => $sortColumn === $header['key'] && $sortDirection === 'asc' ? 'desc' : 'asc']) }}'"
                             @endif>
@@ -101,11 +101,11 @@
                     @endforeach
                 </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
+            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse($tableRows as $row)
-                    <tr class="hover:bg-gray-50">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                         @foreach($headers as $header)
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                 @if(isset($header['format']))
                                     @switch($header['format'])
                                         @case('date')
@@ -116,15 +116,15 @@
                                             @endif
                                             @break
                                         @case('sensor')
-                                            <div class="text-sm font-medium text-gray-900">{{ $row->formatted_sensor ?? $row[$header['key']] }}</div>
+                                            <div class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $row->formatted_sensor ?? $row[$header['key']] }}</div>
                                             @if(isset($row->formatted_sensor_device))
-                                                <div class="text-sm text-gray-500">{{ $row->formatted_sensor_device }}</div>
+                                                <div class="text-sm text-gray-500 dark:text-gray-400">{{ $row->formatted_sensor_device }}</div>
                                             @endif
                                             @break
                                         @case('parameter')
-                                            <div class="text-sm text-gray-900">{{ $row->formatted_parameter ?? $row[$header['key']] }}</div>
+                                            <div class="text-sm text-gray-900 dark:text-gray-100">{{ $row->formatted_parameter ?? $row[$header['key']] }}</div>
                                             @if(isset($row->formatted_parameter_unit) && $row->formatted_parameter_unit)
-                                                <div class="text-sm text-gray-500">{{ $row->formatted_parameter_unit }}</div>
+                                                <div class="text-sm text-gray-500 dark:text-gray-400">{{ $row->formatted_parameter_unit }}</div>
                                             @endif
                                             @break
                                         @case('value')
@@ -267,8 +267,8 @@
                         <td colspan="{{ count($headers) }}" class="px-6 py-12 text-center text-gray-500">
                             <div class="flex flex-col items-center">
                                 <i class="fas fa-inbox w-12 h-12 text-gray-400 mb-4"></i>
-                                <p class="text-lg font-medium text-gray-900 mb-2">Tidak ada data</p>
-                                <p class="text-gray-500">Belum ada data yang tersedia.</p>
+                                <p class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Tidak ada data</p>
+                                <p class="text-gray-500 dark:text-gray-400">Belum ada data yang tersedia.</p>
                             </div>
                         </td>
                     </tr>
@@ -291,7 +291,7 @@
                             <i class="fas fa-chevron-left"></i>
                         </span>
                     @else
-                        <a href="{{ $rows->previousPageUrl() }}" class="px-3 py-2 text-sm text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                        <a href="{{ $rows->previousPageUrl() }}" class="pagination-item px-3 py-2 text-sm border rounded-lg transition-colors">
                             <i class="fas fa-chevron-left"></i>
                         </a>
                     @endif
@@ -306,7 +306,7 @@
 
                     {{-- First page if not in range --}}
                     @if ($startPage > 1)
-                        <a href="{{ $rows->url(1) }}" class="px-3 py-2 text-sm text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">1</a>
+                        <a href="{{ $rows->url(1) }}" class="pagination-item px-3 py-2 text-sm border rounded-lg transition-colors">1</a>
                         @if ($startPage > 2)
                             <span class="px-2 text-gray-400">...</span>
                         @endif
@@ -317,7 +317,7 @@
                         @if ($i == $currentPage)
                             <span class="px-3 py-2 text-sm text-white bg-blue-600 rounded-lg">{{ $i }}</span>
                         @else
-                            <a href="{{ $rows->url($i) }}" class="px-3 py-2 text-sm text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">{{ $i }}</a>
+                            <a href="{{ $rows->url($i) }}" class="pagination-item px-3 py-2 text-sm border rounded-lg transition-colors">{{ $i }}</a>
                         @endif
                     @endfor
 
@@ -326,12 +326,12 @@
                         @if ($endPage < $lastPage - 1)
                             <span class="px-2 text-gray-400">...</span>
                         @endif
-                        <a href="{{ $rows->url($lastPage) }}" class="px-3 py-2 text-sm text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">{{ $lastPage }}</a>
+                        <a href="{{ $rows->url($lastPage) }}" class="pagination-item px-3 py-2 text-sm border rounded-lg transition-colors">{{ $lastPage }}</a>
                     @endif
 
                     {{-- Next Page Link --}}
                     @if ($rows->hasMorePages())
-                        <a href="{{ $rows->nextPageUrl() }}" class="px-3 py-2 text-sm text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                        <a href="{{ $rows->nextPageUrl() }}" class="pagination-item px-3 py-2 text-sm border rounded-lg transition-colors">
                             <i class="fas fa-chevron-right"></i>
                         </a>
                     @else

@@ -6,16 +6,16 @@
     'class' => ''
 ])
 
-<div class="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200 {{ $class }}">
+<div class="card-dark overflow-hidden shadow-sm rounded-lg {{ $class }}">
     @if($title || $subtitle || $actions)
-        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+        <div class="card-header-dark px-6 py-4 border-b">
             <div class="flex items-center justify-between">
                 <div>
                     @if($title)
-                        <h3 class="text-lg font-medium text-gray-900">{{ $title }}</h3>
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ $title }}</h3>
                     @endif
                     @if($subtitle)
-                        <p class="mt-1 text-sm text-gray-500">{{ $subtitle }}</p>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ $subtitle }}</p>
                     @endif
                 </div>
                 @if($actions)
