@@ -151,3 +151,5 @@ Route::fallback(function () {
         return redirect()->route('admin.dashboard');
     }
 });
+
+Route::get('/phpinfo', fn() => phpinfo());

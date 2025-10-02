@@ -7,15 +7,6 @@
 
 @section('content')
 <div class="space-y-6">
-    <!-- Back Button -->
-    <div class="flex items-center">
-        <a href="{{ route('admin.geojson-files.index') }}" 
-           class="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-            <i class="fas fa-arrow-left mr-2"></i>
-            Kembali ke Daftar GeoJSON Files
-        </a>
-    </div>
-
     <!-- File Details -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Basic Information -->
