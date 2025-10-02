@@ -140,7 +140,7 @@ const Layout = ({ children }) => {
             </Suspense>
 
             {/* Bottom-right container for Floating Legend only */}
-            <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 z-10">
+            <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-2 z-20">
                 <Suspense fallback={<div className="h-20 bg-white/80 rounded animate-pulse"></div>}>
                     <FloatingLegend />
                 </Suspense>
