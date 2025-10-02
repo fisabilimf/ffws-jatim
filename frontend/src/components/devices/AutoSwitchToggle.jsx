@@ -256,7 +256,6 @@ const AutoSwitchToggle = ({
         }
     };
 
-    // Sinkronisasi dengan external currentStationIndex
     useEffect(() => {
         if (currentStationIndex !== undefined && currentStationIndex !== currentIndex) {
             console.log("Syncing with external currentStationIndex:", currentStationIndex);
@@ -328,7 +327,7 @@ const AutoSwitchToggle = ({
             document.removeEventListener("autoSwitchDeactivated", logAutoSwitchEvent);
             document.removeEventListener("mapboxReadyForAutoSwitch", handleMapboxReady);
         };
-    }, [isPlaying, isPendingStop, interval, tick]);
+    }, [isPlaying, onAutoSwitchToggle]);
 
     const hasData = tickerData && tickerData.length > 0;
 
