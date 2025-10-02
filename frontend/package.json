@@ -8,6 +8,7 @@
         "dev:fast": "vite --force",
         "build": "vite build",
         "build:analyze": "vite build --mode analyze",
+        "build:stats": "vite build --mode production && npx vite-bundle-analyzer dist",
         "preview": "vite preview",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
