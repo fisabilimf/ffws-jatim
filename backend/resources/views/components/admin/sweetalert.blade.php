@@ -15,7 +15,18 @@
 @endif
 
 @if(session('error'))
-    <div x-data x-init="window.AdminUtils?.toastError('{{ addslashes(session('error')) }}')"></div>
+    <div x-data x-init="
+        const errorMessage = '{{ addslashes(session('error')) }}';
+        if (errorMessage.length > 80) {
+            // For longer error messages, use error detail format
+            const title = errorMessage.includes('foreign key constraint') || errorMessage.includes('tidak dapat dihapus') 
+                ? 'Tidak Dapat Menghapus Data' 
+                : 'Terjadi Kesalahan';
+            window.AdminUtils?.toastErrorDetail(title, errorMessage);
+        } else {
+            window.AdminUtils?.toastError(errorMessage);
+        }
+    "></div>
 @endif
 
 @if(session('warning'))
@@ -28,7 +39,15 @@
 
 <!-- Validation Errors -->
 @if($errors->any())
-    <div x-data x-init="window.AdminUtils?.toastError('Ada kesalahan pada input. Periksa kembali.')"></div>
+    <div x-data x-init="
+        const errorCount = {{ $errors->count() }};
+        const firstError = '{{ addslashes($errors->first()) }}';
+        if (errorCount === 1) {
+            window.AdminUtils?.toastError(firstError);
+        } else {
+            window.AdminUtils?.toastErrorDetail('Validasi Gagal', `Ada ${errorCount} kesalahan pada input. Periksa kembali form.`);
+        }
+    "></div>
 @endif
 
 {{-- SweetAlert2 Toast Functions --}}
@@ -48,56 +67,4 @@ document.addEventListener('DOMContentLoaded', function() {
     
     checkAdminUtils();
 });
-
-// Helper functions untuk toast yang bisa dipanggil dari mana saja
-window.showToast = {
-    success: function(message, options = {}) {
-        if (window.AdminUtils?.toastSuccess) {
-            return window.AdminUtils.toastSuccess(message, options);
-        } else {
-            console.warn('AdminUtils.toastSuccess not available');
-        }
-    },
-    
-    error: function(message, options = {}) {
-        if (window.AdminUtils?.toastError) {
-            return window.AdminUtils.toastError(message, options);
-        } else {
-            console.warn('AdminUtils.toastError not available');
-        }
-    },
-    
-    warning: function(message, options = {}) {
-        if (window.AdminUtils?.toastWarning) {
-            return window.AdminUtils.toastWarning(message, options);
-        } else {
-            console.warn('AdminUtils.toastWarning not available');
-        }
-    },
-    
-    info: function(message, options = {}) {
-        if (window.AdminUtils?.toastInfo) {
-            return window.AdminUtils.toastInfo(message, options);
-        } else {
-            console.warn('AdminUtils.toastInfo not available');
-        }
-    }
-};
 </script>
-
-{{-- Komponen ini tidak perlu output HTML khusus. --}}
-{{-- Cukup pastikan admin.js (yang memuat SweetAlert2 dan autobind) sudah diload. --}}
-{{-- Cara pakai di view:
-    <x-admin.sweetalert />
-    <a href="..." data-confirm>Hapus</a>
-    <button data-confirm-delete>Hapus</button>
-    <form method="POST" ... data-confirm-save>...</form>
-    
-    // Untuk toast:
-    <button onclick="showToast.success('Data berhasil disimpan!')">Test Success</button>
-    <button onclick="showToast.error('Terjadi kesalahan!')">Test Error</button>
-    <button onclick="showToast.warning('Perhatian!')">Test Warning</button>
-    <button onclick="showToast.info('Informasi penting')">Test Info</button>
---}}
-
-

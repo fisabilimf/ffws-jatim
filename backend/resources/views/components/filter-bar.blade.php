@@ -5,9 +5,9 @@
     'method' => 'GET',
     'showReset' => true,
     'resetUrl' => null,
-    'class' => '',
     'gridCols' => 'md:grid-cols-5',
-    'compact' => false
+    'compact' => false,
+    'class' => ''
 ])
 
 @php
@@ -41,7 +41,7 @@
                 
                 <div class="{{ $filterClass }}">
                     @if($filterType !== 'checkbox')
-                        <label for="{{ $filterId }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        <label for="{{ $filterId }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             {{ $filterLabel }}
                             @if($filterRequired)
                                 <span class="text-red-500">*</span>
@@ -53,7 +53,7 @@
                         @case('select')
                             <select name="{{ $filterName }}" 
                                     id="{{ $filterId }}" 
-                                    class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm py-2">
+                                    class="block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
                                 @if(isset($filter['empty_option']))
                                     <option value="">{{ $filter['empty_option'] }}</option>
                                 @endif
@@ -76,7 +76,7 @@
                                    name="{{ $filterName }}" 
                                    id="{{ $filterId }}"
                                    value="{{ $filterValue }}"
-                                   class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm py-2">
+                                   class="block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
                             @break
                                 
                         @case('datetime-local')
@@ -167,7 +167,7 @@
                                    id="{{ $filterId }}"
                                    value="{{ $filterValue }}"
                                    placeholder="{{ $filterPlaceholder }}"
-                                   class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm py-2">
+                                   class="block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
                     @endswitch
                 </div>
             @endforeach
@@ -177,7 +177,7 @@
         <div class="flex justify-end space-x-3 mt-4">
             @if($showReset)
                 <a href="{{ $resetUrl }}" 
-                   class="bg-white text-gray-700 px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors text-sm">
+                   class="btn-reset bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors text-sm">
                     Reset Filter
                 </a>
             @endif
