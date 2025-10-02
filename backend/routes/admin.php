@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\MasSensorController;
 use App\Http\Controllers\Admin\MasModelController;
 use App\Http\Controllers\Admin\DataActualController;
 use App\Http\Controllers\Admin\DataPredictionController;
+use App\Http\Controllers\Admin\GeojsonFileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -118,6 +119,18 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         Route::get('/{dataPrediction}/edit', [DataPredictionController::class, 'edit'])->name('edit');
         Route::put('/{dataPrediction}', [DataPredictionController::class, 'update'])->name('update');
         Route::delete('/{dataPrediction}', [DataPredictionController::class, 'destroy'])->name('destroy');
+    });
+
+    // GeoJSON Files Management
+    Route::prefix('geojson-files')->name('geojson-files.')->group(function () {
+        Route::get('/', [GeojsonFileController::class, 'index'])->name('index');
+        Route::get('/create', [GeojsonFileController::class, 'create'])->name('create');
+        Route::post('/', [GeojsonFileController::class, 'store'])->name('store');
+        Route::get('/{geojsonFile}', [GeojsonFileController::class, 'show'])->name('show');
+        Route::get('/{geojsonFile}/edit', [GeojsonFileController::class, 'edit'])->name('edit');
+        Route::put('/{geojsonFile}', [GeojsonFileController::class, 'update'])->name('update');
+        Route::delete('/{geojsonFile}', [GeojsonFileController::class, 'destroy'])->name('destroy');
+        Route::get('/{geojsonFile}/download', [GeojsonFileController::class, 'download'])->name('download');
     });
 
     // Profile & Account
