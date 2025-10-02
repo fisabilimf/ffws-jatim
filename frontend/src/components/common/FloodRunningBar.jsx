@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
-import Chart from "@/components/common/Chart";
+import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { fetchDevices } from "@/services/devices";
+
+// Lazy load Chart component untuk optimasi bundle
+const Chart = lazy(() => import("@/components/common/Chart"));
 
 const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarOpen = false }) => {
     const [tickerData, setTickerData] = useState([]);
@@ -148,16 +150,20 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
                                     <span className="text-xs font-bold text-gray-900">{formatValue(item.value)}</span>
                                     <span className="text-xs text-gray-500">{item.unit}</span>
                                 </div>
-                                <Chart
-                                    data={item.history}
-                                    width={48}
-                                    height={22}
-                                    showTooltip={false}
-                                    miniMode={true}
-                                    status={item.status}
-                                    canvasId={`chart-first-${item.id}`}
-                                    className="w-12 h-6 rounded"
-                                />
+                                <Suspense fallback={
+                                    <div className="w-12 h-6 bg-gray-200 rounded animate-pulse"></div>
+                                }>
+                                    <Chart
+                                        data={item.history}
+                                        width={48}
+                                        height={22}
+                                        showTooltip={false}
+                                        miniMode={true}
+                                        status={item.status}
+                                        canvasId={`chart-first-${item.id}`}
+                                        className="w-12 h-6 rounded"
+                                    />
+                                </Suspense>
                             </div>
                         ))}
 
@@ -179,16 +185,20 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
                                     <span className="text-xs font-bold text-gray-900">{formatValue(item.value)}</span>
                                     <span className="text-xs text-gray-500">{item.unit}</span>
                                 </div>
-                                <Chart
-                                    data={item.history}
-                                    width={48}
-                                    height={22}
-                                    showTooltip={false}
-                                    miniMode={true}
-                                    status={item.status}
-                                    canvasId={`chart-second-${item.id}`}
-                                    className="w-12 h-6 rounded"
-                                />
+                                <Suspense fallback={
+                                    <div className="w-12 h-6 bg-gray-200 rounded animate-pulse"></div>
+                                }>
+                                    <Chart
+                                        data={item.history}
+                                        width={48}
+                                        height={22}
+                                        showTooltip={false}
+                                        miniMode={true}
+                                        status={item.status}
+                                        canvasId={`chart-second-${item.id}`}
+                                        className="w-12 h-6 rounded"
+                                    />
+                                </Suspense>
                             </div>
                         ))}
                     </div>
