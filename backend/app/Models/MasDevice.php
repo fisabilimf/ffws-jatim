@@ -23,4 +23,9 @@ class MasDevice extends Model
     {
         return $this->belongsTo(MasRiverBasin::class, 'mas_river_basin_id');
     }
+
+    public function sensors()
+    {
+        return $this->hasMany(MasSensor::class, 'device_id');
+    }
 }
