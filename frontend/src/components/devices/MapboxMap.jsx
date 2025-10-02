@@ -5,9 +5,6 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import MapTooltip from "./maptooltip";
 import { fetchDevices } from "../../services/devices";
 import VectorTilesAPI from "./VectorTilesAPI";
-import BottomFilter from "./BottomFilter";
-import FilterSidebar from "./FilterSidebar";
-import CoordinatesPopup from "./CoordinatesPopup";
 
 if (!mapboxgl.accessToken) mapboxgl.accessToken = "pk.eyJ1IjoiZGl0b2ZhdGFoaWxsYWgxIiwiYSI6ImNtZjNveGloczAwNncya3E1YzdjcTRtM3MifQ.kIf5rscGYOzvvBcZJ41u8g";
 
@@ -318,13 +315,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
   return (
     <div className="w-full h-screen overflow-hidden relative z-0">
       <div ref={mapContainer} className="w-full h-full relative z-0" />
-      <BottomFilter onToggleFilter={toggleFilterSidebar} />
-      <FilterSidebar 
-        isVisible={showFilterSidebar} onClose={() => setShowFilterSidebar(false)}
-        tickerData={tickerData} onStationChange={handleStationChange}
-        currentStationIndex={currentStationIndex} onAutoSwitchToggle={handleAutoSwitchToggle}
-        autoSwitchActive={autoSwitchActive}
-      />
+     
       {selectedStationCoords && !riverLayerActive && zoomLevel > 10 && mapLoaded && (
         <button onClick={toggleRiverLayer} className="absolute bottom-16 left-4 z-10 px-4 py-2 rounded-lg shadow-lg transition-colors flex items-center bg-white hover:bg-gray-100 text-gray-800">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -352,9 +343,7 @@ const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
       {selectedStationCoords && riverLayerActive && (
         <VectorTilesAPI map={map.current} isVisible={showWaterEffect} coordinates={safeAreaCoords} mapLoaded={mapLoaded} />
       )}
-      {showCoordinatesPopup && clickedCoordinates && (
-        <CoordinatesPopup map={map.current} coordinates={clickedCoordinates} onClose={handleCloseCoordinatesPopup} />
-      )}
+    
       <style jsx>{`
         @keyframes alert-pulse { 0% { transform: scale(1); opacity: 0.7; } 50% { transform: scale(1.5); opacity: 0.3; } 100% { transform: scale(1); opacity: 0.7; } }
         .mapboxgl-popup-content { border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
