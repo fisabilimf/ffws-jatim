@@ -150,6 +150,18 @@
                :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0 h-0 py-0 overflow-hidden': !$store.sidebar.open && window.innerWidth >= 1024 }">
                Region</div>
 
+            <!-- Json Files -->
+            <a href="{{ route('admin.geojson-files.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative transition-colors duration-200
+                                           {{ request()->routeIs('admin.geojson-files.*')
+   ? 'active bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+   : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white' }}"
+               :class="{ 'px-3 py-2': $store.sidebar.open || window.innerWidth < 1024, 'px-2 py-2 justify-center': !$store.sidebar.open && window.innerWidth >= 1024 }">
+               <i class="fas fa-file text-base"
+                  :class="{ 'mr-3': $store.sidebar.open || window.innerWidth < 1024, 'mr-0': !$store.sidebar.open && window.innerWidth >= 1024 }"></i>
+               <span
+                  :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">GeoJSON Files</span>
+            </a>
+
             <!-- Region: Data Aliran Sungai -->
             <a href="{{ route('admin.region.river-basins.index') }}" class="sidebar-nav-item group flex items-center text-sm font-medium rounded-md relative transition-colors duration-200
                             {{ request()->routeIs('admin.region.river-basins.*')
@@ -199,8 +211,6 @@
                <span
                   :class="{ 'opacity-100': $store.sidebar.open || window.innerWidth < 1024, 'opacity-0': !$store.sidebar.open && window.innerWidth >= 1024 }">Desa</span>
             </a>
-
-
          </div>
       </div>
    </nav>

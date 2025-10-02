@@ -86,12 +86,6 @@ const MapTooltip = ({ map, station, isVisible, coordinates, onShowDetail, onClos
         border-radius: 8px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       }
-        
-      button:focus {
-        outline: none;
-        border: none;
-        box-shadow: none;
-      }
       
       .map-tooltip-content {
         padding: 12px;
