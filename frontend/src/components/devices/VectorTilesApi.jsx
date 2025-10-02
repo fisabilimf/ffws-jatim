@@ -2,11 +2,10 @@ import React, { useEffect, useRef } from 'react';
 import * as turf from '@turf/turf';
 
 const VectorTilesAPI = ({ map, isVisible, coordinates, mapLoaded }) => {
-    // Fungsi untuk mengubah warna air di area hijau
+    // Fungsi untuk mengubah warna air di area hijau dengan gradiasi ketinggian
     const changeWaterColorInSafeArea = () => {
         if (!map || !mapLoaded || !coordinates) return;
 
-        // Pastikan safe-areas source ada (river layer harus aktif terlebih dahulu)
         if (!map.getSource('safe-areas')) {
             console.warn('Safe areas not found. River layer must be activated first.');
             return;
@@ -22,7 +21,6 @@ const VectorTilesAPI = ({ map, isVisible, coordinates, mapLoaded }) => {
                 map.removeSource('water-in-safe-area-source');
             }
 
-            // Dapatkan data safe-areas yang sudah ada
             const safeAreasSource = map.getSource('safe-areas');
             let safeAreaData = null;
 
@@ -38,22 +36,32 @@ const VectorTilesAPI = ({ map, isVisible, coordinates, mapLoaded }) => {
                 type: 'geojson',
                 data: {
                     type: 'FeatureCollection',
-                    features: [] // Akan diisi nanti
+                    features: []
                 }
             });
 
-            // Tambahkan layer untuk air di dalam safe area dengan warna berbeda
+            // Tambahkan layer untuk air di dalam safe area dengan gradiasi ketinggian
             map.addLayer({
                 id: 'water-in-safe-area',
                 type: 'fill',
                 source: 'water-in-safe-area-source',
                 paint: {
-                    'fill-color': '#0066CC', // Biru lebih gelap untuk air di dalam area hijau
+                    // Gradiasi warna berdasarkan ketinggian air
+                    'fill-color': [
+                        'interpolate',
+                        ['linear'],
+                        ['to-number', ['coalesce', ['get', 'elevation'], ['get', 'height'], '0']],
+                        0, '#87CEEB',      // Biru muda (kering/dangkal)
+                        2, '#4682B4',      // Biru baja (sedang)
+                        5, '#191970',      // Biru midnight (tinggi)
+                        10, '#000080',     // Biru navy (sangat tinggi)
+                        15, '#000033'      // Biru kehitaman (banjir)
+                    ],
                     'fill-opacity': 0.8
                 }
-            }, 'safe-areas-border'); // Tempatkan sebelum border
+            }, 'safe-areas-border');
 
-            // Cari layer air di peta - gunakan 'water-layer' yang sudah kita buat
+            // Cari layer air di peta
             const waterLayer = map.getStyle().layers.find(layer => 
                 layer.id === 'water-layer' || 
                 (layer.type === 'fill' && 
@@ -67,9 +75,6 @@ const VectorTilesAPI = ({ map, isVisible, coordinates, mapLoaded }) => {
                 return;
             }
 
-            console.log('Found water layer:', waterLayer.id);
-
-            // Dapatkan sumber data layer air
             const waterSource = waterLayer.source;
             const waterSourceLayer = waterLayer['source-layer'];
 
@@ -85,8 +90,8 @@ const VectorTilesAPI = ({ map, isVisible, coordinates, mapLoaded }) => {
             // Coba beberapa pendekatan untuk mendapatkan fitur air
             let waterFeatures = [];
             
-            // Pendekatan 1: querySourceFeatures
             try {
+                // Perbaiki filter untuk menangani MultiPolygon
                 waterFeatures = map.querySourceFeatures(waterSource, {
                     sourceLayer: waterSourceLayer,
                     filter: ['any', 
@@ -98,9 +103,19 @@ const VectorTilesAPI = ({ map, isVisible, coordinates, mapLoaded }) => {
                 console.log(`Found ${waterFeatures.length} water features using querySourceFeatures`);
             } catch (e) {
                 console.warn('Error with querySourceFeatures:', e);
+                
+                // Coba pendekatan alternatif tanpa filter tipe
+                try {
+                    waterFeatures = map.querySourceFeatures(waterSource, {
+                        sourceLayer: waterSourceLayer,
+                        bounds: bbox
+                    });
+                    console.log(`Found ${waterFeatures.length} water features using querySourceFeatures without type filter`);
+                } catch (e2) {
+                    console.warn('Error with querySourceFeatures without filter:', e2);
+                }
             }
             
-            // Pendekatan 2: queryRenderedFeatures jika pendekatan 1 gagal
             if (waterFeatures.length === 0) {
                 try {
                     const sw = [bbox[0], bbox[1]];
@@ -110,11 +125,7 @@ const VectorTilesAPI = ({ map, isVisible, coordinates, mapLoaded }) => {
                         map.project(sw),
                         map.project(ne),
                         { 
-                            layers: [waterLayer.id],
-                            filter: ['any', 
-                                ['==', '$type', 'Polygon'],
-                                ['==', '$type', 'MultiPolygon']
-                            ]
+                            layers: [waterLayer.id]
                         }
                     );
                     console.log(`Found ${waterFeatures.length} water features using queryRenderedFeatures`);
@@ -123,34 +134,80 @@ const VectorTilesAPI = ({ map, isVisible, coordinates, mapLoaded }) => {
                 }
             }
 
-            // Siapkan array untuk fitur hasil potongan
             const featuresInSafeArea = [];
-
-            // Buat polygon dari safe area untuk digunakan dalam operasi spasial
             const safeAreaPolygon = turf.polygon(safeAreaData.geometry.coordinates);
 
             // Loop melalui setiap fitur air dan potong dengan safe area
             for (const feature of waterFeatures) {
                 try {
-                    // Handle MultiPolygon
+                    // Handle MultiPolygon dengan benar
                     if (feature.geometry.type === 'MultiPolygon') {
+                        // Konversi MultiPolygon ke koleksi Polygon
                         for (const polygonCoords of feature.geometry.coordinates) {
+                            // Pastikan polygonCoords valid
+                            if (!polygonCoords || polygonCoords.length === 0) continue;
+                            
                             const polygonFeature = turf.polygon(polygonCoords, feature.properties);
                             
                             // Cek apakah fitur berpotongan dengan safe area
                             if (turf.booleanIntersects(polygonFeature, safeAreaPolygon)) {
-                                // Jika berpotongan, tambahkan fitur asli
+                                // Coba dapatkan ketinggian dari properti fitur
+                                let elevation = 0;
+                                
+                                if (feature.properties) {
+                                    elevation = parseFloat(feature.properties.elevation) || 
+                                               parseFloat(feature.properties.height) || 
+                                               parseFloat(feature.properties.depth) || 
+                                               parseFloat(feature.properties.level) || 
+                                               0;
+                                }
+                                
+                                // Jika tidak ada properti ketinggian, coba dapatkan dari terrain
+                                if (elevation === 0 && map.getSource('mapbox-dem')) {
+                                    elevation = getElevationFromTerrain(polygonFeature);
+                                }
+                                
+                                // Jika masih 0, gunakan simulasi berdasarkan posisi
+                                if (elevation === 0) {
+                                    elevation = simulateElevationByPosition(polygonFeature);
+                                }
+                                
+                                polygonFeature.properties.elevation = elevation;
                                 featuresInSafeArea.push(polygonFeature);
                             }
                         }
                     } 
                     // Handle Polygon
                     else if (feature.geometry.type === 'Polygon') {
+                        // Pastikan koordinat valid
+                        if (!feature.geometry.coordinates || feature.geometry.coordinates.length === 0) continue;
+                        
                         const polygonFeature = turf.polygon(feature.geometry.coordinates, feature.properties);
                         
                         // Cek apakah fitur berpotongan dengan safe area
                         if (turf.booleanIntersects(polygonFeature, safeAreaPolygon)) {
-                            // Jika berpotongan, tambahkan fitur asli
+                            // Coba dapatkan ketinggian dari properti fitur
+                            let elevation = 0;
+                            
+                            if (feature.properties) {
+                                elevation = parseFloat(feature.properties.elevation) || 
+                                           parseFloat(feature.properties.height) || 
+                                           parseFloat(feature.properties.depth) || 
+                                           parseFloat(feature.properties.level) || 
+                                           0;
+                            }
+                            
+                            // Jika tidak ada properti ketinggian, coba dapatkan dari terrain
+                            if (elevation === 0 && map.getSource('mapbox-dem')) {
+                                elevation = getElevationFromTerrain(polygonFeature);
+                            }
+                            
+                            // Jika masih 0, gunakan simulasi berdasarkan posisi
+                            if (elevation === 0) {
+                                elevation = simulateElevationByPosition(polygonFeature);
+                            }
+                            
+                            polygonFeature.properties.elevation = elevation;
                             featuresInSafeArea.push(polygonFeature);
                         }
                     }
@@ -167,14 +224,83 @@ const VectorTilesAPI = ({ map, isVisible, coordinates, mapLoaded }) => {
                 features: featuresInSafeArea
             });
 
-            console.log('Water color in safe area changed');
+            console.log('Water color in safe area changed with elevation gradient');
 
         } catch (error) {
             console.error('Error changing water color in safe area:', error);
         }
     };
 
-    // Fungsi helper untuk mendapatkan titik tengah polygon (tetap dipertahankan untuk keperluan lain)
+    // Fungsi untuk mendapatkan elevasi dari Mapbox Terrain
+    const getElevationFromTerrain = (feature) => {
+        try {
+            // Pastikan sumber terrain ada
+            if (!map.getSource('mapbox-dem')) {
+                console.warn('Mapbox DEM source not available');
+                return 0;
+            }
+            
+            // Dapatkan titik tengah fitur
+            const center = turf.center(feature);
+            const [lng, lat] = center.geometry.coordinates;
+            
+            // Pastikan koordinat valid
+            if (!lng || !lat || isNaN(lng) || isNaN(lat)) {
+                console.warn('Invalid coordinates for terrain query');
+                return 0;
+            }
+            
+            // Dapatkan elevasi pada titik tersebut
+            const elevation = map.queryTerrainElevation([lng, lat]);
+            
+            // Kembalikan elevasi dalam meter (biasanya sudah dalam meter)
+            return Math.max(0, elevation || 0);
+        } catch (error) {
+            console.warn('Error getting elevation from terrain:', error);
+            return 0;
+        }
+    };
+
+    // Fungsi untuk mensimulasikan elevasi berdasarkan posisi geografis
+    const simulateElevationByPosition = (feature) => {
+        try {
+            // Dapatkan koordinat fitur
+            const coords = feature.geometry.coordinates[0];
+            
+            // Pastikan koordinat valid
+            if (!coords || coords.length === 0) {
+                console.warn('Invalid coordinates for elevation simulation');
+                return 2;
+            }
+            
+            // Hitung rata-rata latitude dan longitude
+            const avgLat = coords.reduce((sum, coord) => sum + coord[1], 0) / coords.length;
+            const avgLng = coords.reduce((sum, coord) => sum + coord[0], 0) / coords.length;
+            
+            // Pastikan koordinat valid
+            if (isNaN(avgLat) || isNaN(avgLng)) {
+                console.warn('Invalid average coordinates for elevation simulation');
+                return 2;
+            }
+            
+            // Simulasi elevasi berdasarkan posisi
+            const distanceFromEquator = Math.abs(avgLat);
+            const westFactor = (110 - avgLng) / 50;
+            
+            const simulatedElevation = Math.max(0, 
+                (distanceFromEquator * 0.5) + 
+                (westFactor * 2) +           
+                (Math.random() * 3)          
+            );
+            
+            return Math.round(simulatedElevation * 10) / 10;
+        } catch (error) {
+            console.warn('Error simulating elevation by position:', error);
+            return 2;
+        }
+    };
+
+    // Fungsi helper untuk mendapatkan titik tengah polygon
     const getPolygonCenter = (coords) => {
         let x = 0;
         let y = 0;
@@ -188,7 +314,7 @@ const VectorTilesAPI = ({ map, isVisible, coordinates, mapLoaded }) => {
         return [x / n, y / n];
     };
 
-    // Fungsi helper untuk mengecek apakah titik berada di dalam polygon (tetap dipertahankan untuk keperluan lain)
+    // Fungsi helper untuk mengecek apakah titik berada di dalam polygon
     const isPointInPolygon = (point, polygon) => {
         let inside = false;
         for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
@@ -225,7 +351,6 @@ const VectorTilesAPI = ({ map, isVisible, coordinates, mapLoaded }) => {
         if (!map || !mapLoaded) return;
 
         if (isVisible && coordinates) {
-            // Tambahkan delay kecil untuk memastikan river layer sudah siap
             const timer = setTimeout(() => {
                 changeWaterColorInSafeArea();
             }, 500);
