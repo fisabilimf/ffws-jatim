@@ -1,2 +1,0 @@
-@include('admin.region.kecamatan')
-
