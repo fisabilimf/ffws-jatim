@@ -140,14 +140,14 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
 
     return (
         <div
-            className={`fixed top-20 left-96 right-80 bottom-0 z-[50] bg-white shadow-2xl transform transition-all duration-300 ease-in-out ${
+            className={`rounded-tr-lg fixed top-20 left-96 right-80 bottom-0 z-[50] bg-white shadow-2xl transform transition-all duration-300 ease-in-out ${
                 isVisible ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
             }`}
             style={{ willChange: "transform, opacity" }}
         >
             <div className="h-full flex flex-col">
                 {/* Header Panel - Gradient Styling */}
-                <div className="bg-gradient-to-r from-gray-50 via-gray-100 to-gray-200 p-4 flex-shrink-0 shadow-lg">
+                <div className="bg-gradient-to-r from-white-50 via-white-100 to-white-200 p-4 flex-shrink-0 shadow-lg">
                     {/* Baris judul + tombol close dengan alignment yang rapi */}
                     <div className="flex items-center justify-between">
                         {/* Bagian kiri - tombol back + judul */}
@@ -218,9 +218,9 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
                                         key={tab.key}
                                         onClick={() => handleTabClick(tab.key)}
                                         disabled={isTabChanging}
-                                        className={`relative py-4 px-4 transition-all duration-500 ease-out rounded-lg shadow-sm group ${
+                                        className={`relative py-4 px-4 transition-all duration-500 ease-out rounded-lg group ${
                                             activeTab === tab.key
-                                                ? "text-gray-800 font-semibold bg-gradient-to-r from-gray-200 to-gray-300 shadow-md"
+                                                ? "text-gray-800 font-semibold"
                                                 : "text-gray-600 font-medium hover:text-gray-800"
                                         } ${isTabChanging ? "opacity-70 cursor-wait" : "cursor-pointer"}`}
                                         role="tab"
@@ -229,7 +229,7 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
                                         <span className="relative z-10 whitespace-nowrap">{tab.label}</span>
                                         {/* Active indicator - line for active, dot for inactive on hover */}
                                         {activeTab === tab.key ? (
-                                            <div className="absolute bottom-0 left-1/2 w-8 h-1 bg-gradient-to-r from-gray-600 to-gray-700 rounded-full shadow-sm underline-active" />
+                                            <div className="absolute bottom-0 left-1/2 w-8 h-1 bg-gradient-to-r from-blue-300 to-blue-800 rounded-full shadow-sm underline-active" />
                                         ) : (
                                             <div className="absolute bottom-0 left-1/2 w-1.5 h-1.5 bg-gray-400 rounded-full opacity-0 group-hover:opacity-100 group-hover:dot-hover transition-all duration-300 ease-out" />
                                         )}
@@ -311,7 +311,7 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
                                                                 fill="currentColor"
                                                                 viewBox="0 0 24 24"
                                                             >
-                                                                <path d="M2 17h20v2H2zm1.15-4.05L4 12l.85.95L6 11.5l.85.95L8 11l-.85-.95L6 12.5l-.85-.95L4 13l-.85-.95zM6 5l.85.95L8 4.5l.85.95L10 4l-.85-.95L8 5.5l-.85-.95L6 6l-.85-.95L4 7l-.85-.95L2 6l.85-.95L4 4.5l.85-.95L6 5zm12 0l.85.95L20 4.5l.85.95L22 4l-.85-.95L20 5.5l-.85-.95L18 6l-.85-.95L16 7l-.85-.95L14 6l.85-.95L16 4.5l.85-.95L18 5z" />
+                                                                <path d="M2 17h20v2H2zm1.15-4.05L4 12l.85.95L6 11.5l.85.95L8 11l-.85-.95L6 12.5l-.85-.95L4 13l-.85-.95L2 12l.85-.95L4 11.5l.85.95L6 11l-.85-.95L4 12.5l-.85-.95L2 13zm0-8.95L4 3l.85.95L6 2.5l.85.95L8 2l-.85-.95L6 3.5 5.15 2.5 4 3l-.85-.95L2 3.05z" />
                                                             </svg>
                                                         </div>
                                                         <div className="text-sm text-gray-600">Kecepatan Angin</div>
