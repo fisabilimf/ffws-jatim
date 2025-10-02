@@ -61,7 +61,7 @@ const SidebarTemplate = ({
                          className="w-full inline-flex items-center justify-start gap-2 px-0 py-2.5 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 text-sm font-medium rounded-lg border border-blue-200 hover:from-blue-100 hover:to-blue-200 hover:shadow-md hover:scale-[1.02] transition-all duration-200"
                          title="Buka Detail Panel"
                        >
-                         <span>Detail Informasi Stasiun</span>
+                         <span>Detail Informasi</span>
                        </button>
                    </div>
                 )}
@@ -79,4 +79,3 @@ const SidebarTemplate = ({
 };
 
 export default SidebarTemplate;
-

@@ -86,15 +86,7 @@ const MapTooltip = ({ map, station, isVisible, coordinates, onShowDetail, onClos
         border-radius: 8px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       }
-      
-      /* Reset semua button styling */
-      button {
-        background: none;
-        border: none;
-        outline: none;
-        box-shadow: none;
-      }
-      
+        
       button:focus {
         outline: none;
         border: none;
