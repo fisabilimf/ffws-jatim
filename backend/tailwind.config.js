@@ -5,6 +5,7 @@ export default {
     "./resources/**/*.js",
     "./resources/**/*.vue",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       fontFamily: {
@@ -23,6 +24,14 @@ export default {
           800: '#1e40af',
           900: '#1e3a8a',
           950: '#172554',
+        },
+        // Custom dark theme colors
+        dark: {
+          bg: '#09090b',
+          card: '#18181b',
+          border: '#27272a',
+          text: '#fafafa',
+          muted: '#a1a1aa',
         },
         success: {
           50: '#f0fdf4',

@@ -6,6 +6,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Models\MasDevice;
 use App\Models\MasRiverBasin;
 
@@ -95,48 +97,187 @@ class MasDeviceController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:100|unique:mas_devices,code',
-            'mas_river_basin_id' => 'required|exists:mas_river_basins,id',
-            'latitude' => 'required|numeric|between:-90,90',
-            'longitude' => 'required|numeric|between:-180,180',
-            'elevation_m' => 'nullable|numeric|min:0',
-            'status' => 'required|in:active,inactive,maintenance'
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'code' => 'required|string|max:100|unique:mas_devices,code',
+                'mas_river_basin_id' => 'required|exists:mas_river_basins,id',
+                'latitude' => 'required|numeric|between:-90,90',
+                'longitude' => 'required|numeric|between:-180,180',
+                'elevation_m' => 'nullable|numeric|min:0',
+                'status' => 'required|in:active,inactive,maintenance'
+            ]);
 
-        MasDevice::create($validated);
+            $device = MasDevice::create($validated);
 
-        return redirect()->route('admin.devices.index')
-            ->with('success', 'Device berhasil ditambahkan.');
+            return redirect()->route('admin.devices.index')
+                ->with('success', "Device '{$device->name}' berhasil ditambahkan.");
+                
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()
+                ->withErrors($e->validator)
+                ->withInput()
+                ->with('error', 'Data yang diinput tidak valid. Silakan periksa kembali.');
+                
+        } catch (\Illuminate\Database\QueryException $e) {
+            Log::error('Database error when creating device: ' . $e->getMessage(), [
+                'request_data' => $request->all(),
+                'error_code' => $e->getCode()
+            ]);
+            
+            // Handle specific database constraint errors
+            if ($e->getCode() == 23000) {
+                if (strpos($e->getMessage(), 'mas_devices_code_unique') !== false) {
+                    return redirect()->back()
+                        ->withInput()
+                        ->with('error', "Kode device '{$request->code}' sudah digunakan. Silakan gunakan kode yang berbeda.");
+                }
+            }
+            
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan database saat menyimpan device. Silakan coba lagi.');
+                
+        } catch (\Exception $e) {
+            Log::error('Unexpected error when creating device: ' . $e->getMessage(), [
+                'request_data' => $request->all(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan tak terduga. Silakan coba lagi atau hubungi administrator.');
+        }
     }
 
     public function update(Request $request, $id)
     {
-        $device = MasDevice::findOrFail($id);
-        
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:100|unique:mas_devices,code,' . $id,
-            'mas_river_basin_id' => 'required|exists:mas_river_basins,id',
-            'latitude' => 'required|numeric|between:-90,90',
-            'longitude' => 'required|numeric|between:-180,180',
-            'elevation_m' => 'nullable|numeric|min:0',
-            'status' => 'required|in:active,inactive'
-        ]);
+        try {
+            $device = MasDevice::findOrFail($id);
+            
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'code' => 'required|string|max:100|unique:mas_devices,code,' . $id,
+                'mas_river_basin_id' => 'required|exists:mas_river_basins,id',
+                'latitude' => 'required|numeric|between:-90,90',
+                'longitude' => 'required|numeric|between:-180,180',
+                'elevation_m' => 'nullable|numeric|min:0',
+                'status' => 'required|in:active,inactive,maintenance'
+            ]);
 
-        $device->update($validated);
+            $oldName = $device->name;
+            $device->update($validated);
 
-        return redirect()->route('admin.devices.index')
-            ->with('success', 'Device berhasil diperbarui.');
+            return redirect()->route('admin.devices.index')
+                ->with('success', "Device '{$oldName}' berhasil diperbarui menjadi '{$device->name}'.");
+                
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return redirect()->route('admin.devices.index')
+                ->with('error', 'Device yang akan diperbarui tidak ditemukan.');
+                
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()
+                ->withErrors($e->validator)
+                ->withInput()
+                ->with('error', 'Data yang diinput tidak valid. Silakan periksa kembali.');
+                
+        } catch (\Illuminate\Database\QueryException $e) {
+            Log::error('Database error when updating device: ' . $e->getMessage(), [
+                'device_id' => $id,
+                'request_data' => $request->all(),
+                'error_code' => $e->getCode()
+            ]);
+            
+            // Handle specific database constraint errors
+            if ($e->getCode() == 23000) {
+                if (strpos($e->getMessage(), 'mas_devices_code_unique') !== false) {
+                    return redirect()->back()
+                        ->withInput()
+                        ->with('error', "Kode device '{$request->code}' sudah digunakan. Silakan gunakan kode yang berbeda.");
+                }
+            }
+            
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan database saat memperbarui device. Silakan coba lagi.');
+                
+        } catch (\Exception $e) {
+            Log::error('Unexpected error when updating device: ' . $e->getMessage(), [
+                'device_id' => $id,
+                'request_data' => $request->all(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan tak terduga. Silakan coba lagi atau hubungi administrator.');
+        }
     }
 
     public function destroy($id)
     {
-        $device = MasDevice::findOrFail($id);
-        $device->delete();
+        try {
+            $device = MasDevice::findOrFail($id);
+            
+            // Check if device has related sensors or data
+            $sensorsCount = $device->sensors()->count();
+            $dataCount = DB::table('data_actuals')
+                        ->join('mas_sensors', 'data_actuals.mas_sensor_id', '=', 'mas_sensors.id')
+                        ->where('mas_sensors.device_id', $id)
+                        ->count();
+            
+            if ($sensorsCount > 0 || $dataCount > 0) {
+                $errorMsg = "Device '{$device->name}' tidak dapat dihapus karena masih memiliki:";
+                $details = [];
+                
+                if ($sensorsCount > 0) {
+                    $details[] = "{$sensorsCount} sensor yang terkait";
+                }
+                if ($dataCount > 0) {
+                    $details[] = "{$dataCount} data aktual yang terkait";
+                }
+                
+                $errorMsg .= " " . implode(" dan ", $details) . ".";
+                $errorMsg .= " Hapus terlebih dahulu data terkait sebelum menghapus device ini.";
+                
+                return redirect()->route('admin.devices.index')
+                    ->with('error', $errorMsg);
+            }
+            
+            $deviceName = $device->name;
+            $device->delete();
 
-        return redirect()->route('admin.devices.index')
-            ->with('success', 'Device berhasil dihapus.');
+            return redirect()->route('admin.devices.index')
+                ->with('success', "Device '{$deviceName}' berhasil dihapus.");
+                
+        } catch (\Illuminate\Database\QueryException $e) {
+            Log::error('Database error when deleting device: ' . $e->getMessage(), [
+                'device_id' => $id,
+                'error_code' => $e->getCode(),
+                'sql_state' => $e->errorInfo[0] ?? null
+            ]);
+            
+            // Handle specific database constraint errors
+            if ($e->getCode() == 23000 || strpos($e->getMessage(), 'foreign key constraint') !== false) {
+                $errorMsg = "Device tidak dapat dihapus karena masih digunakan oleh data lain dalam sistem. ";
+                $errorMsg .= "Pastikan untuk menghapus semua sensor dan data terkait terlebih dahulu.";
+                
+                return redirect()->route('admin.devices.index')
+                    ->with('error', $errorMsg);
+            }
+            
+            // Generic database error
+            return redirect()->route('admin.devices.index')
+                ->with('error', 'Terjadi kesalahan database saat menghapus device. Silakan coba lagi atau hubungi administrator.');
+                
+        } catch (\Exception $e) {
+            Log::error('Unexpected error when deleting device: ' . $e->getMessage(), [
+                'device_id' => $id,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->route('admin.devices.index')
+                ->with('error', 'Terjadi kesalahan tak terduga. Silakan coba lagi atau hubungi administrator.');
+        }
     }
 }

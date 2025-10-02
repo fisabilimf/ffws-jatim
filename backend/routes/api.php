@@ -71,6 +71,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('river-basins')->group(function () {
         Route::get('/{id}', [RiverBasinController::class, 'show']);
     });
+ 
+    // GeoJSON files - list and content
+    Route::prefix('geojson-files')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\Admin\GeojsonFileController::class, 'index']);
+        Route::get('/{id}/content', [\App\Http\Controllers\Api\Admin\GeojsonFileController::class, 'content']);
+    });
 });
 
 // Test route untuk memastikan API berjalan

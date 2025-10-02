@@ -36,7 +36,7 @@
 
     <!-- Dialog -->
     <div class="min-h-screen flex items-center justify-center p-4">
-        <div class="w-full {{ $dialogWidth }} bg-white rounded-lg shadow-xl overflow-hidden transform transition-all"
+        <div class="w-full {{ $dialogWidth }} transform transition-all"
              x-transition:enter="ease-out duration-200"
              x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
              x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
@@ -44,25 +44,32 @@
              x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
              x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
         >
-            <!-- Header -->
-            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-gray-900">{{ $title }}</h3>
-                <button type="button" class="text-gray-400 hover:text-gray-600" @click="internalShow = false">
-                    <i class="fa-solid fa-xmark text-xl"></i>
-                </button>
-            </div>
+            <!-- Using Card Component with Modal-specific actions -->
+            <x-admin.card 
+                :title="$title" 
+                class="shadow-xl"
+                padding="p-0">
+                
+                <x-slot name="actions">
+                    <button type="button" 
+                            class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" 
+                            @click="internalShow = false">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                </x-slot>
 
-            <!-- Body -->
-            <div class="px-6 py-4">
-                {{ $slot }}
-            </div>
-
-            <!-- Footer -->
-            @isset($footer)
-                <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex items-center justify-end gap-2">
-                    {{ $footer }}
+                <!-- Modal Body -->
+                <div class="px-6 py-4">
+                    {{ $slot }}
                 </div>
-            @endisset
+
+                <!-- Modal Footer -->
+                @isset($footer)
+                    <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 flex items-center justify-end gap-2">
+                        {{ $footer }}
+                    </div>
+                @endisset
+            </x-admin.card>
         </div>
     </div>
 </div>
