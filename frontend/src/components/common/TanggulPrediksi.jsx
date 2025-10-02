@@ -160,10 +160,9 @@ const PredictionChart = ({ stationData, chartHistory = [], width = 560, height =
                                 type="monotone"
                                 dataKey="predicted"
                                 fill="url(#waterPredGradient)"
-                                fillOpacity={0.6}
+                                fillOpacity={0.8}
                                 stroke="#ef4444"
-                                strokeWidth={2}
-                                strokeDasharray="5 5"
+                                strokeWidth={0.5}
                                 name="Prediksi"
                             />
 
@@ -172,7 +171,7 @@ const PredictionChart = ({ stationData, chartHistory = [], width = 560, height =
                                 type="monotone"
                                 dataKey="levee"
                                 fill="url(#leveeGradientPred)"
-                                fillOpacity={0.7}
+                                fillOpacity={1}
                                 stroke="#9CA3AF"
                                 strokeWidth={2}
                                 name="Bingkai Tanggul"

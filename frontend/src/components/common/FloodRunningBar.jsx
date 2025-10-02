@@ -215,14 +215,14 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
                     }
                 }
                 
-                /* Responsive right positioning based on FilterButton size */
+                /* Right spacing = outer margin (1rem) + FilterButton (48px) + gap (1rem) */
                 .flood-running-bar {
-                    right: calc(1.5rem + 40px + 2rem); /* Mobile: 1.5rem margin + 40px button + 2rem margin */
+                    right: calc(1rem + 48px + 1rem);
                 }
                 
                 @media (min-width: 640px) {
                     .flood-running-bar {
-                        right: calc(1.5rem + 40px + 2rem); /* Desktop: 1.5rem margin + 40px button + 2rem margin */
+                        right: calc(1rem + 48px + 1rem);
                     }
                 }
             `}</style>

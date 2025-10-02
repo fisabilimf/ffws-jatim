@@ -99,7 +99,7 @@ const RiverDevelopmentChart = ({ stationData, chartHistory = [], width = 560, he
         // level air mengikuti kontur tanggul
         const data = leveeData.map((point) => {
             // Jika tinggi tanggul lebih rendah dari level air, maka ada air
-            const waterHeight = point.levee < waterLevel ? waterLevel : 0;
+            const waterHeight = point.levee < waterLevel ? waterLevel : 1;
             return {
                 x: point.x,
                 levee: point.levee,
