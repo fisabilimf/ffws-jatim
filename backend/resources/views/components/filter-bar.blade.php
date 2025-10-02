@@ -5,20 +5,9 @@
     'method' => 'GET',
     'showReset' => true,
     'resetUrl' => null,
-          <!-- Action Buttons - Positioned at bottom right -->
-        <div class="flex justify-end space-x-3 mt-4">
-            @if($showReset)
-                <x-admin.button href="{{ $resetUrl }}" variant="outline">
-                    Reset Filter
-                </x-admin.button>
-            @endif
-            
-            <x-admin.button type="submit" variant="primary">
-                Filter
-            </x-admin.button>
-        </div>',
     'gridCols' => 'md:grid-cols-5',
-    'compact' => false
+    'compact' => false,
+    'class' => ''
 ])
 
 @php

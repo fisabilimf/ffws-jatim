@@ -112,30 +112,33 @@
                                             @if(isset($row->formatted_received_at))
                                                 {{ \Carbon\Carbon::parse($row->formatted_received_at)->format('d/m/Y H:i') }}
                                             @else
-                                                {{ \Carbon\Carbon::parse($row[$header['key']])->format('d/m/Y H:i') }}
+                                                {{ \Carbon\Carbon::parse(is_array($row) ? $row[$header['key']] : $row->{$header['key']})->format('d/m/Y H:i') }}
                                             @endif
                                             @break
                                         @case('sensor')
-                                            <div class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $row->formatted_sensor ?? $row[$header['key']] }}</div>
+                                            <div class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $row->formatted_sensor ?? (is_array($row) ? $row[$header['key']] : $row->{$header['key']}) }}</div>
                                             @if(isset($row->formatted_sensor_device))
                                                 <div class="text-sm text-gray-500 dark:text-gray-400">{{ $row->formatted_sensor_device }}</div>
                                             @endif
                                             @break
                                         @case('parameter')
-                                            <div class="text-sm text-gray-900 dark:text-gray-100">{{ $row->formatted_parameter ?? $row[$header['key']] }}</div>
+                                            <div class="text-sm text-gray-900 dark:text-gray-100">{{ $row->formatted_parameter ?? (is_array($row) ? $row[$header['key']] : $row->{$header['key']}) }}</div>
                                             @if(isset($row->formatted_parameter_unit) && $row->formatted_parameter_unit)
                                                 <div class="text-sm text-gray-500 dark:text-gray-400">{{ $row->formatted_parameter_unit }}</div>
                                             @endif
                                             @break
                                         @case('value')
-                                            <span class="font-mono text-sm">{{ $row->formatted_value ?? $row[$header['key']] }}</span>
+                                            <span class="font-mono text-sm">{{ $row->formatted_value ?? (is_array($row) ? $row[$header['key']] : $row->{$header['key']}) }}</span>
                                             @break
                                         @case('percentage')
-                                            <span class="font-mono text-sm">{{ $row->formatted_confidence ?? $row[$header['key']] }}</span>
+                                            <span class="font-mono text-sm">{{ $row->formatted_confidence ?? (is_array($row) ? $row[$header['key']] : $row->{$header['key']}) }}</span>
+                                            @break
+                                        @case('decimal')
+                                            <span class="font-mono text-sm">{{ number_format(is_array($row) ? $row[$header['key']] : $row->{$header['key']}, 2) }}</span>
                                             @break
                                         @case('status')
                                             @php
-                                                $statusValue = $row->formatted_threshold_status ?? $row[$header['key']];
+                                                $statusValue = $row->formatted_threshold_status ?? (is_array($row) ? $row[$header['key']] : $row->{$header['key']});
                                                 $statusClasses = [
                                                     'active' => 'bg-green-100 text-green-800',
                                                     'inactive' => 'bg-red-100 text-red-800',
@@ -238,7 +241,12 @@
                                                 {{ $row->{'formatted_' . $header['key']} }}
                                             @else
                                                 @php
-                                                    $value = $row[$header['key']] ?? '';
+                                                    // Handle both array and object access
+                                                    if (is_array($row)) {
+                                                        $value = $row[$header['key']] ?? '';
+                                                    } else {
+                                                        $value = $row->{$header['key']} ?? '';
+                                                    }
                                                     if (is_array($value)) {
                                                         $value = json_encode($value);
                                                     }
@@ -251,7 +259,12 @@
                                         {{ $row->{'formatted_' . $header['key']} }}
                                     @else
                                         @php
-                                            $value = $row[$header['key']] ?? '';
+                                            // Handle both array and object access
+                                            if (is_array($row)) {
+                                                $value = $row[$header['key']] ?? '';
+                                            } else {
+                                                $value = $row->{$header['key']} ?? '';
+                                            }
                                             if (is_array($value)) {
                                                 $value = json_encode($value);
                                             }
