@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const SidebarTemplate = ({ 
+const SidebarTemplate  = ({ 
   isOpen, 
   onClose, 
   title, 
@@ -39,7 +39,7 @@ const SidebarTemplate = ({
       }`}
       style={{ willChange: 'transform, opacity' }}
     >
-      <div className="bg-white border-b border-gray-200 p-4 flex-shrink-0">
+      <div className="bg-white p-4 flex-shrink-0">
         <div className="flex items-center space-x-3">
           <button
             onClick={handleClose}
@@ -54,16 +54,33 @@ const SidebarTemplate = ({
               <>
                 <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
                 {subtitle && <p className="text-gray-500 text-sm">{subtitle}</p>}
+                
+                {/* --- PERUBAHAN UTAMA DI SINI --- */}
                 {showArrow && !isDetailPanelOpen && (
-                   <div className="mt-3 pt-3 border-t border-gray-100">
-                       <button
-                         onClick={onArrowToggle}
-                         className="w-full inline-flex items-center justify-start gap-2 px-0 py-2.5 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 text-sm font-medium rounded-lg border border-blue-200 hover:from-blue-100 hover:to-blue-200 hover:shadow-md hover:scale-[1.02] transition-all duration-200"
-                         title="Buka Detail Panel"
-                       >
-                         <span>Detail Informasi Stasiun</span>
-                       </button>
-                   </div>
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <button
+                      onClick={onArrowToggle}
+                      className="group w-full flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200 hover:border-blue-500 hover:bg-blue-50 hover:shadow-lg transition-all duration-300 ease-in-out"
+                      title="Buka Detail Panel"
+                    >
+                      {/* Konten teks di sebelah kiri */}
+                      <div className="text-left">
+                        <span className="font-semibold text-slate-800 group-hover:text-blue-800 transition-colors">
+                          Detail Informasi
+                        </span>
+                        <p className="text-sm text-slate-500 group-hover:text-blue-600 transition-colors">
+                          Lihat data lengkap stasiun
+                        </p>
+                      </div>
+
+                      {/* Ikon panah di sebelah kanan */}
+                      <div className="text-slate-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    </button>
+                  </div>
                 )}
               </>
             )}
@@ -79,4 +96,3 @@ const SidebarTemplate = ({
 };
 
 export default SidebarTemplate;
-
