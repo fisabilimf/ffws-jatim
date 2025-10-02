@@ -65,7 +65,7 @@ const RiverDevelopmentChart = ({ stationData, chartHistory = [], width = 560, he
     }
 
     const chartData = useMemo(() => {
-        const waterLevel = stationData.value || 0.2; // Default 0.4m (antara 0.3-0.5m)
+        const waterLevel = stationData.value || 0.2; // Default 0.2m
 
         // Data tanggul V-shape
         const leveeData = [
@@ -75,20 +75,20 @@ const RiverDevelopmentChart = ({ stationData, chartHistory = [], width = 560, he
             { x: 3, levee: 3.5 }, // Puncak kiri
             { x: 4, levee: 3.5 }, // Puncak kiri
             { x: 5, levee: 3.2 }, // Mulai miring landai
-            { x: 6, levee: 2.8 }, // Sisi miring landai
-            { x: 7, levee: 2.2 }, // Sisi miring landai
-            { x: 8, levee: 1.5 }, // Sisi miring landai
+            { x: 6, levee: 2.5 }, // Sisi miring landai
+            { x: 7, levee: 2 }, // Sisi miring landai
+            { x: 8, levee: 1 }, // Sisi miring landai
             { x: 9, levee: 0.8 }, // Sisi miring landai
-            { x: 10, levee: 0.2 }, // Dasar sungai
+            { x: 10, levee: 0.4 }, // Dasar sungai
             { x: 11, levee: 0.2 }, // Dasar sungai
             { x: 12, levee: 0.2 }, // Dasar sungai
             { x: 13, levee: 0.2 }, // Dasar sungai
-            { x: 14, levee: 0.2 }, // Dasar sungai
-            { x: 15, levee: 0.2 }, // Dasar sungai
+            { x: 14, levee: 0.2}, // Dasar sungai
+            { x: 15, levee: 0.4 }, // Dasar sungai
             { x: 16, levee: 0.8 }, // Sisi miring landai
-            { x: 17, levee: 1.5 }, // Sisi miring landai
-            { x: 18, levee: 2.2 }, // Sisi miring landai
-            { x: 19, levee: 2.8 }, // Sisi miring landai
+            { x: 17, levee: 1 }, // Sisi miring landai
+            { x: 18, levee: 2 }, // Sisi miring landai
+            { x: 19, levee: 2.5}, // Sisi miring landai
             { x: 20, levee: 3.2 }, // Mulai miring landai
             { x: 21, levee: 3.5 }, // Puncak kanan
             { x: 22, levee: 3.5 }, // Puncak kanan
@@ -96,45 +96,33 @@ const RiverDevelopmentChart = ({ stationData, chartHistory = [], width = 560, he
             { x: 24, levee: 3.5 }, // Puncak kanan
         ];
 
-        // level air mengikuti kontur tanggul
+        // Data dengan level air konstan (muka air rata)
         const data = leveeData.map((point) => {
-            // Jika tinggi tanggul lebih rendah dari level air, maka ada air
-            const waterHeight = point.levee < waterLevel ? waterLevel : 1;
             return {
                 x: point.x,
                 levee: point.levee,
-                water: waterHeight,
+                water: waterLevel, // Nilai konstan untuk muka air rata
             };
         });
 
-        console.log("TanggulAktual chartData (V-shape dengan air mengikuti kontur):", data); // Debug log
+        console.log("TanggulAktual chartData (muka air rata):", data); // Debug log
         return data;
-    }, [stationData.value]);
-
-    // Data untuk marker bulat pada level air
-    const waterMarkers = useMemo(() => {
-        const markers = [];
-        const waterLevel = stationData.value || 0.25;
-
-        for (let i = 0; i < 8; i++) {
-            markers.push({
-                x: (i / 7) * 20, // Sesuaikan dengan dataPoints
-                y: waterLevel,
-            });
-        }
-
-        return markers;
     }, [stationData.value]);
 
     // Custom tooltip
     const CustomTooltip = ({ active, payload, label }) => {
         if (active && payload && payload.length) {
+            const waterLevel = stationData.value || 0.2;
+            const leveePayload = payload.find(p => p.name === "Bingkai Tanggul");
+            const leveeValue = leveePayload ? leveePayload.value : null;
             return (
                 <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
                     <p className="text-sm font-medium text-gray-700">
-                        Level Air: {(stationData.value || 0).toFixed(2)}m
+                        Level Air: {waterLevel.toFixed(2)}m
                     </p>
-                    <p className="text-sm text-gray-600">Tinggi Tanggul: {payload[0]?.value?.toFixed(2)}m</p>
+                    {leveeValue !== null && (
+                        <p className="text-sm text-gray-600">Tinggi Tanggul: {leveeValue.toFixed(2)}m</p>
+                    )}
                 </div>
             );
         }
@@ -192,18 +180,18 @@ const RiverDevelopmentChart = ({ stationData, chartHistory = [], width = 560, he
                             <Tooltip content={<CustomTooltip />} />
                             <Legend verticalAlign="top" height={36} wrapperStyle={{ paddingBottom: "10px" }} />
 
-                            {/* Area visual air berwarna biru - di belakang layer tanggul */}
+                            {/* Area visual air berwarna biru - muka air rata tanpa outline */}
                             <Area
                                 type="monotone"
                                 dataKey="water"
                                 fill="url(#waterGradient)"
-                                fillOpacity={0.8}
-                                stroke="#87CEEB"
-                                strokeWidth={0.5}
+                                fillOpacity={0.6}
+                                stroke="none" // Menghilangkan outline
+                                strokeWidth={0} // Menghilangkan ketebalan outline
                                 name="Level Air"
                             />
 
-                            {/* Area tanggul (abu-abu) dengan sisi miring landai - di depan layer air */}
+                            {/* Area tanggul (abu-abu) dengan sisi miring landai */}
                             <Area
                                 type="monotone"
                                 dataKey="levee"

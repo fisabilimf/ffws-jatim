@@ -52,20 +52,20 @@ const PredictionChart = ({ stationData, chartHistory = [], width = 560, height =
             { x: 3, levee: 3.5 }, // Puncak kiri
             { x: 4, levee: 3.5 }, // Puncak kiri
             { x: 5, levee: 3.2 }, // Mulai miring landai
-            { x: 6, levee: 2.8 }, // Sisi miring landai
-            { x: 7, levee: 2.2 }, // Sisi miring landai
-            { x: 8, levee: 1.5 }, // Sisi miring landai
+            { x: 6, levee: 2.5 }, // Sisi miring landai
+            { x: 7, levee: 2 }, // Sisi miring landai
+            { x: 8, levee: 1 }, // Sisi miring landai
             { x: 9, levee: 0.8 }, // Sisi miring landai
-            { x: 10, levee: 0.2 }, // Dasar sungai
+            { x: 10, levee: 0.4 }, // Dasar sungai
             { x: 11, levee: 0.2 }, // Dasar sungai
             { x: 12, levee: 0.2 }, // Dasar sungai
             { x: 13, levee: 0.2 }, // Dasar sungai
-            { x: 14, levee: 0.2 }, // Dasar sungai
-            { x: 15, levee: 0.2 }, // Dasar sungai
+            { x: 14, levee: 0.2}, // Dasar sungai
+            { x: 15, levee: 0.4 }, // Dasar sungai
             { x: 16, levee: 0.8 }, // Sisi miring landai
-            { x: 17, levee: 1.5 }, // Sisi miring landai
-            { x: 18, levee: 2.2 }, // Sisi miring landai
-            { x: 19, levee: 2.8 }, // Sisi miring landai
+            { x: 17, levee: 1 }, // Sisi miring landai
+            { x: 18, levee: 2 }, // Sisi miring landai
+            { x: 19, levee: 2.5}, // Sisi miring landai
             { x: 20, levee: 3.2 }, // Mulai miring landai
             { x: 21, levee: 3.5 }, // Puncak kanan
             { x: 22, levee: 3.5 }, // Puncak kanan
@@ -73,46 +73,33 @@ const PredictionChart = ({ stationData, chartHistory = [], width = 560, height =
             { x: 24, levee: 3.5 }, // Puncak kanan
         ];
 
-        // Hitung level air prediksi yang mengikuti kontur tanggul
+        // Data dengan prediksi konstan (muka air rata)
         const data = leveeData.map((point) => {
-            // Jika tinggi tanggul lebih rendah dari level air prediksi, maka ada air
-            const waterHeight = point.levee < predictedWaterLevel ? predictedWaterLevel : 0;
             return {
                 x: point.x,
                 levee: point.levee,
-                predicted: waterHeight,
+                predicted: predictedWaterLevel, // Nilai konstan untuk muka air rata
             };
         });
 
-        console.log("TanggulPrediksi chartData (V-shape dengan air prediksi mengikuti kontur):", data); // Debug log
+        console.log("TanggulPrediksi chartData (muka air rata):", data); // Debug log
         return data;
-    }, [stationData.value]);
-
-    // Marker level air prediksi
-    const waterMarkers = useMemo(() => {
-        const markers = [];
-        const predictedWaterLevel = (stationData.value || 0.25) + 0.3;
-
-        for (let i = 0; i < 6; i++) {
-            markers.push({
-                x: (i / 5) * 20, // Sesuaikan dengan dataPoints
-                y: predictedWaterLevel,
-            });
-        }
-
-        return markers;
     }, [stationData.value]);
 
     // Custom tooltip
     const CustomTooltip = ({ active, payload, label }) => {
         if (active && payload && payload.length) {
-            const predictedLevel = (stationData.value || 0) + 0.3;
+            const predictedLevel = (stationData.value || 0.4) + 0.2;
+            const leveePayload = payload.find(p => p.name === "Bingkai Tanggul");
+            const leveeValue = leveePayload ? leveePayload.value : null;
             return (
                 <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
                     <p className="text-sm font-medium text-gray-700">
                         Prediksi Level Air: {predictedLevel.toFixed(2)}m
                     </p>
-                    <p className="text-sm text-gray-600">Tinggi Tanggul: {payload[0]?.value?.toFixed(2)}m</p>
+                    {leveeValue !== null && (
+                        <p className="text-sm text-gray-600">Tinggi Tanggul: {leveeValue.toFixed(2)}m</p>
+                    )}
                 </div>
             );
         }
@@ -155,18 +142,29 @@ const PredictionChart = ({ stationData, chartHistory = [], width = 560, height =
                             <Tooltip content={<CustomTooltip />} />
                             <Legend verticalAlign="top" height={36} wrapperStyle={{ paddingBottom: "10px" }} />
 
-                            {/* Area visual air prediksi berwarna merah - di belakang layer tanggul */}
+                            {/* Area visual air prediksi berwarna merah - muka air rata tanpa outline */}
                             <Area
                                 type="monotone"
                                 dataKey="predicted"
                                 fill="url(#waterPredGradient)"
-                                fillOpacity={0.8}
-                                stroke="#ef4444"
-                                strokeWidth={0.5}
+                                fillOpacity={1}
+                                stroke="none" // Menghilangkan outline
+                                strokeWidth={0} // Menghilangkan ketebalan outline
                                 name="Prediksi"
                             />
 
-                            {/* Area tanggul (abu-abu) dengan sisi miring landai - di depan layer air */}
+                            {/* Garis horizontal untuk menunjukkan level air prediksi */}
+                            <Line
+                                type="monotone"
+                                dataKey="predicted"
+                                stroke="#b91c1c"
+                                strokeWidth={0}
+                                dot={false}
+                                activeDot={false}
+                                legendType="none"
+                            />
+
+                            {/* Area tanggul (abu-abu) dengan sisi miring landai */}
                             <Area
                                 type="monotone"
                                 dataKey="levee"
