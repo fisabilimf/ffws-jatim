@@ -1,14 +1,11 @@
 import React, { useState, useRef, useCallback, memo, lazy, Suspense, useEffect } from "react";
-
-// Lazy load komponen yang tidak critical untuk initial load
-const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const GoogleMapsSearchbar = lazy(() => import("@components/common/GoogleMapsSearchbar"));
-const MapboxMap = lazy(() => import("@components/devices/MapboxMap"));
+const MapboxMap = lazy(() => import("@/components/MapboxMap"));
 const FloatingLegend = lazy(() => import("@components/common/FloatingLegend"));
-const FloodRunningBar = lazy(() => import("@components/FloodRunningBar"));
+const FloodRunningBar = lazy(() => import("@/components/common/FloodRunningBar"));
 const StationDetail = lazy(() => import("@components/sensors/StationDetail"));
 const DetailPanel = lazy(() => import("@components/sensors/DetailPanel"));
-
+const FilterPanel = lazy(() => import("@components/common/FilterPanel"));
 const Layout = ({ children }) => {
     const [tickerData, setTickerData] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
@@ -18,6 +15,7 @@ const Layout = ({ children }) => {
     const [currentStationIndex, setCurrentStationIndex] = useState(0);
     const [isAutoSwitchOn, setIsAutoSwitchOn] = useState(false);
     const mapRef = useRef(null);
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
 
     // Memoize event handlers untuk mencegah re-render yang tidak perlu
     const handleSearch = useCallback((query) => {
@@ -30,16 +28,30 @@ const Layout = ({ children }) => {
     }, []);
 
     const handleAutoSwitchToggle = useCallback((isOn) => {
-        setIsAutoSwitchOn(isOn);
-        // If auto switch is turned off, close sidebar
-        if (!isOn) {
-            setIsSidebarOpen(false);
-            setSelectedStation(null);
-        } else {
-            // Jika auto switch diaktifkan, tutup detail panel
-            setIsDetailPanelOpen(false);
-        }
-    }, []);
+        console.log('=== LAYOUT: AUTO SWITCH TOGGLE REQUESTED ===');
+        console.log('Requested state:', isOn);
+        console.log('Current isAutoSwitchOn:', isAutoSwitchOn);
+        console.log('Current tickerData length:', tickerData?.length || 0);
+        
+        // Debounce untuk mencegah rapid state changes
+        const timeoutId = setTimeout(() => {
+            console.log('Setting isAutoSwitchOn to:', isOn);
+            setIsAutoSwitchOn(isOn);
+            
+            // If auto switch is turned off, close sidebar
+            if (!isOn) {
+                console.log('Auto switch OFF - closing sidebar');
+                setIsSidebarOpen(false);
+                setSelectedStation(null);
+            } else {
+                console.log('Auto switch ON - closing detail panel');
+                // Jika auto switch diaktifkan, tutup detail panel
+                setIsDetailPanelOpen(false);
+            }
+        }, 50);
+        
+        return () => clearTimeout(timeoutId);
+    }, [isAutoSwitchOn, tickerData]);
 
     const handleCloseStationDetail = useCallback(() => {
         setSelectedStation(null);
@@ -74,19 +86,38 @@ const Layout = ({ children }) => {
     }, []);
 
     const handleStationChange = useCallback(
-        (station, index) => {
-            setCurrentStationIndex(index);
-            // Buka panel detail saat auto switch
-            setSelectedStation(station);
-            setIsSidebarOpen(true);
-            // Tutup detail panel jika auto switch sedang berjalan
-            if (isAutoSwitchOn) {
-                setIsDetailPanelOpen(false);
+        (device, index) => {
+            const deviceName = device?.name || device?.device_name || device?.station_name;
+            console.log('Layout: Device change requested:', deviceName, 'index:', index);
+            
+            // Validasi input
+            if (!device || index === undefined) {
+                console.warn('Layout: Invalid device or index provided');
+                return;
             }
-            // Trigger map auto switch
+            
+            // Update state dengan debouncing untuk mencegah rapid changes
+            const timeoutId = setTimeout(() => {
+                setCurrentStationIndex(index);
+                // Buka panel detail saat auto switch
+                setSelectedStation(device);
+                setIsSidebarOpen(true);
+                // Tutup detail panel jika auto switch sedang berjalan
+                if (isAutoSwitchOn) {
+                    setIsDetailPanelOpen(false);
+                }
+            }, 10);
+            
+            // Trigger map auto switch (tidak perlu debounce karena ini external call)
             if (window.mapboxAutoSwitch) {
-                window.mapboxAutoSwitch(station, index);
+                try {
+                    window.mapboxAutoSwitch(device, index);
+                } catch (error) {
+                    console.error('Layout: Error calling mapboxAutoSwitch:', error);
+                }
             }
+            
+            return () => clearTimeout(timeoutId);
         },
         [isAutoSwitchOn]
     );
@@ -136,14 +167,8 @@ const Layout = ({ children }) => {
                 />
             </Suspense>
 
-            {/* Bottom-right stack container for AutoSwitch and Legend */}
-            <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 z-10 space-y-2">
-                {/* Auto Switch Card */}
-                <div className="">
-                    
-                </div>
-
-                {/* Floating Legend */}
+            {/* Bottom-right container for Floating Legend only */}
+            <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-2 z-20">
                 <Suspense fallback={<div className="h-20 bg-white/80 rounded animate-pulse"></div>}>
                     <FloatingLegend />
                 </Suspense>
@@ -182,10 +207,12 @@ const Layout = ({ children }) => {
                 />
             </Suspense>
 
-            {/* Independent Filter Control */}
-            <Suspense fallback={<div className="fixed top-4 right-4 w-12 h-12 bg-white/80 rounded-full animate-pulse"></div>}>
-                
-               
+            {/* Right-side Filter Panel */}
+            <Suspense fallback={<div className="fixed right-0 top-0 h-full w-80 bg-white shadow-lg animate-pulse"></div>}>
+                <FilterPanel
+                    isOpen={isFilterOpen}
+                    onOpen={() => setIsFilterOpen(true)}
+                />
             </Suspense>
         </div>
     );

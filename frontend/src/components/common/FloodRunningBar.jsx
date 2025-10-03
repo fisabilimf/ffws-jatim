@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
-import Chart from "@/components/common/Chart";
+import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { fetchDevices } from "@/services/devices";
+
+// Lazy load Chart component untuk optimasi bundle
+const Chart = lazy(() => import("@/components/common/Chart"));
 
 const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarOpen = false }) => {
     const [tickerData, setTickerData] = useState([]);
@@ -119,11 +121,7 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
 
     return (
         <div
-            className={`fixed top-4 z-[70] transition-all duration-300 ease-in-out`}
-            style={{
-                left: "calc(368px + 2rem)",
-                right: "100px",
-            }}
+            className={`fixed top-4 z-[70] transition-all duration-300 ease-in-out left-[calc(368px+2rem)] flood-running-bar`}
         >
             <div className="w-full">
                 <div className="overflow-hidden bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-1.5 sm:p-2">
@@ -152,16 +150,20 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
                                     <span className="text-xs font-bold text-gray-900">{formatValue(item.value)}</span>
                                     <span className="text-xs text-gray-500">{item.unit}</span>
                                 </div>
-                                <Chart
-                                    data={item.history}
-                                    width={48}
-                                    height={22}
-                                    showTooltip={false}
-                                    miniMode={true}
-                                    status={item.status}
-                                    canvasId={`chart-first-${item.id}`}
-                                    className="w-12 h-6 rounded"
-                                />
+                                <Suspense fallback={
+                                    <div className="w-12 h-6 bg-gray-200 rounded animate-pulse"></div>
+                                }>
+                                    <Chart
+                                        data={item.history}
+                                        width={48}
+                                        height={22}
+                                        showTooltip={false}
+                                        miniMode={true}
+                                        status={item.status}
+                                        canvasId={`chart-first-${item.id}`}
+                                        className="w-12 h-6 rounded"
+                                    />
+                                </Suspense>
                             </div>
                         ))}
 
@@ -183,16 +185,20 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
                                     <span className="text-xs font-bold text-gray-900">{formatValue(item.value)}</span>
                                     <span className="text-xs text-gray-500">{item.unit}</span>
                                 </div>
-                                <Chart
-                                    data={item.history}
-                                    width={48}
-                                    height={22}
-                                    showTooltip={false}
-                                    miniMode={true}
-                                    status={item.status}
-                                    canvasId={`chart-second-${item.id}`}
-                                    className="w-12 h-6 rounded"
-                                />
+                                <Suspense fallback={
+                                    <div className="w-12 h-6 bg-gray-200 rounded animate-pulse"></div>
+                                }>
+                                    <Chart
+                                        data={item.history}
+                                        width={48}
+                                        height={22}
+                                        showTooltip={false}
+                                        miniMode={true}
+                                        status={item.status}
+                                        canvasId={`chart-second-${item.id}`}
+                                        className="w-12 h-6 rounded"
+                                    />
+                                </Suspense>
                             </div>
                         ))}
                     </div>
@@ -209,14 +215,24 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
                     }
                 }
                 
+<<<<<<< HEAD:frontend/src/components/FloodRunningBar.jsx
                 /* Responsive right positioning based on FilterButton size */
                 .flood-running-bar {
                     right: calc(1.5rem + 40px + 2rem); /* Mobile: 1.5rem margin + 40px button + 2rem margin */
+=======
+                /* Right spacing = outer margin (1rem) + FilterButton (48px) + gap (1rem) */
+                .flood-running-bar {
+                    right: calc(1rem + 48px + 1rem);
+>>>>>>> 001df2bf4b5158ab0d9ab0f11161b180954cc48c:frontend/src/components/common/FloodRunningBar.jsx
                 }
                 
                 @media (min-width: 640px) {
                     .flood-running-bar {
+<<<<<<< HEAD:frontend/src/components/FloodRunningBar.jsx
                         right: calc(1.5rem + 40px + 2rem); /* Desktop: 1.5rem margin + 40px button + 2rem margin */
+=======
+                        right: calc(1rem + 48px + 1rem);
+>>>>>>> 001df2bf4b5158ab0d9ab0f11161b180954cc48c:frontend/src/components/common/FloodRunningBar.jsx
                     }
                 }
             `}</style>

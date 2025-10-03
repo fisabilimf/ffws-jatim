@@ -14,14 +14,32 @@ export const fetchWithAuth = async (endpoint, options = {}) => {
         ...options.headers,
     };
 
+    const fullUrl = `${API_BASE_URL}${endpoint}`;
+    
+    console.log('=== API CALL ===');
+    console.log('URL:', fullUrl);
+    console.log('Headers:', headers);
+    console.log('Options:', options);
+
     try {
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
+        const response = await fetch(fullUrl, { ...options, headers });
+        
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
+        
         if (!response.ok) {
-            throw new Error("Network response was not ok");
+            const errorText = await response.text();
+            console.error('API Error:', response.status, errorText);
+            throw new Error(`Network response was not ok: ${response.status} - ${errorText}`);
         }
-        return response.json();
+        
+        const data = await response.json();
+        console.log('API Response data:', data);
+        console.log('=== END API CALL ===');
+        return data;
     } catch (error) {
-        console.error(`There was a problem with the fetch operation for endpoint ${endpoint}:`, error);
+        console.error('API Call failed:', error);
+        console.log('=== END API CALL (ERROR) ===');
         throw error;
     }
 };

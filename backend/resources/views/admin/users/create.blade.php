@@ -6,7 +6,7 @@
 @section('breadcrumb', 'Tambah User')
 
 @section('content')
-<div class="max-w-2xl mx-auto">
+<div class="max-w-auto mx-auto">
     <x-admin.card title="Form User Baru" subtitle="Isi informasi user yang akan dibuat">
         <form action="{{ route('admin.users.store') }}" method="POST" class="space-y-6">
             @csrf
@@ -90,10 +90,9 @@
             
             <!-- Form Actions -->
             <div class="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200">
-                <a href="{{ route('admin.users.index') }}" 
-                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <x-admin.button href="{{ route('admin.users.index') }}" variant="outline">
                     Batal
-                </a>
+                </x-admin.button>
                 <x-admin.button type="submit" variant="primary">
                     <i class="fas fa-check -ml-1 mr-2 "></i>
                     Simpan User
