@@ -6,6 +6,7 @@ const FloodRunningBar = lazy(() => import("@/components/common/FloodRunningBar")
 const StationDetail = lazy(() => import("@components/sensors/StationDetail"));
 const DetailPanel = lazy(() => import("@components/sensors/DetailPanel"));
 const FilterPanel = lazy(() => import("@components/common/FilterPanel"));
+const AutoSwitchToggle = lazy(() => import("@components/devices/AutoSwitchToggle"));
 const Layout = ({ children }) => {
     const [tickerData, setTickerData] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");

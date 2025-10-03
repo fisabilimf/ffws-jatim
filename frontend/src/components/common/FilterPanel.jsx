@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import AutoSwitchToggle from "@components/common/AutoSwitchToggle";
+import AutoSwitchToggle from "../devices/AutoSwitchToggle";
 
 /**
  * FilterPanel
