@@ -1,0 +1,13 @@
+2025-10-03 09:30:00,026 - __main__ - INFO - Creating Flask application...
+2025-10-03 09:30:00,115 - __main__ - ERROR - Server startup failed: No module named 'MySQLdb'
+2025-10-03 09:33:19,289 - mysql.connector - INFO - package: mysql.connector.plugins
+2025-10-03 09:33:19,291 - mysql.connector - INFO - plugin_name: caching_sha2_password
+2025-10-03 09:33:19,291 - mysql.connector - INFO - AUTHENTICATION_PLUGIN_CLASS: MySQLCachingSHA2PasswordAuthPlugin
+2025-10-03 09:33:19,307 - __main__ - INFO - Creating Flask application...
+2025-10-03 09:33:19,372 - __main__ - INFO - Starting server on 0.0.0.0:5000 (debug=False)
+2025-10-03 09:33:19,414 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.131:5000
+2025-10-03 09:33:19,415 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-03 09:33:55,131 - werkzeug - INFO - 127.0.0.1 - - [03/Oct/2025 09:33:55] "GET /health HTTP/1.1" 200 -

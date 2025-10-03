@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FFWS Forecasting System Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .loading { background-color: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #6c757d; cursor: not-allowed; }
+        .endpoint-group {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .endpoint-group h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .test-results {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌊 FFWS Forecasting System Integration Test</h1>
+        <p>This page tests the complete integration between Laravel Backend, Python ML Service, and Frontend Services.</p>
+        
+        <div class="endpoint-group">
+            <h3>System Health Checks</h3>
+            <button onclick="testPythonHealth()">Test Python Service</button>
+            <button onclick="testLaravelHealth()">Test Laravel Proxy</button>
+            <button onclick="testModels()">Test ML Models</button>
+            <button onclick="testSensors()">Test Sensors List</button>
+        </div>
+
+        <div class="endpoint-group">
+            <h3>Forecasting Operations</h3>
+            <button onclick="testBasicForecast()">Test Basic Forecast</button>
+            <button onclick="testBasinForecast()">Test Basin Forecast</button>
+            <button onclick="testFallbackForecast()">Test Fallback Forecast</button>
+            <button onclick="testPredictionHistory()">Test Prediction History</button>
+        </div>
+
+        <div class="endpoint-group">
+            <h3>GeoJSON Integration</h3>
+            <button onclick="testGeojsonIntegration()">Test GeoJSON with Predictions</button>
+            <button onclick="testCompleteWorkflow()">Test Complete Workflow</button>
+        </div>
+
+        <div class="container">
+            <h3>Test Results</h3>
+            <div id="results" class="test-results"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1:8000/api';
+        const PYTHON_BASE = 'http://127.0.0.1:5000';
+        
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            results.appendChild(div);
+            results.scrollTop = results.scrollHeight;
+        }
+
+        async function makeRequest(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                throw new Error(`Request failed: ${error.message}`);
+            }
+        }
+
+        async function testPythonHealth() {
+            addResult('Testing Python service health...', 'loading');
+            try {
+                const result = await makeRequest(`${PYTHON_BASE}/health`);
+                addResult(`✅ Python Service: ${JSON.stringify(result)}`, 'success');
+            } catch (error) {
+                addResult(`❌ Python Service Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testLaravelHealth() {
+            addResult('Testing Laravel forecasting proxy...', 'loading');
+            try {
+                const result = await makeRequest(`${API_BASE}/forecasting/health`);
+                addResult(`✅ Laravel Proxy: ${JSON.stringify(result)}`, 'success');
+            } catch (error) {
+                addResult(`❌ Laravel Proxy Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testModels() {
+            addResult('Testing ML models list...', 'loading');
+            try {
+                const result = await makeRequest(`${API_BASE}/forecasting/models`);
+                addResult(`✅ ML Models: Found ${result.models ? result.models.length : 0} models`, 'success');
+                addResult(`<pre>${JSON.stringify(result, null, 2)}</pre>`, 'info');
+            } catch (error) {
+                addResult(`❌ Models Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testSensors() {
+            addResult('Testing forecasting sensors...', 'loading');
+            try {
+                const result = await makeRequest(`${API_BASE}/forecasting/sensors`);
+                addResult(`✅ Sensors: Found ${result.sensors ? result.sensors.length : 0} sensors`, 'success');
+                addResult(`<pre>${JSON.stringify(result, null, 2)}</pre>`, 'info');
+            } catch (error) {
+                addResult(`❌ Sensors Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testBasicForecast() {
+            addResult('Testing basic ML forecast...', 'loading');
+            try {
+                const payload = {
+                    sensor_code: 'DHOMPO',
+                    prediction_hours: 6,
+                    step_hours: 1.0,
+                    model_type: 'GRU'
+                };
+                const result = await makeRequest(`${API_BASE}/forecasting/run`, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                addResult(`✅ Basic Forecast: Generated ${result.predictions ? result.predictions.length : 0} predictions`, 'success');
+                addResult(`<pre>${JSON.stringify(result, null, 2)}</pre>`, 'info');
+            } catch (error) {
+                addResult(`❌ Basic Forecast Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testBasinForecast() {
+            addResult('Testing basin-wide forecast...', 'loading');
+            try {
+                const payload = {
+                    basin_id: 1,
+                    prediction_hours: 6
+                };
+                const result = await makeRequest(`${API_BASE}/forecasting/run-basin`, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                addResult(`✅ Basin Forecast: Processed ${result.results ? result.results.length : 0} sensors`, 'success');
+                addResult(`<pre>${JSON.stringify(result, null, 2)}</pre>`, 'info');
+            } catch (error) {
+                addResult(`❌ Basin Forecast Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testFallbackForecast() {
+            addResult('Testing fallback forecast...', 'loading');
+            try {
+                const payload = {
+                    sensor_code: 'DHOMPO',
+                    prediction_hours: 6
+                };
+                const result = await makeRequest(`${API_BASE}/forecasting/fallback`, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                addResult(`✅ Fallback Forecast: Generated fallback predictions`, 'success');
+                addResult(`<pre>${JSON.stringify(result, null, 2)}</pre>`, 'info');
+            } catch (error) {
+                addResult(`❌ Fallback Forecast Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testPredictionHistory() {
+            addResult('Testing prediction history...', 'loading');
+            try {
+                const result = await makeRequest(`${API_BASE}/forecasting/predictions/DHOMPO`);
+                addResult(`✅ Prediction History: Found ${result.predictions ? result.predictions.length : 0} records`, 'success');
+                addResult(`<pre>${JSON.stringify(result, null, 2)}</pre>`, 'info');
+            } catch (error) {
+                addResult(`❌ Prediction History Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testGeojsonIntegration() {
+            addResult('Testing GeoJSON integration...', 'loading');
+            try {
+                const result = await makeRequest(`${API_BASE}/forecasting/predictions/DHOMPO/with-geojson`);
+                addResult(`✅ GeoJSON Integration: ${result.geojson_available ? 'GeoJSON available' : 'No GeoJSON'}`, 'success');
+                addResult(`<pre>${JSON.stringify(result, null, 2)}</pre>`, 'info');
+            } catch (error) {
+                addResult(`❌ GeoJSON Integration Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCompleteWorkflow() {
+            addResult('🚀 Testing complete forecasting workflow...', 'loading');
+            
+            // Step 1: Health check
+            await testPythonHealth();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Step 2: Laravel proxy
+            await testLaravelHealth();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Step 3: Run forecast
+            await testBasicForecast();
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Step 4: Check results
+            await testPredictionHistory();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Step 5: GeoJSON integration
+            await testGeojsonIntegration();
+            
+            addResult('🎉 Complete workflow test finished!', 'success');
+        }
+
+        // Auto-run initial health checks
+        window.addEventListener('load', async () => {
+            addResult('🌊 FFWS Forecasting System Test Page Loaded', 'info');
+            addResult('Click buttons above to test individual components or run complete workflow', 'info');
+        });
+    </script>
+</body>
+</html>
