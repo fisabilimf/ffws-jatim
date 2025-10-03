@@ -105,7 +105,7 @@ const FilterPanel = ({
             <section className="space-y-3">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                 <ToggleRight className="w-4 h-4 text-blue-600" />
-                Station Auto Switch
+                Device Auto Switch
               </h3>
               <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
                 <AutoSwitchToggle
