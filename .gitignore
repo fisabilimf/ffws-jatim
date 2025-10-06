@@ -68,3 +68,8 @@ backup_*/
 /raspy/
 /new_models/
 forecasting/ffws_new_v2.sql
+
+*.h5
+*.pkl
+*.geojson
+*.qmd
