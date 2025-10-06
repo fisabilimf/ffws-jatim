@@ -73,3 +73,5 @@ forecasting/ffws_new_v2.sql
 *.pkl
 *.geojson
 *.qmd
+
+/uploads/
