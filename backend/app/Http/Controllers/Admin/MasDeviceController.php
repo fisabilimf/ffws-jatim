@@ -56,7 +56,7 @@ class MasDeviceController extends Controller
             ];
             $detailJson = json_encode($detailData);
 
-            $device->river_basin_name = $device->riverBasin->name ?? '-';
+            $device->river_basin_name = $device->riverBasin->river_basins_name ?? '-';
             $device->latitude = number_format($device->latitude, 6);
             $device->longitude = number_format($device->longitude, 6);
             $device->elevation_m = $device->elevation_m ? number_format($device->elevation_m, 2) . ' m' : '-';
@@ -88,7 +88,7 @@ class MasDeviceController extends Controller
         $riverBasins = MasRiverBasin::all()->map(function ($rb) {
             return [
                 'value' => $rb->id,
-                'label' => $rb->name
+                'label' => $rb->river_basins_name
             ];
         });
         

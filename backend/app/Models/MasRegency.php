@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MasRegency extends Model
 {
@@ -13,7 +14,16 @@ class MasRegency extends Model
     protected $fillable = [
         'regencies_name',
         'regencies_code',
+        'provinces_code',
     ];
+
+    /**
+     * Get the province that owns the regency.
+     */
+    public function province(): BelongsTo
+    {
+        return $this->belongsTo(MasProvince::class, 'provinces_code', 'provinces_code');
+    }
 
     /**
      * Get the device values for the regency.

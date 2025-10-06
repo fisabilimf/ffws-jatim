@@ -37,6 +37,7 @@ use App\Http\Controllers\Api\Admin\ForecastingController;
 
 // External API Controller
 use App\Http\Controllers\Api\Admin\ExternalApiController;
+use App\Http\Controllers\Api\Admin\DeviceSensorImportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -64,6 +65,9 @@ Route::prefix('public')->group(function () {
     Route::get('/river-basins', [RiverBasinController::class, 'index']);
     Route::get('/devices', [MasDeviceController::class, 'index']);
     Route::get('/sensors', [MasSensorController::class, 'index']);
+    
+    // Public geojson mapping endpoint for testing
+    Route::post('/geojson-mapping/by-discharge', [\App\Http\Controllers\Api\Admin\GeojsonMappingController::class, 'getGeojsonByDischarge']);
 });
 
 // Protected routes (authentication required)
@@ -371,6 +375,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/stations', [ExternalApiController::class, 'getStations']);
         Route::get('/sensor/{sensorCode}', [ExternalApiController::class, 'getBySensorCode']);
         Route::post('/cleanup', [ExternalApiController::class, 'cleanup']);
+        
+        // Device and Sensor Import routes
+        Route::prefix('import')->group(function () {
+            Route::get('/preview', [DeviceSensorImportController::class, 'preview']);
+            Route::post('/devices-sensors', [DeviceSensorImportController::class, 'importAll']);
+            Route::get('/status', [DeviceSensorImportController::class, 'status']);
+        });
     });
 });
 

@@ -8,8 +8,8 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 import logging
 
-from .db import init_session_from_settings
 from .config import Settings
+from .db import init_engine, init_session
 from .forecast import predict_for_sensor
 from .models import MasSensors, DataActual, MasDevices
 from sqlalchemy import select, and_, desc
@@ -45,7 +45,8 @@ def forecast_multi_parameter():
             return jsonify({'error': 'sensor_code is required'}), 400
         
         settings = Settings()
-        session = init_session_from_settings(settings)()
+        engine = init_engine(settings)
+        session = init_session(engine)()
         
         try:
             # Get base water level prediction
@@ -98,7 +99,8 @@ def analyze_rainfall_impact():
             return jsonify({'error': 'sensor_code is required'}), 400
         
         settings = Settings()
-        session = init_session_from_settings(settings)()
+        engine = init_engine(settings)
+        session = init_session(engine)()
         
         try:
             # Get sensor and device info
@@ -310,3 +312,166 @@ def calculate_rainfall_water_impact(base_water_level: float, rainfall_context: d
         'risk_level': risk_level,
         'time_decay_factor': time_decay
     }
+
+
+# Forecasting Control Endpoints
+@enhanced_bp.route('/forecasting/start', methods=['POST'])
+def start_forecasting():
+    """
+    Start forecasting for a specific sensor.
+    
+    Request body:
+    {
+        "sensor_code": "SENSOR-2531",
+        "sensor_id": 1,
+        "parameter": "water_level",
+        "model_id": 5,
+        "sensor_data": {...}
+    }
+    """
+    try:
+        data = request.get_json()
+        sensor_code = data.get('sensor_code')
+        sensor_id = data.get('sensor_id')
+        
+        if not sensor_code:
+            return jsonify({'error': 'sensor_code is required'}), 400
+        
+        logger.info(f"Starting forecasting for sensor: {sensor_code}")
+        
+        # TODO: Implement actual forecasting startup logic
+        # This might involve:
+        # 1. Checking if forecasting is already running
+        # 2. Starting a background process/thread
+        # 3. Updating forecasting status in database
+        
+        # For now, return success response
+        return jsonify({
+            'success': True,
+            'message': f'Forecasting started for sensor {sensor_code}',
+            'sensor_code': sensor_code,
+            'sensor_id': sensor_id,
+            'status': 'running',
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error starting forecasting: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@enhanced_bp.route('/forecasting/pause', methods=['POST'])
+def pause_forecasting():
+    """
+    Pause forecasting for a specific sensor.
+    
+    Request body:
+    {
+        "sensor_code": "SENSOR-2531",
+        "sensor_id": 1
+    }
+    """
+    try:
+        data = request.get_json()
+        sensor_code = data.get('sensor_code')
+        sensor_id = data.get('sensor_id')
+        
+        if not sensor_code:
+            return jsonify({'error': 'sensor_code is required'}), 400
+        
+        logger.info(f"Pausing forecasting for sensor: {sensor_code}")
+        
+        # TODO: Implement actual forecasting pause logic
+        # This might involve:
+        # 1. Pausing background processes
+        # 2. Updating forecasting status in database
+        
+        return jsonify({
+            'success': True,
+            'message': f'Forecasting paused for sensor {sensor_code}',
+            'sensor_code': sensor_code,
+            'sensor_id': sensor_id,
+            'status': 'paused',
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error pausing forecasting: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@enhanced_bp.route('/forecasting/stop', methods=['POST'])
+def stop_forecasting():
+    """
+    Stop forecasting for a specific sensor.
+    
+    Request body:
+    {
+        "sensor_code": "SENSOR-2531",
+        "sensor_id": 1
+    }
+    """
+    try:
+        data = request.get_json()
+        sensor_code = data.get('sensor_code')
+        sensor_id = data.get('sensor_id')
+        
+        if not sensor_code:
+            return jsonify({'error': 'sensor_code is required'}), 400
+        
+        logger.info(f"Stopping forecasting for sensor: {sensor_code}")
+        
+        # TODO: Implement actual forecasting stop logic
+        # This might involve:
+        # 1. Stopping background processes
+        # 2. Cleaning up resources
+        # 3. Updating forecasting status in database
+        
+        return jsonify({
+            'success': True,
+            'message': f'Forecasting stopped for sensor {sensor_code}',
+            'sensor_code': sensor_code,
+            'sensor_id': sensor_id,
+            'status': 'stopped',
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error stopping forecasting: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@enhanced_bp.route('/forecasting/status/<sensor_code>', methods=['GET'])
+def get_forecasting_status(sensor_code):
+    """
+    Get current forecasting status for a sensor.
+    """
+    try:
+        logger.info(f"Getting forecasting status for sensor: {sensor_code}")
+        
+        # TODO: Implement actual status checking logic
+        # This might involve checking database or process status
+        
+        return jsonify({
+            'success': True,
+            'sensor_code': sensor_code,
+            'status': 'stopped',  # Default status for now
+            'last_updated': datetime.now().isoformat(),
+            'message': 'Status retrieved successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting forecasting status: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500

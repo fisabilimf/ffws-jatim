@@ -5,7 +5,7 @@ import { fetchWithAuth } from "./apiClient";
  * @returns {Promise<Array>} A promise that resolves to an array of device objects.
  */
 export const fetchDevices = async () => {
-    const data = await fetchWithAuth("/devices");
+    const data = await fetchWithAuth("/public/devices");
     return data.data;
 };
 

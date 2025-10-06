@@ -43,16 +43,26 @@ class GeojsonMappingController extends Controller
             'discharge_value' => 'required|numeric',
         ]);
 
-        $sensorCode = $request->sensor_code;
+        $inputCode = $request->sensor_code;
         $dischargeValue = $request->discharge_value;
 
+        // Try to find as device code first, then as sensor code
+        $deviceCode = $inputCode;
+        
+        // Check if it's a sensor code and get the device code
+        $sensor = \App\Models\MasSensor::where('sensor_code', $inputCode)->first();
+        if ($sensor) {
+            $deviceCode = $sensor->mas_device_code;
+        }
+
         // Find geojson mapping that matches the discharge value range
-        $mapping = GeojsonMapping::findByDeviceAndDischarge($sensorCode, $dischargeValue);
+        $mapping = GeojsonMapping::findByDeviceAndDischarge($deviceCode, $dischargeValue);
 
         if (!$mapping) {
             return response()->json([
                 'error' => 'No geojson mapping found for the given discharge value',
-                'sensor_code' => $sensorCode,
+                'input_code' => $inputCode,
+                'device_code' => $deviceCode,
                 'discharge_value' => $dischargeValue
             ], 404);
         }
@@ -187,11 +197,15 @@ class GeojsonMappingController extends Controller
      */
     private function returnGeojsonFile($filePath, $description = null)
     {
-        if (!Storage::exists($filePath)) {
+        // Handle absolute paths
+        if (file_exists($filePath)) {
+            $content = file_get_contents($filePath);
+        } else if (Storage::exists($filePath)) {
+            // Fallback to storage for relative paths
+            $content = Storage::get($filePath);
+        } else {
             return response()->json(['error' => 'File not found'], 404);
         }
-
-        $content = Storage::get($filePath);
 
         return response($content, 200)
             ->header('Content-Type', 'application/json')

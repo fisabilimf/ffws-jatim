@@ -36,6 +36,14 @@ class RatingCurve extends Model
     }
 
     /**
+     * Get the sensor value that owns the rating curve.
+     */
+    public function sensorValue(): BelongsTo
+    {
+        return $this->belongsTo(SensorValue::class, 'mas_sensor_code', 'mas_sensor_code');
+    }
+
+    /**
      * Get the calculated discharges for the rating curve.
      */
     public function calculatedDischarges(): HasMany

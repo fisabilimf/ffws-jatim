@@ -13,7 +13,16 @@ class MasCity extends Model
     protected $fillable = [
         'cities_name',
         'cities_code',
+        'regencies_code',
     ];
+
+    /**
+     * Get the regency that owns the city.
+     */
+    public function regency(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(MasRegency::class, 'regencies_code', 'regencies_code');
+    }
 
     /**
      * Get the river basins for the city.

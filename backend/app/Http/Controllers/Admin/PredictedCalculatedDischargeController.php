@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\PredictedCalculatedDischarge;
 use App\Models\MasSensor;
+use App\Models\SensorValue;
 use App\Models\RatingCurve;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -23,11 +24,13 @@ class PredictedCalculatedDischargeController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('mas_sensor_code', 'like', "%{$search}%")
-                  ->orWhereHas('sensor', function ($sensor) use ($search) {
-                      $sensor->where('sensor_name', 'like', "%{$search}%");
+                  ->orWhereIn('mas_sensor_code', function ($subQuery) use ($search) {
+                      $subQuery->select('mas_sensor_code')
+                               ->from('sensor_values')
+                               ->where('sensor_name', 'like', "%{$search}%");
                   })
                   ->orWhereHas('ratingCurve', function ($curve) use ($search) {
-                      $curve->where('name', 'like', "%{$search}%");
+                      $curve->where('formula_type', 'like', "%{$search}%");
                   });
             });
         }
@@ -53,8 +56,13 @@ class PredictedCalculatedDischargeController extends Controller
         $predictedDischarges = $query->orderBy('calculated_at', 'desc')->paginate(15);
 
         // Get filter options
-        $sensors = MasSensor::orderBy('sensor_name')->get();
-        $ratingCurves = RatingCurve::orderBy('name')->get();
+        $sensors = SensorValue::select('mas_sensor_code', 'sensor_name')
+                             ->distinct()
+                             ->whereNotNull('sensor_name')
+                             ->where('sensor_name', '!=', '')
+                             ->orderBy('sensor_name')
+                             ->get();
+        $ratingCurves = RatingCurve::orderBy('effective_date', 'desc')->get();
 
         return view('admin.predicted_calculated_discharges.index', compact(
             'predictedDischarges', 
@@ -68,8 +76,13 @@ class PredictedCalculatedDischargeController extends Controller
      */
     public function create()
     {
-        $sensors = MasSensor::orderBy('sensor_name')->get();
-        $ratingCurves = RatingCurve::orderBy('name')->get();
+        $sensors = SensorValue::select('mas_sensor_code', 'sensor_name')
+                             ->distinct()
+                             ->whereNotNull('sensor_name')
+                             ->where('sensor_name', '!=', '')
+                             ->orderBy('sensor_name')
+                             ->get();
+        $ratingCurves = RatingCurve::orderBy('effective_date', 'desc')->get();
 
         return view('admin.predicted_calculated_discharges.create', compact('sensors', 'ratingCurves'));
     }
@@ -84,7 +97,7 @@ class PredictedCalculatedDischargeController extends Controller
                 'required',
                 'string',
                 'max:50',
-                'exists:mas_sensors,sensor_code'
+                'exists:sensor_values,mas_sensor_code'
             ],
             'predicted_value' => [
                 'required',
@@ -127,8 +140,13 @@ class PredictedCalculatedDischargeController extends Controller
      */
     public function edit(PredictedCalculatedDischarge $predictedCalculatedDischarge)
     {
-        $sensors = MasSensor::orderBy('sensor_name')->get();
-        $ratingCurves = RatingCurve::orderBy('name')->get();
+        $sensors = SensorValue::select('mas_sensor_code', 'sensor_name')
+                             ->distinct()
+                             ->whereNotNull('sensor_name')
+                             ->where('sensor_name', '!=', '')
+                             ->orderBy('sensor_name')
+                             ->get();
+        $ratingCurves = RatingCurve::orderBy('effective_date', 'desc')->get();
 
         return view('admin.predicted_calculated_discharges.edit', compact(
             'predictedCalculatedDischarge', 
@@ -147,7 +165,7 @@ class PredictedCalculatedDischargeController extends Controller
                 'required',
                 'string',
                 'max:50',
-                'exists:mas_sensors,sensor_code'
+                'exists:sensor_values,mas_sensor_code'
             ],
             'predicted_value' => [
                 'required',
@@ -198,11 +216,13 @@ class PredictedCalculatedDischargeController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('mas_sensor_code', 'like', "%{$search}%")
-                  ->orWhereHas('sensor', function ($sensor) use ($search) {
-                      $sensor->where('sensor_name', 'like', "%{$search}%");
+                  ->orWhereIn('mas_sensor_code', function ($subQuery) use ($search) {
+                      $subQuery->select('mas_sensor_code')
+                               ->from('sensor_values')
+                               ->where('sensor_name', 'like', "%{$search}%");
                   })
                   ->orWhereHas('ratingCurve', function ($curve) use ($search) {
-                      $curve->where('name', 'like', "%{$search}%");
+                      $curve->where('formula_type', 'like', "%{$search}%");
                   });
             });
         }
@@ -246,13 +266,17 @@ class PredictedCalculatedDischargeController extends Controller
             ]);
 
             foreach ($predictedDischarges as $discharge) {
+                // Get sensor name from sensor_values table
+                $sensorName = SensorValue::where('mas_sensor_code', $discharge->mas_sensor_code)
+                                        ->value('sensor_name') ?? 'N/A';
+                
                 fputcsv($file, [
                     $discharge->id,
                     $discharge->mas_sensor_code,
-                    $discharge->sensor->sensor_name ?? 'N/A',
+                    $sensorName,
                     $discharge->predicted_value,
                     $discharge->predicted_discharge,
-                    $discharge->ratingCurve->name ?? 'N/A',
+                    ($discharge->ratingCurve->formula_type ?? 'N/A') . ' (ID: ' . ($discharge->ratingCurve->id ?? 'N/A') . ')',
                     $discharge->calculated_at?->format('Y-m-d H:i:s'),
                     $discharge->created_at?->format('Y-m-d H:i:s'),
                     $discharge->updated_at?->format('Y-m-d H:i:s'),

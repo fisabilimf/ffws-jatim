@@ -49,6 +49,14 @@ class MasModel extends Model
     }
 
     /**
+     * Get the sensors for the model.
+     */
+    public function sensors(): HasMany
+    {
+        return $this->hasMany(MasSensor::class, 'mas_model_id');
+    }
+
+    /**
      * Scope a query to only include active models.
      */
     public function scopeActive($query)

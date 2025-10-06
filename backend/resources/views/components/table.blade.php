@@ -10,17 +10,36 @@
     'searchable' => false,
     'searchQuery' => '',
     'searchPlaceholder' => 'Cari...',
-    'class' => ''
+    'class' => '',
+    'config' => null,
+    'data' => null
 ])
 
 @php
+    // Handle backward compatibility with @include syntax
+    if (isset($config) && $config) {
+        $title = $title ?? $config['title'] ?? null;
+        $headers = !empty($headers) ? $headers : ($config['headers'] ?? []);
+        $searchable = $searchable || (isset($config['searchable']) ? $config['searchable'] : false);
+    }
+    
+    // Handle backward compatibility with data parameter
+    if (isset($data) && $data) {
+        $rows = !empty($rows) ? $rows : $data;
+    }
+    
+    // Ensure $rows is not null
+    $rows = $rows ?? [];
+    
     // Auto detect if rows is a paginator instance
-    $isPaginated = $rows instanceof \Illuminate\Pagination\LengthAwarePaginator || 
+    $isPaginated = (is_object($rows) && (
+                   $rows instanceof \Illuminate\Pagination\LengthAwarePaginator || 
                    $rows instanceof \Illuminate\Pagination\Paginator ||
-                   method_exists($rows, 'hasPages');
+                   method_exists($rows, 'hasPages')));
     
     // Extract data from paginator
     $tableRows = $isPaginated ? $rows->items() : $rows;
+    $tableRows = $tableRows ?? [];
 @endphp
 
 <div class="card-dark shadow-sm rounded-lg {{ $class }}">
@@ -163,11 +182,66 @@
                                                 {{ $statusLabel }}
                                             </span>
                                             @break
+                                        @case('forecasting_status')
+                                            @php
+                                                $forecastingStatusValue = is_array($row) ? $row[$header['key']] : $row->{$header['key']};
+                                                $forecastingStatusClasses = [
+                                                    'stopped' => 'bg-gray-100 text-gray-800',
+                                                    'running' => 'bg-green-100 text-green-800',
+                                                    'paused' => 'bg-yellow-100 text-yellow-800'
+                                                ];
+                                                $forecastingStatusClass = $forecastingStatusClasses[$forecastingStatusValue ?? 'stopped'] ?? 'bg-gray-100 text-gray-800';
+                                                
+                                                $forecastingStatusLabels = [
+                                                    'stopped' => 'Berhenti',
+                                                    'running' => 'Berjalan',
+                                                    'paused' => 'Dijeda'
+                                                ];
+                                                $forecastingStatusLabel = $forecastingStatusLabels[$forecastingStatusValue] ?? ucfirst($forecastingStatusValue ?? 'Unknown');
+                                            @endphp
+                                            <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full {{ $forecastingStatusClass }}">
+                                                {{ $forecastingStatusLabel }}
+                                            </span>
+                                            @break
                                         @case('actions')
                                             <div class="flex items-center space-x-2">
                                                 @php
                                                     // Check for both 'actions' and 'formatted_actions' properties
                                                     $actions = $row->actions ?? $row->formatted_actions ?? [];
+                                                    
+                                                    // Handle config-based actions (backward compatibility)
+                                                    if (empty($actions) && isset($config) && isset($config['actions'])) {
+                                                        $actions = [];
+                                                        foreach ($config['actions'] as $configAction) {
+                                                            $actionUrl = '#';
+                                                            if (isset($configAction['route'])) {
+                                                                $routeName = $configAction['route'];
+                                                                $routeParams = [];
+                                                                
+                                                                // Get the model's primary key (usually 'id')
+                                                                $modelKey = is_object($row) ? $row->id : (isset($row['id']) ? $row['id'] : null);
+                                                                if ($modelKey) {
+                                                                    $routeParams[] = $modelKey;
+                                                                }
+                                                                
+                                                                try {
+                                                                    $actionUrl = route($routeName, $routeParams);
+                                                                } catch (Exception $e) {
+                                                                    $actionUrl = '#';
+                                                                }
+                                                            }
+                                                            
+                                                            $actions[] = [
+                                                                'type' => $configAction['type'] ?? 'button',
+                                                                'label' => $configAction['label'] ?? 'Action',
+                                                                'url' => $actionUrl,
+                                                                'method' => $configAction['method'] ?? 'GET',
+                                                                'confirm' => $configAction['confirm'] ?? null,
+                                                                'class' => $configAction['class'] ?? '',
+                                                                'icon' => $configAction['icon'] ?? null
+                                                            ];
+                                                        }
+                                                    }
                                                 @endphp
                                                 @if(!empty($actions))
                                                     @foreach($actions as $action)

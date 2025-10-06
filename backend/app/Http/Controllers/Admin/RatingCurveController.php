@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\RatingCurve;
 use App\Models\MasSensor;
+use App\Models\SensorValue;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -17,7 +18,7 @@ class RatingCurveController extends Controller
      */
     public function index(Request $request): View
     {
-        $query = RatingCurve::with(['sensor']);
+        $query = RatingCurve::with(['sensorValue']);
 
         // Search functionality
         if ($request->filled('search')) {
@@ -25,8 +26,10 @@ class RatingCurveController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('mas_sensor_code', 'like', "%{$search}%")
                   ->orWhere('formula_type', 'like', "%{$search}%")
-                  ->orWhereHas('sensor', function ($q) use ($search) {
-                      $q->where('sensor_name', 'like', "%{$search}%");
+                  ->orWhereIn('mas_sensor_code', function ($subQuery) use ($search) {
+                      $subQuery->select('mas_sensor_code')
+                               ->from('sensor_values')
+                               ->where('sensor_name', 'like', "%{$search}%");
                   });
             });
         }
@@ -46,9 +49,12 @@ class RatingCurveController extends Controller
                              ->withQueryString();
 
         $formulaTypes = $this->getFormulaTypes();
-        $sensors = MasSensor::where('is_active', true)
-                           ->orderBy('sensor_name')
-                           ->get();
+        $sensors = SensorValue::select('mas_sensor_code', 'sensor_name')
+                             ->distinct()
+                             ->whereNotNull('sensor_name')
+                             ->where('sensor_name', '!=', '')
+                             ->orderBy('sensor_name')
+                             ->get();
 
         return view('admin.rating_curves.index', compact('ratingCurves', 'formulaTypes', 'sensors'));
     }
@@ -58,9 +64,12 @@ class RatingCurveController extends Controller
      */
     public function create(): View
     {
-        $sensors = MasSensor::where('is_active', true)
-                           ->orderBy('sensor_name')
-                           ->get();
+        $sensors = SensorValue::select('mas_sensor_code', 'sensor_name')
+                             ->distinct()
+                             ->whereNotNull('sensor_name')
+                             ->where('sensor_name', '!=', '')
+                             ->orderBy('sensor_name')
+                             ->get();
         
         $formulaTypes = $this->getFormulaTypes();
 
@@ -73,7 +82,7 @@ class RatingCurveController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'mas_sensor_code' => 'required|exists:mas_sensors,sensor_code',
+            'mas_sensor_code' => 'required|exists:sensor_values,mas_sensor_code',
             'formula_type' => 'required|in:power,polynomial,exponential,linear',
             'a' => 'required|numeric',
             'b' => 'nullable|numeric',
@@ -92,7 +101,7 @@ class RatingCurveController extends Controller
      */
     public function show(RatingCurve $ratingCurve): View
     {
-        $ratingCurve->load(['sensor', 'calculatedDischarges', 'predictedCalculatedDischarges']);
+        $ratingCurve->load(['sensorValue', 'calculatedDischarges', 'predictedCalculatedDischarges']);
         
         return view('admin.rating_curves.show', compact('ratingCurve'));
     }
@@ -102,9 +111,12 @@ class RatingCurveController extends Controller
      */
     public function edit(RatingCurve $ratingCurve): View
     {
-        $sensors = MasSensor::where('is_active', true)
-                           ->orderBy('sensor_name')
-                           ->get();
+        $sensors = SensorValue::select('mas_sensor_code', 'sensor_name')
+                             ->distinct()
+                             ->whereNotNull('sensor_name')
+                             ->where('sensor_name', '!=', '')
+                             ->orderBy('sensor_name')
+                             ->get();
         
         $formulaTypes = $this->getFormulaTypes();
 
@@ -117,7 +129,7 @@ class RatingCurveController extends Controller
     public function update(Request $request, RatingCurve $ratingCurve): RedirectResponse
     {
         $validated = $request->validate([
-            'mas_sensor_code' => 'required|exists:mas_sensors,sensor_code',
+            'mas_sensor_code' => 'required|exists:sensor_values,mas_sensor_code',
             'formula_type' => 'required|in:power,polynomial,exponential,linear',
             'a' => 'required|numeric',
             'b' => 'nullable|numeric',

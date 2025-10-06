@@ -4,139 +4,146 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\MasUpt;
-use App\Models\MasRiverBasin;
-use App\Models\MasCity;
 use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class MasUptController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(Request $request): View
+    public function index(Request $request)
     {
-        $query = MasUpt::with(['riverBasin', 'city']);
+        $query = MasUpt::query();
 
-        // Search functionality
-        if ($request->filled('search')) {
-            $search = $request->get('search');
+        if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('upts_name', 'like', "%{$search}%")
-                  ->orWhere('upts_code', 'like', "%{$search}%")
-                  ->orWhereHas('riverBasin', function ($q) use ($search) {
-                      $q->where('river_basin_name', 'like', "%{$search}%");
-                  })
-                  ->orWhereHas('city', function ($q) use ($search) {
-                      $q->where('cities_name', 'like', "%{$search}%");
-                  });
+                  ->orWhere('upts_code', 'like', "%{$search}%");
             });
         }
 
-        // Filter by river basin
-        if ($request->filled('river_basin_code')) {
-            $query->where('river_basin_code', $request->get('river_basin_code'));
-        }
-
-        // Filter by city
-        if ($request->filled('cities_code')) {
-            $query->where('cities_code', $request->get('cities_code'));
-        }
-
-        $upts = $query->orderBy('upts_name')
-                     ->paginate(15)
-                     ->withQueryString();
-
-        // Get filter options
-        $riverBasins = MasRiverBasin::orderBy('river_basin_name')->get();
-        $cities = MasCity::orderBy('cities_name')->get();
-
-        return view('admin.mas_upts.index', compact('upts', 'riverBasins', 'cities'));
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(): View
-    {
-        $riverBasins = MasRiverBasin::orderBy('river_basin_name')->get();
-        $cities = MasCity::orderBy('cities_name')->get();
+        $upts = $query->orderBy('upts_name')->paginate(10)->withQueryString();
         
-        return view('admin.mas_upts.create', compact('riverBasins', 'cities'));
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'upts_code' => 'required|string|max:255|unique:mas_upts,upts_code',
-            'upts_name' => 'required|string|max:255',
-            'river_basin_code' => 'required|string|exists:mas_river_basins,river_basins_code',
-            'cities_code' => 'required|string|exists:mas_cities,cities_code',
-        ]);
-
-        MasUpt::create($validated);
-
-        return redirect()->route('admin.mas-upts.index')
-                        ->with('success', 'UPT created successfully.');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(MasUpt $masUpt): View
-    {
-        $masUpt->load(['riverBasin', 'city', 'uptds']);
+        // Prepare data for table component
+        $tableHeaders = [
+            ['key' => 'id', 'label' => 'ID', 'sortable' => true],
+            ['key' => 'upts_name', 'label' => 'Nama UPT', 'sortable' => true],
+            ['key' => 'upts_code', 'label' => 'Kode UPT', 'sortable' => true],
+            ['key' => 'actions', 'label' => 'Aksi', 'format' => 'actions', 'sortable' => false]
+        ];
         
-        return view('admin.mas_upts.show', compact('masUpt'));
-    }
+        // Transform UPTs data for table
+        $upts->getCollection()->transform(function ($upt) {
+            $detailData = [
+                'id' => $upt->id,
+                'upts_name' => addslashes($upt->upts_name),
+                'upts_code' => addslashes($upt->upts_code ?? '')
+            ];
+            $detailJson = json_encode($detailData);
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(MasUpt $masUpt): View
-    {
-        $riverBasins = MasRiverBasin::orderBy('river_basin_name')->get();
-        $cities = MasCity::orderBy('cities_name')->get();
+            $upt->actions = [
+                [
+                    'label' => 'Edit',
+                    'title' => 'Edit UPT',
+                    'url' => '#',
+                    'onclick' => "window.dispatchEvent(new CustomEvent('open-edit-upt', { detail: {$detailJson} }))",
+                    'icon' => 'pen',
+                    'color' => 'blue'
+                ],
+                [
+                    'label' => 'Hapus',
+                    'title' => 'Hapus UPT',
+                    'url' => route('admin.mas-upts.destroy', $upt->id),
+                    'color' => 'red',
+                    'method' => 'DELETE',
+                    'icon' => 'trash',
+                    'confirm' => 'Apakah Anda yakin ingin menghapus UPT ini?'
+                ]
+            ];
+            
+            return $upt;
+        });
         
-        return view('admin.mas_upts.edit', compact('masUpt', 'riverBasins', 'cities'));
+        return view('admin.mas_upts.index', compact('upts', 'tableHeaders'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, MasUpt $masUpt): RedirectResponse
+    public function store(Request $request)
     {
-        $validated = $request->validate([
-            'upts_code' => 'required|string|max:255|unique:mas_upts,upts_code,' . $masUpt->id,
-            'upts_name' => 'required|string|max:255',
-            'river_basin_code' => 'required|string|exists:mas_river_basins,river_basins_code',
-            'cities_code' => 'required|string|exists:mas_cities,cities_code',
-        ]);
+        try {
+            $validated = $request->validate([
+                'upts_name' => 'required|string|max:255|unique:mas_upts,upts_name',
+                'upts_code' => 'required|string|max:50|unique:mas_upts,upts_code',
+                'upts_address' => 'nullable|string|max:500'
+            ]);
 
-        $masUpt->update($validated);
+            $upt = MasUpt::create($validated);
 
-        return redirect()->route('admin.mas-upts.index')
-                        ->with('success', 'UPT updated successfully.');
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(MasUpt $masUpt): RedirectResponse
-    {
-        // Check if UPT has related UPTDs
-        if ($masUpt->uptds()->count() > 0) {
             return redirect()->route('admin.mas-upts.index')
-                           ->with('error', 'Cannot delete UPT because it has related UPTDs.');
+                ->with('success', "UPT '{$upt->upts_name}' berhasil ditambahkan.");
+                
+        } catch (\Exception $e) {
+            Log::error('Error creating UPT: ' . $e->getMessage(), [
+                'request_data' => $request->all(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->route('admin.mas-upts.index')
+                ->with('error', 'Terjadi kesalahan saat menambahkan UPT. Silakan coba lagi.');
         }
+    }
 
-        $masUpt->delete();
+    public function update(Request $request, MasUpt $masUpt)
+    {
+        try {
+            $validated = $request->validate([
+                'upts_name' => 'required|string|max:255|unique:mas_upts,upts_name,' . $masUpt->id,
+                'upts_code' => 'required|string|max:50|unique:mas_upts,upts_code,' . $masUpt->id,
+                'upts_address' => 'nullable|string|max:500'
+            ]);
 
-        return redirect()->route('admin.mas-upts.index')
-                        ->with('success', 'UPT deleted successfully.');
+            $masUpt->update($validated);
+
+            return redirect()->route('admin.mas-upts.index')
+                ->with('success', "UPT '{$masUpt->upts_name}' berhasil diperbarui.");
+                
+        } catch (\Exception $e) {
+            Log::error('Error updating UPT: ' . $e->getMessage(), [
+                'upt_id' => $masUpt->id,
+                'request_data' => $request->all(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->route('admin.mas-upts.index')
+                ->with('error', 'Terjadi kesalahan saat memperbarui UPT. Silakan coba lagi.');
+        }
+    }
+
+    public function destroy(MasUpt $masUpt)
+    {
+        try {
+            DB::beginTransaction();
+
+            $uptName = $masUpt->upts_name;
+            $masUpt->delete();
+
+            DB::commit();
+
+            return redirect()->route('admin.mas-upts.index')
+                ->with('success', "UPT '{$uptName}' berhasil dihapus.");
+                
+        } catch (\Exception $e) {
+            DB::rollback();
+            
+            Log::error('Error deleting UPT: ' . $e->getMessage(), [
+                'upt_id' => $masUpt->id,
+                'upt_name' => $masUpt->upts_name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->route('admin.mas-upts.index')
+                ->with('error', 'UPT tidak dapat dihapus karena masih memiliki data terkait atau terjadi kesalahan sistem.');
+        }
     }
 }

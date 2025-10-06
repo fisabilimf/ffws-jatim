@@ -36,7 +36,7 @@ class MasDeviceController extends Controller
     {
         try {
             $device = MasDevice::select('name', 'code', 'latitude', 'longitude', 'elevation_m', 'status', 'mas_river_basin_id')
-                ->with('riverBasin:id,name')
+                ->with('riverBasin:id,river_basins_name')
                 ->findOrFail($id);
 
             // Format data untuk response
@@ -48,7 +48,7 @@ class MasDeviceController extends Controller
                 'elevation_m' => $device->elevation_m ? number_format($device->elevation_m, 2) : '-',
                 'status' => $device->status,
                 'mas_river_basin_id' => $device->mas_river_basin_id,
-                'river_basin_name' => $device->riverBasin->name ?? '-'
+                'river_basin_name' => $device->riverBasin->river_basins_name ?? '-'
             ];
             
             return $this->successResponse($formattedDevice, 'Device retrieved successfully');

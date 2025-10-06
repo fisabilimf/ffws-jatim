@@ -39,7 +39,7 @@ class DeviceValue extends Model
      */
     public function device(): BelongsTo
     {
-        return $this->belongsTo(MasDevice::class, 'mas_device_code', 'device_code');
+        return $this->belongsTo(MasDevice::class, 'mas_device_code', 'code');
     }
 
     /**

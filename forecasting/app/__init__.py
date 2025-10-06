@@ -2,6 +2,7 @@ from flask import Flask
 from .config import Settings
 from .db import init_engine, init_session
 from .routes import bp as api_bp
+from .enhanced_routes import enhanced_bp
 
 def create_app() -> Flask:
     settings = Settings()
@@ -15,6 +16,7 @@ def create_app() -> Flask:
 
     # Blueprints
     app.register_blueprint(api_bp, url_prefix="/api")
+    app.register_blueprint(enhanced_bp)
 
     @app.get("/health")
     def health():

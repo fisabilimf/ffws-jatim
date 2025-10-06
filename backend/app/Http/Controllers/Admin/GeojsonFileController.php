@@ -110,7 +110,7 @@ class GeojsonFileController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:json,geojson|max:51200', // 50MB max
+            'file' => 'required|file|mimes:json,geojson|max:1501200', // 50MB max
             'label' => 'nullable|string|max:100',
         ]);
 

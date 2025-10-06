@@ -36,11 +36,11 @@ class ExternalApiData extends Model
     ];
 
     protected $casts = [
-        'longitude' => 'decimal:8',
-        'latitude' => 'decimal:8',
+        'longitude' => 'decimal:8',  // matches decimal(11,8) in SQL dump
+        'latitude' => 'decimal:8',   // matches decimal(10,8) in SQL dump
         'tanggal' => 'date',
         'jam' => 'integer',
-        'value' => 'decimal:6',
+        'value' => 'decimal:3',      // matches decimal(8,3) in SQL dump
         'raw_data' => 'json',
         'created_at_source' => 'datetime',
         'updated_at_source' => 'datetime',

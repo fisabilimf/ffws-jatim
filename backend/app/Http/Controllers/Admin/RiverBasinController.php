@@ -16,16 +16,16 @@ class RiverBasinController extends Controller
 
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
+                $q->where('river_basins_name', 'like', "%{$search}%")
                   ->orWhere('code', 'like', "%{$search}%");
             });
         }
 
-        $riverBasins = $query->orderBy('name')->paginate(10)->withQueryString();
+        $riverBasins = $query->orderBy('river_basins_name')->paginate(10)->withQueryString();
 
         $tableHeaders = [
             ['key' => 'id', 'label' => 'ID', 'sortable' => true],
-            ['key' => 'name', 'label' => 'Nama Aliran Sungai', 'sortable' => true],
+            ['key' => 'river_basins_name', 'label' => 'Nama Aliran Sungai', 'sortable' => true],
             ['key' => 'code', 'label' => 'Kode', 'sortable' => true],
             ['key' => 'created_at', 'label' => 'Dibuat', 'sortable' => true, 'format' => 'date'],
             ['key' => 'actions', 'label' => 'Aksi', 'sortable' => false, 'format' => 'actions'],
@@ -35,7 +35,7 @@ class RiverBasinController extends Controller
         $riverBasins->getCollection()->transform(function ($rb) {
             $detailData = [
                 'id' => $rb->id,
-                'name' => addslashes($rb->name),
+                'name' => addslashes($rb->river_basins_name),
                 'code' => addslashes($rb->code),
             ];
             $detailJson = json_encode($detailData);
@@ -68,13 +68,13 @@ class RiverBasinController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:mas_river_basins,name'],
+            'river_basins_name' => ['required', 'string', 'max:255', 'unique:mas_river_basins,river_basins_name'],
             'code' => ['required', 'string', 'max:255', 'unique:mas_river_basins,code'],
         ], [
-            'name.required' => 'Nama DAS wajib diisi.',
-            'name.string' => 'Nama DAS harus berupa teks.',
-            'name.max' => 'Nama DAS maksimal 255 karakter.',
-            'name.unique' => 'Nama DAS sudah digunakan. Silakan gunakan nama yang berbeda.',
+            'river_basins_name.required' => 'Nama DAS wajib diisi.',
+            'river_basins_name.string' => 'Nama DAS harus berupa teks.',
+            'river_basins_name.max' => 'Nama DAS maksimal 255 karakter.',
+            'river_basins_name.unique' => 'Nama DAS sudah digunakan. Silakan gunakan nama yang berbeda.',
             'code.required' => 'Kode DAS wajib diisi.',
             'code.string' => 'Kode DAS harus berupa teks.',
             'code.max' => 'Kode DAS maksimal 255 karakter.',
@@ -95,13 +95,13 @@ class RiverBasinController extends Controller
     public function update(Request $request, MasRiverBasin $river_basin): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:mas_river_basins,name,' . $river_basin->id],
+            'river_basins_name' => ['required', 'string', 'max:255', 'unique:mas_river_basins,river_basins_name,' . $river_basin->id],
             'code' => ['required', 'string', 'max:255', 'unique:mas_river_basins,code,' . $river_basin->id],
         ], [
-            'name.required' => 'Nama DAS wajib diisi.',
-            'name.string' => 'Nama DAS harus berupa teks.',
-            'name.max' => 'Nama DAS maksimal 255 karakter.',
-            'name.unique' => 'Nama DAS sudah digunakan. Silakan gunakan nama yang berbeda.',
+            'river_basins_name.required' => 'Nama DAS wajib diisi.',
+            'river_basins_name.string' => 'Nama DAS harus berupa teks.',
+            'river_basins_name.max' => 'Nama DAS maksimal 255 karakter.',
+            'river_basins_name.unique' => 'Nama DAS sudah digunakan. Silakan gunakan nama yang berbeda.',
             'code.required' => 'Kode DAS wajib diisi.',
             'code.string' => 'Kode DAS harus berupa teks.',
             'code.max' => 'Kode DAS maksimal 255 karakter.',

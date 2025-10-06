@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\MasScaler;
 use App\Models\MasModel;
 use App\Models\MasSensor;
+use App\Models\SensorValue;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -66,8 +67,10 @@ class MasScalerController extends Controller
                          ->orderBy('model_name')
                          ->get();
         
-        $sensors = MasSensor::where('is_active', true)
-                           ->orderBy('sensor_name')
+        $sensors = MasSensor::leftJoin('sensor_values', 'mas_sensors.sensor_code', '=', 'sensor_values.mas_sensor_code')
+                           ->where('mas_sensors.is_active', true)
+                           ->select('mas_sensors.id', 'mas_sensors.sensor_code', 'sensor_values.sensor_name')
+                           ->orderBy('sensor_values.sensor_name')
                            ->get();
 
         $techniques = MasScaler::getTechniqueOptions();
@@ -134,8 +137,10 @@ class MasScalerController extends Controller
                          ->orderBy('model_name')
                          ->get();
         
-        $sensors = MasSensor::where('is_active', true)
-                           ->orderBy('sensor_name')
+        $sensors = MasSensor::leftJoin('sensor_values', 'mas_sensors.sensor_code', '=', 'sensor_values.mas_sensor_code')
+                           ->where('mas_sensors.is_active', true)
+                           ->select('mas_sensors.id', 'mas_sensors.sensor_code', 'sensor_values.sensor_name')
+                           ->orderBy('sensor_values.sensor_name')
                            ->get();
 
         $techniques = MasScaler::getTechniqueOptions();

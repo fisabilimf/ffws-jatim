@@ -33,7 +33,7 @@ export const fetchCities = async () => {
  * @returns {Promise<Array>} A promise that resolves to an array of regency objects.
  */
 export const fetchRegencies = async () => {
-    const data = await fetchWithAuth("/regencies");
+    const data = await fetchWithAuth("/public/regencies");
     return data.data;
 };
 
@@ -42,7 +42,7 @@ export const fetchRegencies = async () => {
  * @returns {Promise<Array>} A promise that resolves to an array of village objects.
  */
 export const fetchVillages = async () => {
-    const data = await fetchWithAuth("/villages");
+    const data = await fetchWithAuth("/public/villages");
     return data.data;
 };
 
@@ -60,7 +60,7 @@ export const fetchWatersheds = async () => {
  * @returns {Promise<Array>} A promise that resolves to an array of river basin objects.
  */
 export const fetchRiverBasins = async () => {
-    const data = await fetchWithAuth("/river-basins");
+    const data = await fetchWithAuth("/public/river-basins");
     return data.data;
 };
 
@@ -80,7 +80,7 @@ export const fetchDevices = async () => {
  * @returns {Promise<Array>} A promise that resolves to an array of sensor objects.
  */
 export const fetchSensors = async () => {
-    const data = await fetchWithAuth("/sensors");
+    const data = await fetchWithAuth("/public/sensors");
     return data.data;
 };
 

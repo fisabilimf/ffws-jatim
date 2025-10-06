@@ -16,6 +16,7 @@ class MasUpt extends Model
         'cities_code',
         'upts_name',
         'upts_code',
+        'upts_address',
     ];
 
     /**

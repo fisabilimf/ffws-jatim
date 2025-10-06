@@ -267,6 +267,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         Route::get('/{sensor}/edit', [MasSensorController::class, 'edit'])->name('edit');
         Route::put('/{sensor}', [MasSensorController::class, 'update'])->name('update');
         Route::delete('/{sensor}', [MasSensorController::class, 'destroy'])->name('destroy');
+        
+        // Forecasting control routes
+        Route::post('/{sensor}/start-forecasting', [MasSensorController::class, 'startForecasting'])->name('start-forecasting');
+        Route::post('/{sensor}/pause-forecasting', [MasSensorController::class, 'pauseForecasting'])->name('pause-forecasting');
+        Route::post('/{sensor}/stop-forecasting', [MasSensorController::class, 'stopForecasting'])->name('stop-forecasting');
     });
 
     // Data Master (Models)

@@ -36,6 +36,15 @@
             ],
             [
                 'type' => 'select',
+                'name' => 'forecasting_status',
+                'label' => 'Forecasting Status',
+                'empty_option' => 'Semua Status Forecasting',
+                'options' => collect($forecastingStatusOptions)->map(function($label, $value) {
+                    return ['value' => $value, 'label' => $label];
+                })->values()->toArray()
+            ],
+            [
+                'type' => 'select',
                 'name' => 'per_page',
                 'label' => 'Per Halaman',
                 'options' => [
@@ -53,7 +62,7 @@
         title="Filter & Pencarian Sensor"
         :filters="$filterConfig"
         :action="route('admin.sensors.index')"
-        gridCols="md:grid-cols-4"
+        gridCols="md:grid-cols-5"
     />
 
     <!-- Table Section -->
