@@ -1,39 +1,76 @@
 import React, { useEffect, useState } from "react";
-import AutoSwitchToggle from "@components/common/AutoSwitchToggle";
-import { Sliders, ToggleLeft, ToggleRight, Layers, Keyboard, AlertTriangle } from "lucide-react";
+import { Sliders, ToggleRight, Layers, AlertTriangle } from "lucide-react";
 
-/**
- * FilterPanel
- * A slide-in panel from the right side, similar to StationDetail but right-anchored.
- * Intended to host filter controls like AutoSwitchToggle, checkboxes, etc.
- */
+// A placeholder for the AutoSwitchToggle component to resolve the build error.
+// In a real application, this would likely be in its own file.
+const AutoSwitchToggle = ({ onAutoSwitchToggle }) => {
+  const [isAutoSwitchOn, setIsAutoSwitchOn] = useState(true);
+
+  const handleToggle = () => {
+    const newState = !isAutoSwitchOn;
+    setIsAutoSwitchOn(newState);
+    if (onAutoSwitchToggle) {
+      onAutoSwitchToggle(newState);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+       <div className="flex items-center justify-between">
+        <label htmlFor="auto-switch" className="text-sm font-medium text-gray-700">
+          Auto-Switch Stations
+        </label>
+        <button
+          id="auto-switch"
+          onClick={handleToggle}
+          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+            isAutoSwitchOn ? "bg-blue-600" : "bg-gray-300"
+          }`}
+          type="button"
+          aria-pressed={isAutoSwitchOn}
+        >
+          <span
+            className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+              isAutoSwitchOn ? "translate-x-5" : "translate-x-1"
+            }`}
+          />
+        </button>
+       </div>
+      <p className="text-xs text-gray-500">
+        Automatically cycles through device locations.
+      </p>
+    </div>
+  );
+};
+
+
 const FilterPanel = ({
   isOpen,
-  onOpen, // tambahkan prop baru untuk membuka panel
+  onOpen,
   onClose,
-  title = "Filter",
   subtitle,
   children,
   widthClass = "w-80",
   tickerData,
   handleStationChange,
   currentStationIndex,
-  handleAutoSwitchToggle
+  handleAutoSwitchToggle,
+  onLayerToggle,
+  activeLayers = {}
 }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [activeTab, setActiveTab] = useState("controls");
-  const [layersState, setLayersState] = useState([
-    { id: "stations", name: "Stasiun Monitoring", color: "#3B82F6", enabled: false},
-    { id: "rivers", name: "Sungai", color: "#06B6D4", enabled: false },
-    { id: "flood-risk", name: "Area Risiko Banjir", color: "#F59E0B", enabled: false },
-    { id: "rainfall", name: "Data Curah Hujan", color: "#10B981", enabled: false },
-    { id: "elevation", name: "Elevasi Terrain", color: "#8B5CF6", enabled: false },
-    { id: "administrative", name: "Batas Administrasi", color: "#6B7280", enabled: false }
-  ]);
+
+  // Data untuk layer peta, termasuk layer "Sungai" yang akan kita gunakan
+  const layersData = [
+    { id: "rivers", name: "Sungai", color: "#06B6D4" },
+    { id: "flood-risk", name: "Area Risiko Banjir", color: "#F59E0B" },
+    { id: "rainfall", name: "Data Curah Hujan", color: "#10B981" },
+    { id: "elevation", name: "Elevasi Terrain", color: "#8B5CF6" },
+    { id: "administrative", name: "Batas Administrasi", color: "#6B7280" }
+  ];
 
   useEffect(() => {
     if (isOpen) {
-      // delay ensures transition applies when mounted
       const t = setTimeout(() => setIsVisible(true), 10);
       return () => clearTimeout(t);
     } else {
@@ -41,27 +78,33 @@ const FilterPanel = ({
     }
   }, [isOpen]);
 
+  // Fungsi ini dipanggil ketika tombol toggle layer di klik
+  // Ia akan memanggil fungsi onLayerToggle yang di-pass dari parent
   const handleLayerToggle = (layerId) => {
-    setLayersState((prev) =>
-      prev.map((layer) =>
-        layer.id === layerId ? { ...layer, enabled: !layer.enabled } : layer
-      )
-    );
+    if (onLayerToggle && typeof onLayerToggle === 'function') {
+      const newStatus = !activeLayers[layerId];
+      onLayerToggle(layerId, newStatus);
+    } else {
+      console.error(`FilterPanel: onLayerToggle is not a function or is undefined`);
+    }
   };
 
-  // Tombol trigger filter
-  // Selalu tampil di kanan atas, di luar panel
-  // Panel tetap muncul seperti biasa
   return (
     <>
       <div className="absolute top-4 right-4 z-[80]">
         <button
-          onClick={onOpen}
-          className="relative inline-flex items-center justify-center w-12 h-12 rounded-full bg-white hover:bg-blue-50 transition-colors"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (onOpen && typeof onOpen === 'function') {
+              onOpen();
+            }
+          }}
+          className="relative inline-flex items-center justify-center w-12 h-12 rounded-full bg-white hover:bg-blue-50 transition-colors shadow-md"
           title="Buka Filter"
           aria-label="Buka Filter"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="relative z-10 w-6 h-6 text-blue-600 mix-blend-normal pointer-events-none">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="relative z-10 w-6 h-6 text-blue-600">
             <path d="M22 3H2l8 9v7l4 2v-9l8-9z"></path>
           </svg>
         </button>
@@ -72,6 +115,7 @@ const FilterPanel = ({
             isVisible ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
           }`}
           style={{ willChange: "transform, opacity" }}
+          onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div className="rounded-tl-lg flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50/50">
@@ -83,17 +127,20 @@ const FilterPanel = ({
               </div>
             </div>
             <button
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 setIsVisible(false);
                 setTimeout(() => {
-                  onClose && onClose();
+                  if (onClose && typeof onClose === 'function') {
+                    onClose();
+                  }
                 }, 300);
               }}
               className="p-1.5 hover:bg-gray-200 rounded-md transition-colors"
               title="Tutup"
               aria-label="Tutup panel filter"
             >
-              <span className="sr-only">Close</span>
               <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -125,7 +172,7 @@ const FilterPanel = ({
                 Map Layers
               </h3>
               <div className="space-y-3">
-                {layersState.map((layer) => (
+                {layersData.map((layer) => (
                   <div
                     key={layer.id}
                     className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
@@ -138,15 +185,20 @@ const FilterPanel = ({
                       <span className="text-sm font-medium text-gray-700">{layer.name}</span>
                     </div>
                     <button
-                      onClick={() => handleLayerToggle(layer.id)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleLayerToggle(layer.id);
+                      }}
                       className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                        layer.enabled ? "bg-blue-600" : "bg-gray-300"
+                        activeLayers[layer.id] ? "bg-blue-600" : "bg-gray-300"
                       }`}
                       type="button"
+                      aria-pressed={!!activeLayers[layer.id]}
                     >
                       <span
                         className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                          layer.enabled ? "translate-x-5" : "translate-x-1"
+                          activeLayers[layer.id] ? "translate-x-5" : "translate-x-1"
                         }`}
                       />
                     </button>
@@ -154,12 +206,12 @@ const FilterPanel = ({
                 ))}
               </div>
 
-              <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200 space-y-1">
+              <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
                 <div className="flex items-start gap-2">
                   <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5" />
                   <div className="text-xs text-amber-800">
                     <div className="font-medium">Layer Control</div>
-                    <div className="mt-1">Beberapa layer mungkin memerlukan waktu loading tambahan.</div>
+                    <div className="mt-1">Klik toggle untuk mengaktifkan atau menonaktifkan layer.</div>
                   </div>
                 </div>
               </div>
@@ -169,18 +221,7 @@ const FilterPanel = ({
           {/* Footer */}
           <div className="rounded-bl-lg border-t border-gray-200 p-4 bg-gray-50/50">
             <div className="flex items-center justify-between text-xs text-gray-500">
-              <div className="flex items-center gap-4">
-                {/* <div className="flex items-center gap-1">
-                  <Keyboard className="w-3 h-3" />
-                  <span>ESC to close</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span>Ctrl+Tab to switch</span>
-                </div> */}
-                <div className="flex items-center gap-1">
-                  <span>Map Layer Control</span>
-                </div>
-              </div>
+              <span>Map Layer Control</span>
               <div className="text-gray-400">Filter v1.0</div>
             </div>
           </div>

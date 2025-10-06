@@ -2,13 +2,13 @@ import React, { useState, useRef, useCallback, memo, lazy, Suspense, useEffect }
 
 // Lazy load komponen yang tidak critical untuk initial load
 const GoogleMapsSearchbar = lazy(() => import("@components/common/GoogleMapsSearchbar"));
-const MapboxMap = lazy(() => import("@/components/MapboxMap"));
+const MapboxMap = lazy(() => import("@/components/devices/MapboxMap"));
 const FloatingLegend = lazy(() => import("@components/common/FloatingLegend"));
 const FloodRunningBar = lazy(() => import("@/components/common/FloodRunningBar"));
 const StationDetail = lazy(() => import("@components/sensors/StationDetail"));
 const DetailPanel = lazy(() => import("@components/sensors/DetailPanel"));
 const AutoSwitchToggle = lazy(() => import("@components/common/AutoSwitchToggle"));
-const FilterPanel = lazy(() => import("@components/common/FilterPanel"));
+const FilterPanel = lazy(() => import("@/components/FilterPanel"));
 const Layout = ({ children }) => {
     const [tickerData, setTickerData] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
