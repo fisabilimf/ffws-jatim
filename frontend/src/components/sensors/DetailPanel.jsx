@@ -491,7 +491,7 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
                                 </div>
                             </div>
                         )}
-
+                        
                         {/* Tab Sensor - Perkembangan Air Sungai Aktual */}
                         {activeTab === "sensor" && (
                             <Suspense fallback={
