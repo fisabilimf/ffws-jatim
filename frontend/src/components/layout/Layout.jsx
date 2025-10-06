@@ -7,7 +7,7 @@ const FloatingLegend = lazy(() => import("@components/common/FloatingLegend"));
 const FloodRunningBar = lazy(() => import("@/components/common/FloodRunningBar"));
 const StationDetail = lazy(() => import("@components/sensors/StationDetail"));
 const DetailPanel = lazy(() => import("@components/sensors/DetailPanel"));
-const AutoSwitchToggle = lazy(() => import("@components/common/AutoSwitchToggle"));
+const AutoSwitchToggle = lazy(() => import("@components/devices/AutoSwitchToggle"));
 const FilterPanel = lazy(() => import("@/components/FilterPanel"));
 const Layout = ({ children }) => {
     const [tickerData, setTickerData] = useState(null);
