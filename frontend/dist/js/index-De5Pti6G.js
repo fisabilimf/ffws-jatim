@@ -1,6 +1,6 @@
 import { j as jsxRuntimeExports, c as ReactDOM, d as React } from './react-vendor-CILUtiK9.js';
 import { A as AppProvider } from './contexts-CRJrMtRL.js';
-import { L as Layout } from './layout-components-DJ5s5Jbu.js';
+import { L as Layout } from './layout-components-CnmXGyIn.js';
 import './mapbox-vendor-C_nsdMnr.js';
 import './vendor-HC16imTC.js';
 import './services-BvR663xD.js';
