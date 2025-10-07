@@ -150,9 +150,7 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
                                     <span className="text-xs font-bold text-gray-900">{formatValue(item.value)}</span>
                                     <span className="text-xs text-gray-500">{item.unit}</span>
                                 </div>
-                                <Suspense fallback={
-                                    <div className="w-12 h-6 bg-gray-200 rounded animate-pulse"></div>
-                                }>
+                                <Suspense fallback={<div className="w-12 h-6 bg-gray-200 rounded animate-pulse"></div>}>
                                     <Chart
                                         data={item.history}
                                         width={48}
@@ -185,9 +183,7 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
                                     <span className="text-xs font-bold text-gray-900">{formatValue(item.value)}</span>
                                     <span className="text-xs text-gray-500">{item.unit}</span>
                                 </div>
-                                <Suspense fallback={
-                                    <div className="w-12 h-6 bg-gray-200 rounded animate-pulse"></div>
-                                }>
+                                <Suspense fallback={<div className="w-12 h-6 bg-gray-200 rounded animate-pulse"></div>}>
                                     <Chart
                                         data={item.history}
                                         width={48}
@@ -215,14 +211,14 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
                     }
                 }
                 
-                /* Right spacing = outer margin (1rem) + FilterButton (48px) + gap (1rem) */
+                /* Responsive right positioning based on FilterButton size */
                 .flood-running-bar {
-                    right: calc(1rem + 48px + 1rem);
+                    right: calc(1.5rem + 40px + 2rem); /* Mobile: 1.5rem margin + 40px button + 2rem margin */
                 }
                 
                 @media (min-width: 640px) {
                     .flood-running-bar {
-                        right: calc(1rem + 48px + 1rem);
+                        right: calc(1.5rem + 40px + 2rem); /* Desktop: 1.5rem margin + 40px button + 2rem margin */
                     }
                 }
             `}</style>
