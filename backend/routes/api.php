@@ -4,13 +4,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
-<<<<<<< HEAD
 use App\Http\Controllers\Api\Admin\MasDeviceController;
 use App\Http\Controllers\Api\Admin\MasSensorController;
 use App\Http\Controllers\Api\Admin\RiverBasinController;
-=======
-use App\Http\Controllers\Api\DeviceController;
->>>>>>> 7b2333888e9762563c50562f89445a296288e501
 
 /*
 |--------------------------------------------------------------------------
@@ -31,8 +27,8 @@ Route::prefix('auth')->group(function () {
 
 // Public device routes for map
 Route::prefix('devices')->group(function () {
-    Route::get('/map', [DeviceController::class, 'getDevicesForMap']);
-    Route::get('/{id}', [DeviceController::class, 'show']);
+    Route::get('/map', [MasDeviceController::class, 'getDevicesForMap']);
+    Route::get('/{id}', [MasDeviceController::class, 'show']);
 });
 
 // Test route untuk memastikan API berjalan
@@ -90,7 +86,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('river-basins')->group(function () {
         Route::get('/{id}', [RiverBasinController::class, 'show']);
     });
- 
+
     // GeoJSON files - list and content
     Route::prefix('geojson-files')->group(function () {
         Route::get('/', [\App\Http\Controllers\Api\Admin\GeojsonFileController::class, 'index']);
