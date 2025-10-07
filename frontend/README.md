@@ -78,9 +78,12 @@ zoom: 14            // Map zoom level
 
 ## 📚 **DOCUMENTATION**
 
-- **[AUTOSWITCH_DOCUMENTATION.md](./AUTOSWITCH_DOCUMENTATION.md)** - Complete auto switch documentation
-- **[STATION_DETAIL_TROUBLESHOOTING.md](./STATION_DETAIL_TROUBLESHOOTING.md)** - Troubleshooting guide
-- **[API_INTEGRATION_GUIDE.md](./API_INTEGRATION_GUIDE.md)** - API integration guide
+- **[DOCUMENTATION.md](./DOCUMENTATION.md)** - Complete project documentation
+  - Auto Switch feature guide
+  - API integration guide
+  - Component structure guide
+  - Troubleshooting guide
+  - Performance optimization
 
 ## 🎯 **USAGE**
 
