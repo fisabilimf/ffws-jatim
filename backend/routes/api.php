@@ -4,9 +4,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
+<<<<<<< HEAD
 use App\Http\Controllers\Api\Admin\MasDeviceController;
 use App\Http\Controllers\Api\Admin\MasSensorController;
 use App\Http\Controllers\Api\Admin\RiverBasinController;
+=======
+use App\Http\Controllers\Api\DeviceController;
+>>>>>>> 7b2333888e9762563c50562f89445a296288e501
 
 /*
 |--------------------------------------------------------------------------
@@ -23,6 +27,21 @@ use App\Http\Controllers\Api\Admin\RiverBasinController;
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+});
+
+// Public device routes for map
+Route::prefix('devices')->group(function () {
+    Route::get('/map', [DeviceController::class, 'getDevicesForMap']);
+    Route::get('/{id}', [DeviceController::class, 'show']);
+});
+
+// Test route untuk memastikan API berjalan
+Route::get('/test', function () {
+    return response()->json([
+        'success' => true,
+        'message' => 'API FFWS Jawa Timur is running!',
+        'timestamp' => now()
+    ]);
 });
 
 // Protected routes (authentication required)
