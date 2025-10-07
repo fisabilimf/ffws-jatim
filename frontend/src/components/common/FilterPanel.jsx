@@ -15,7 +15,7 @@ const FilterPanel = ({
   subtitle,
   children,
   widthClass = "w-80",
-  tickerData,
+  devicesData,
   handleStationChange,
   currentStationIndex,
   handleAutoSwitchToggle
@@ -110,10 +110,12 @@ const FilterPanel = ({
               </h3>
               <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
                 <AutoSwitchToggle
-                  tickerData={tickerData}
+                  devices={devicesData} // Using devices from context
                   onStationChange={handleStationChange}
                   currentStationIndex={currentStationIndex}
                   onAutoSwitchToggle={handleAutoSwitchToggle}
+                  interval={8000} // 8 detik untuk memberikan waktu melihat station detail
+                  stopDelay={5000}
                 />
               </div>
             </section>

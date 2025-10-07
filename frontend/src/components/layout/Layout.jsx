@@ -1,22 +1,34 @@
 import React, { useState, useRef, useCallback, memo, lazy, Suspense, useEffect } from "react";
+import { useDevices } from "@/hooks/useAppContext";
+import { useAutoSwitch } from "@/hooks/useAutoSwitch";
 
 // Lazy load komponen yang tidak critical untuk initial load
 const GoogleMapsSearchbar = lazy(() => import("@components/common/GoogleMapsSearchbar"));
 const MapboxMap = lazy(() => import("@/components/MapboxMap"));
 const FloatingLegend = lazy(() => import("@components/common/FloatingLegend"));
 const FloodRunningBar = lazy(() => import("@/components/common/FloodRunningBar"));
-const StationDetail = lazy(() => import("@components/sensors/StationDetail"));
-const DetailPanel = lazy(() => import("@components/sensors/DetailPanel"));
-const AutoSwitchToggle = lazy(() => import("@components/common/AutoSwitchToggle"));
+const StationDetail = lazy(() => import("@components/layout/StationDetail"));
+const DetailPanel = lazy(() => import("@components/layout/DetailPanel"));
 const FilterPanel = lazy(() => import("@components/common/FilterPanel"));
 const Layout = ({ children }) => {
-    const [tickerData, setTickerData] = useState(null);
+    // Get devices data from context
+    const { devices, loading: devicesLoading, error: devicesError, hasDevices } = useDevices();
+    
+    // Debug logging untuk devices dari context
+    console.log('=== LAYOUT DEVICES DEBUG ===');
+    console.log('devices from context:', devices);
+    console.log('devices type:', typeof devices);
+    console.log('devices length:', devices?.length);
+    console.log('devicesLoading:', devicesLoading);
+    console.log('devicesError:', devicesError);
+    console.log('hasDevices:', hasDevices);
+    console.log('=== END LAYOUT DEVICES DEBUG ===');
+    
+    // Local state
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedStation, setSelectedStation] = useState(null);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isDetailPanelOpen, setIsDetailPanelOpen] = useState(false);
-    const [currentStationIndex, setCurrentStationIndex] = useState(0);
-    const [isAutoSwitchOn, setIsAutoSwitchOn] = useState(false);
     const mapRef = useRef(null);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -26,35 +38,100 @@ const Layout = ({ children }) => {
     }, []);
 
     const handleStationSelect = useCallback((station) => {
+        console.log('=== HANDLE STATION SELECT DEBUG ===');
+        console.log('Selected station:', station);
+        console.log('Station ID:', station?.id);
+        console.log('Station name:', station?.name);
+        
         setSelectedStation(station);
         setIsSidebarOpen(true);
+        
+        console.log('selectedStation state set');
+        console.log('isSidebarOpen state set to true');
+        console.log('=== END HANDLE STATION SELECT DEBUG ===');
     }, []);
+
+    // Create a ref to store the current isAutoSwitchOn value
+    const isAutoSwitchOnRef = useRef(false);
+
+    const handleStationChange = useCallback(
+        (device, index) => {
+            const deviceName = device?.name || device?.device_name || device?.station_name;
+            console.log('Layout: Device change requested:', deviceName, 'index:', index);
+            
+            // Validasi input
+            if (!device || index === undefined) {
+                console.warn('Layout: Invalid device or index provided');
+                return;
+            }
+            
+            // Update state dengan debouncing untuk mencegah rapid changes
+            const timeoutId = setTimeout(() => {
+                console.log('Layout: Opening station detail for:', deviceName);
+                // Buka panel detail saat auto switch
+                setSelectedStation(device);
+                setIsSidebarOpen(true);
+                // Tutup detail panel jika auto switch sedang berjalan
+                if (isAutoSwitchOnRef.current) {
+                    setIsDetailPanelOpen(false);
+                }
+            }, 500); // Delay sedikit lebih lama untuk sinkronisasi dengan map animation
+            
+            // Trigger map auto switch (tidak perlu debounce karena ini external call)
+            if (window.mapboxAutoSwitch) {
+                try {
+                    window.mapboxAutoSwitch(device, index);
+                } catch (error) {
+                    console.error('Layout: Error calling mapboxAutoSwitch:', error);
+                }
+            }
+            
+            return () => clearTimeout(timeoutId);
+        },
+        [] // Remove isAutoSwitchOn dependency
+    );
+
+    // Use autoswitch hook
+    const {
+        isPlaying: isAutoSwitchOn,
+        currentIndex: autoSwitchIndex,
+        startAutoSwitch,
+        stopAutoSwitch,
+        togglePlayPause,
+        hasData: autoSwitchHasData,
+        error: autoSwitchError,
+        isLoadingDevices: autoSwitchLoading
+    } = useAutoSwitch({
+        onStationChange: handleStationChange,
+        interval: 8000, // 8 detik untuk memberikan waktu melihat station detail
+        stopDelay: 5000
+    });
+
+    // Update ref when isAutoSwitchOn changes
+    useEffect(() => {
+        isAutoSwitchOnRef.current = isAutoSwitchOn;
+    }, [isAutoSwitchOn]);
 
     const handleAutoSwitchToggle = useCallback((isOn) => {
         console.log('=== LAYOUT: AUTO SWITCH TOGGLE REQUESTED ===');
         console.log('Requested state:', isOn);
         console.log('Current isAutoSwitchOn:', isAutoSwitchOn);
-        console.log('Current tickerData length:', tickerData?.length || 0);
+        console.log('Current devices length:', devices?.length || 0);
         
-        // Debounce untuk mencegah rapid state changes
-        const timeoutId = setTimeout(() => {
-            console.log('Setting isAutoSwitchOn to:', isOn);
-            setIsAutoSwitchOn(isOn);
-            
+        // Use autoswitch hook methods
+        if (isOn) {
+            console.log('Starting auto switch...');
+            startAutoSwitch();
+            // Jika auto switch diaktifkan, tutup detail panel
+            setIsDetailPanelOpen(false);
+        } else {
+            console.log('Stopping auto switch...');
+            stopAutoSwitch();
             // If auto switch is turned off, close sidebar
-            if (!isOn) {
-                console.log('Auto switch OFF - closing sidebar');
-                setIsSidebarOpen(false);
-                setSelectedStation(null);
-            } else {
-                console.log('Auto switch ON - closing detail panel');
-                // Jika auto switch diaktifkan, tutup detail panel
-                setIsDetailPanelOpen(false);
-            }
-        }, 50);
-        
-        return () => clearTimeout(timeoutId);
-    }, [isAutoSwitchOn, tickerData]);
+            setIsSidebarOpen(false);
+            setSelectedStation(null);
+        }
+    }, [isAutoSwitchOn, devices, startAutoSwitch, stopAutoSwitch]);
 
     const handleCloseStationDetail = useCallback(() => {
         setSelectedStation(null);
@@ -88,43 +165,6 @@ const Layout = ({ children }) => {
         setIsSidebarOpen(true);
     }, []);
 
-    const handleStationChange = useCallback(
-        (device, index) => {
-            const deviceName = device?.name || device?.device_name || device?.station_name;
-            console.log('Layout: Device change requested:', deviceName, 'index:', index);
-            
-            // Validasi input
-            if (!device || index === undefined) {
-                console.warn('Layout: Invalid device or index provided');
-                return;
-            }
-            
-            // Update state dengan debouncing untuk mencegah rapid changes
-            const timeoutId = setTimeout(() => {
-                setCurrentStationIndex(index);
-                // Buka panel detail saat auto switch
-                setSelectedStation(device);
-                setIsSidebarOpen(true);
-                // Tutup detail panel jika auto switch sedang berjalan
-                if (isAutoSwitchOn) {
-                    setIsDetailPanelOpen(false);
-                }
-            }, 10);
-            
-            // Trigger map auto switch (tidak perlu debounce karena ini external call)
-            if (window.mapboxAutoSwitch) {
-                try {
-                    window.mapboxAutoSwitch(device, index);
-                } catch (error) {
-                    console.error('Layout: Error calling mapboxAutoSwitch:', error);
-                }
-            }
-            
-            return () => clearTimeout(timeoutId);
-        },
-        [isAutoSwitchOn]
-    );
-
     return (
         <div className="h-screen bg-gray-50 relative overflow-hidden">
             {/* Full Screen Map */}
@@ -136,19 +176,42 @@ const Layout = ({ children }) => {
                         </div>
                     }
                 >
-                    <MapboxMap
-                        ref={mapRef}
-                        tickerData={tickerData}
-                        onStationSelect={handleStationSelect}
-                        onAutoSwitch={handleAutoSwitch}
-                        isAutoSwitchOn={isAutoSwitchOn}
-                        onCloseSidebar={() => {
-                            if (!isAutoSwitchOn) {
-                                setIsSidebarOpen(false);
-                                setSelectedStation(null);
-                            }
-                        }}
-                    />
+                    {devicesLoading ? (
+                        <div className="w-full h-full bg-gray-200 animate-pulse flex items-center justify-center">
+                            <div className="text-center">
+                                <div className="text-lg font-semibold mb-2">Loading Devices...</div>
+                                <div className="text-sm text-gray-600">Fetching station data from API</div>
+                            </div>
+                        </div>
+                    ) : devicesError ? (
+                        <div className="w-full h-full bg-red-100 flex items-center justify-center">
+                            <div className="text-center text-red-600">
+                                <div className="text-lg font-semibold mb-2">Error Loading Devices</div>
+                                <div className="text-sm">{devicesError}</div>
+                            </div>
+                        </div>
+                    ) : !hasDevices ? (
+                        <div className="w-full h-full bg-yellow-100 flex items-center justify-center">
+                            <div className="text-center text-yellow-600">
+                                <div className="text-lg font-semibold mb-2">No Devices Found</div>
+                                <div className="text-sm">No valid devices available for mapping</div>
+                            </div>
+                        </div>
+                    ) : (
+                        <MapboxMap
+                            ref={mapRef}
+                            devicesData={devices}
+                            onStationSelect={handleStationSelect}
+                            onStationChange={handleStationChange}
+                            isAutoSwitchOn={isAutoSwitchOn}
+                            onCloseSidebar={() => {
+                                if (!isAutoSwitchOn) {
+                                    setIsSidebarOpen(false);
+                                    setSelectedStation(null);
+                                }
+                            }}
+                        />
+                    )}
                 </Suspense>
             </div>
 
@@ -161,10 +224,10 @@ const Layout = ({ children }) => {
                 </div>
             </div>
 
+
             {/* Flood Running Bar */}
             <Suspense fallback={<div className="h-16 bg-white/80 animate-pulse"></div>}>
                 <FloodRunningBar
-                    onDataUpdate={setTickerData}
                     onStationSelect={handleStationSelect}
                     isSidebarOpen={isSidebarOpen}
                 />
@@ -188,7 +251,7 @@ const Layout = ({ children }) => {
                 <StationDetail
                     selectedStation={selectedStation}
                     onClose={handleCloseStationDetail}
-                    tickerData={tickerData}
+                    devicesData={devices}
                     isAutoSwitchOn={isAutoSwitchOn}
                     showArrow={true}
                     onArrowToggle={handleToggleDetailPanel}
@@ -217,9 +280,9 @@ const Layout = ({ children }) => {
                     onOpen={() => setIsFilterOpen(true)}
                     onClose={() => setIsFilterOpen(false)}
                     title="Filter"
-                    tickerData={tickerData}
+                    devicesData={devices}
                     handleStationChange={handleStationChange}
-                    currentStationIndex={currentStationIndex}
+                    currentStationIndex={autoSwitchIndex}
                     handleAutoSwitchToggle={handleAutoSwitchToggle}
                 />
             </Suspense>

@@ -1,109 +1,142 @@
-# FFWS JATIM - Flood Forecasting & Weather System
+# 🚀 FFWS JATIM - Frontend Application
 
-Sistem monitoring dan prediksi banjir cerdas untuk wilayah Jawa Timur.
+## 📋 **OVERVIEW**
 
-## 🚀 Fitur Utama
+Aplikasi frontend untuk sistem monitoring banjir Jawa Timur dengan fitur auto switch untuk monitoring stasiun secara otomatis.
 
-- **Monitoring Real-time**: Pemantauan kondisi air sungai dengan update setiap jam
-- **Prediksi Cerdas**: Sistem prediksi banjir menggunakan AI dan machine learning
-- **Visualisasi Data**: Grafik dan chart untuk monitoring level air
-- **Status Monitoring**: Indikator status (Aman, Waspada, Bahaya)
-- **Peta Interaktif**: Mapbox integration dengan marker status real-time
+## 🎯 **FEATURES**
 
-## 🛠️ Teknologi
+- ✅ **Real-time Monitoring** - Data devices real-time dari API
+- ✅ **Auto Switch** - Otomatis beralih antar stasiun monitoring
+- ✅ **Interactive Map** - Mapbox integration dengan markers
+- ✅ **Station Detail** - Detail informasi stasiun monitoring
+- ✅ **Responsive Design** - Mobile-friendly interface
 
-- **Frontend**: React.js + Vite
-- **Styling**: Tailwind CSS
-- **Charts**: Recharts + Custom SVG charts
-- **Maps**: Mapbox GL JS
-- **Spatial Data**: shpjs v6.1.0
-- **Build**: Terser v5.44.0
+## 🏗️ **TECHNOLOGY STACK**
 
-## 📱 Halaman
+- **React 18** - Frontend framework
+- **Vite** - Build tool
+- **Tailwind CSS** - Styling
+- **Mapbox GL JS** - Map integration
+- **Context API** - State management
 
-- **Dashboard** (`/dashboard`): Monitoring real-time dengan grafik prediksi
-- **History** (`/history`): Riwayat data monitoring dengan filter
+## 🚀 **QUICK START**
 
-## 🚀 Instalasi & Menjalankan
-
+### **Installation:**
 ```bash
-# Install dependencies
 npm install
-
-# Development server
-npm run dev
-
-# Build production
-npm run build
-
-# Preview build
-npm run preview
 ```
 
-## 📁 Struktur Project
+### **Development:**
+```bash
+npm run dev
+```
+
+### **Build:**
+```bash
+npm run build
+```
+
+## 📁 **PROJECT STRUCTURE**
 
 ```
 src/
-├── components/             # Komponen UI
-│   ├── common/            # Komponen umum (chart, toggle, legend)
-│   ├── sensors/           # Detail panel, station detail
-│   ├── devices/           # Mapbox map, tooltip
-│   └── layout/            # Layout utama
-├── pages/                 # Halaman aplikasi
-├── hooks/                 # Custom React hooks
-├── contexts/              # React contexts
-├── services/              # API services
-├── utils/                 # Utility functions
-│   └── statusUtils.js     # Status color & text helpers
-├── assets/                # Static assets
-└── main.jsx              # Entry point
+├── components/
+│   ├── common/          # Common components
+│   ├── layout/          # Layout components
+│   ├── sensors/         # Sensor-related components
+│   └── MapboxMap.jsx    # Main map component
+├── contexts/
+│   ├── AppContext.jsx   # App context
+│   └── DevicesContext.jsx # Devices context
+├── hooks/
+│   └── useAutoSwitch.js # Auto switch logic
+├── services/
+│   ├── api.js          # API service
+│   ├── apiClient.js    # API client
+│   └── devices.js      # Devices service
+└── utils/
+    └── statusUtils.js  # Status utilities
 ```
 
-## 🎨 Design System
+## 🔧 **CONFIGURATION**
 
-### Status Colors
-- **Aman**: Green (#10B981)
-- **Waspada**: Yellow (#F59E0B) 
-- **Bahaya**: Red (#EF4444)
+### **API Configuration:**
+```javascript
+// src/services/apiClient.js
+const API_BASE_URL = "https://ffws-backend.rachmanesa.com/api";
+const AUTH_TOKEN = "your-token-here";
+```
 
-### Chart Features
-- **Real-time updates**: Data terupdate setiap jam
-- **Status-based coloring**: Warna otomatis berdasarkan status
-- **Responsive design**: Mobile dan desktop friendly
-- **Mini charts**: Untuk ticker dan running bar
+### **Auto Switch Configuration:**
+```javascript
+// Default settings
+interval: 8000ms    // 8 seconds between switches
+stopDelay: 5000ms   // 5 seconds delay before stop
+zoom: 14            // Map zoom level
+```
 
-## 🔧 Konfigurasi
+## 📚 **DOCUMENTATION**
 
-### Mapbox Setup
-1. Daftar di [Mapbox](https://account.mapbox.com/)
-2. Dapatkan access token
-3. Update token di `src/components/MapboxMap.jsx`
+- **[AUTOSWITCH_DOCUMENTATION.md](./AUTOSWITCH_DOCUMENTATION.md)** - Complete auto switch documentation
+- **[STATION_DETAIL_TROUBLESHOOTING.md](./STATION_DETAIL_TROUBLESHOOTING.md)** - Troubleshooting guide
+- **[API_INTEGRATION_GUIDE.md](./API_INTEGRATION_GUIDE.md)** - API integration guide
 
-### Environment Variables
+## 🎯 **USAGE**
+
+### **Auto Switch:**
+1. Open Filter Panel (click filter button)
+2. Click Auto Switch toggle
+3. Watch automatic station switching
+
+### **Station Detail:**
+1. Click marker on map
+2. Click "Lihat Detail" in tooltip
+3. View station information
+
+## 🔍 **DEBUGGING**
+
+### **Console Logs:**
+- Open browser console (F12)
+- Check debugging logs for troubleshooting
+- Monitor API calls in Network tab
+
+### **Common Issues:**
+- **Station Detail not opening** - Check console logs
+- **Auto Switch not working** - Verify API connection
+- **Map not loading** - Check Mapbox token
+
+## 🚀 **DEPLOYMENT**
+
+### **Build for Production:**
 ```bash
-VITE_API_URL=http://localhost:8000/api
-VITE_APP_NAME=FFWS JATIM
+npm run build
 ```
 
-## 📊 Performance
+### **Deploy:**
+- Copy `dist/` folder to web server
+- Configure web server for SPA routing
+- Set up environment variables
 
-- **Optimized charts**: 10 FPS animation, memoization
-- **Lazy loading**: Komponen non-critical di-load on-demand
-- **Bundle splitting**: Vendor chunks terpisah
-- **Terser minification**: Production build dioptimasi
+## 📊 **PERFORMANCE**
 
-## 🤝 Kontribusi
+- ✅ **Code Splitting** - Lazy loading components
+- ✅ **Bundle Optimization** - Optimized build
+- ✅ **Caching** - API data caching
+- ✅ **Error Handling** - Robust error recovery
 
-1. Fork repository
-2. Buat feature branch
-3. Commit changes
-4. Push ke branch
-5. Buat Pull Request
+## 🤝 **CONTRIBUTING**
 
-## 📄 Lisensi
+1. Fork the repository
+2. Create feature branch
+3. Make changes
+4. Test thoroughly
+5. Submit pull request
 
-ISC License
+## 📄 **LICENSE**
+
+This project is licensed under the MIT License.
 
 ---
 
-**FFWS JATIM** - Melindungi Jawa Timur dari ancaman banjir dengan teknologi cerdas 🚀
+**FFWS JATIM Frontend - Ready for Production! 🚀**

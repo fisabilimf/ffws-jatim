@@ -1,84 +1,63 @@
-import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
-import { fetchDevices } from "@/services/devices";
+import React, { useState, useEffect, lazy, Suspense } from "react";
+import { useDevices } from "@/hooks/useAppContext";
 
 // Lazy load Chart component untuk optimasi bundle
 const Chart = lazy(() => import("@/components/common/Chart"));
 
-const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarOpen = false }) => {
+const FloodRunningBar = ({ onStationSelect, onMapFocus, isSidebarOpen = false }) => {
     const [tickerData, setTickerData] = useState([]);
 
-    const generateDetailedHistory = (currentValue) => {
-        const history = [];
-        let baseValue = currentValue - (Math.random() * 0.5 + 0.2);
-
-        for (let i = 0; i < 20; i++) {
-            const change = (Math.random() - 0.5) * 0.15;
-            baseValue = Math.max(0.5, Math.min(5, baseValue + change));
-            history.push(parseFloat(baseValue.toFixed(2)));
-        }
-        return history;
-    };
+    // Ambil devices dari context dan bangun ticker dari data API saja (tanpa ticker acak)
+    const { devices } = useDevices();
 
     useEffect(() => {
-        const initializeStationData = (devices) => {
-            const initialStations = devices.map((device) => {
-                const initialValue = parseFloat((Math.random() * 4.5 + 0.5).toFixed(2));
+        if (!Array.isArray(devices) || devices.length === 0) {
+            setTickerData([]);
+            return;
+        }
+
+        setTickerData((prev) => {
+            return devices.map((device) => {
+                const id = device.id;
+                const name = device.name || device.device_name || device.station_name || "Unknown";
+                const unit = device.unit || "m";
+                const status = device.status || "unknown";
+                const latitude = device.latitude;
+                const longitude = device.longitude;
+                const coordinates = (latitude && longitude)
+                    ? [parseFloat(longitude), parseFloat(latitude)]
+                    : undefined;
+
+                const prevItem = prev.find((p) => p.id === id);
+                const apiValue = typeof device.value === "number"
+                    ? device.value
+                    : (typeof device.value === "string" && device.value.trim() !== "" && !isNaN(parseFloat(device.value))
+                        ? parseFloat(device.value)
+                        : null);
+
+                const value = apiValue !== null ? apiValue : (prevItem ? prevItem.value : null);
+                const history = value !== null
+                    ? [
+                        ...((prevItem && Array.isArray(prevItem.history)) ? prevItem.history.slice(-19) : []),
+                        value
+                    ]
+                    : ((prevItem && Array.isArray(prevItem.history)) ? prevItem.history : []);
+
                 return {
-                    id: device.id,
-                    name: device.name,
-                    value: initialValue,
-                    unit: "m",
+                    id,
+                    name,
+                    value,
+                    unit,
                     location: device.river_basin ? device.river_basin.name : "Unknown",
-                    coordinates: [parseFloat(device.longitude), parseFloat(device.latitude)],
-                    status: "safe", // Default status
-                    history: generateDetailedHistory(initialValue),
+                    coordinates,
+                    status,
+                    history,
                 };
             });
-            setTickerData(initialStations);
-        };
+        });
+    }, [devices]);
 
-        const loadInitialData = async () => {
-            try {
-                const devicesData = await fetchDevices();
-                if (devicesData && devicesData.length > 0) {
-                    initializeStationData(devicesData);
-                }
-            } catch (error) {
-                console.error("Failed to fetch devices for running bar:", error);
-            }
-        };
-
-        loadInitialData();
-    }, []);
-
-    useEffect(() => {
-        if (tickerData.length === 0) return;
-
-        const updateTickerData = () => {
-            setTickerData((prev) =>
-                prev.map((item) => {
-                    let newValue = Math.max(0.5, Math.min(5, item.value + (Math.random() - 0.5) * 0.2));
-                    const newStatus = "safe"; // Default status
-                    const newHistory = [...item.history.slice(1), newValue];
-                    return {
-                        ...item,
-                        value: newValue,
-                        status: newStatus,
-                        history: newHistory,
-                    };
-                })
-            );
-        };
-
-        const interval = setInterval(updateTickerData, 3000);
-        return () => clearInterval(interval);
-    }, [tickerData]);
-
-    useEffect(() => {
-        if (onDataUpdate && tickerData && tickerData.length > 0) {
-            onDataUpdate(tickerData);
-        }
-    }, [tickerData, onDataUpdate]);
+    // Removed onDataUpdate dependency - no longer needed
 
     const getStatusColor = (status) => {
         switch (status) {
@@ -115,7 +94,7 @@ const FloodRunningBar = ({ onDataUpdate, onStationSelect, onMapFocus, isSidebarO
 
     // Hitung durasi animasi berdasarkan jumlah data
     if (tickerData.length === 0) {
-        return null; // or a loading state
+        return null; // atau tampilkan placeholder jika diperlukan
     }
     const animationDuration = tickerData.length * 4; // 4 detik per item
 

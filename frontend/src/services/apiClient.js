@@ -35,6 +35,19 @@ export const fetchWithAuth = async (endpoint, options = {}) => {
         
         const data = await response.json();
         console.log('API Response data:', data);
+        console.log('API Response data type:', typeof data);
+        console.log('API Response data keys:', Object.keys(data || {}));
+        
+        // Jika response memiliki struktur { data: [...] }, log isinya
+        if (data && data.data) {
+            console.log('API Response data.data:', data.data);
+            console.log('API Response data.data type:', typeof data.data);
+            console.log('API Response data.data length:', data.data?.length);
+            if (Array.isArray(data.data) && data.data.length > 0) {
+                console.log('First device sample:', data.data[0]);
+            }
+        }
+        
         console.log('=== END API CALL ===');
         return data;
     } catch (error) {

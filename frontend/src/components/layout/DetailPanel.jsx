@@ -2,9 +2,9 @@ import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { getStatusText } from "@/utils/statusUtils";
 
 // Lazy load komponen chart yang berat untuk optimasi bundle
-const MonitoringChart = lazy(() => import("@/components/common/MonitoringDualLinet"));
-const TanggulAktual = lazy(() => import("@/components/common/TanggulAktual"));
-const PredictionChart = lazy(() => import("@/components/common/TanggulPrediksi"));
+const MonitoringChart = lazy(() => import("@/components/sensors/RechartsDualLineChart"));
+const TanggulAktual = lazy(() => import("@/components/sensors/TanggulAktual"));
+const PredictionChart = lazy(() => import("@/components/sensors/TanggulPrediksi"));
 
 // Daftar tab konstan agar tidak dibuat ulang setiap render
 const DETAIL_TABS = [

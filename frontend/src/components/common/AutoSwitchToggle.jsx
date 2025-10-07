@@ -1,336 +1,151 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 
 const AutoSwitchToggle = ({
-    tickerData,
+    devices,
     onStationChange,
     currentStationIndex,
     onAutoSwitchToggle,
     interval = 5000,
     stopDelay = 5000,
 }) => {
+    // Simplified state - focus on UI only
     const [isPlaying, setIsPlaying] = useState(false);
-    const [currentIndex, setCurrentIndex] = useState(currentStationIndex ?? 0);
     const [isPendingStop, setIsPendingStop] = useState(false);
     const [isAtMarker, setIsAtMarker] = useState(true);
-    const intervalRef = useRef(null);
-    const stopTimeoutRef = useRef(null);
-    const tickerDataRef = useRef(tickerData);
+    const devicesRef = useRef(devices);
     
-    // Perbarui ref saat tickerData berubah dan urutkan berdasarkan ID
+    // Update ref when devices data changes
     useEffect(() => {
-        const sortedData = tickerData ? [...tickerData].sort((a, b) => a.id - b.id) : [];
-        tickerDataRef.current = sortedData;
-        
-        if (sortedData && sortedData.length > 0) {
-            setCurrentIndex(prev => prev >= sortedData.length ? 0 : prev);
-        }
-    }, [tickerData]);
+        devicesRef.current = devices || [];
+    }, [devices]);
     
-    // Hentikan auto switch jika data kosong
+    // Listen for autoswitch events from useAutoSwitch hook
     useEffect(() => {
-        if (isPlaying && (!tickerData || tickerData.length === 0)) {
-            console.log("Ticker data is empty, stopping auto switch");
-            stopAutoSwitchImmediately();
-        }
-    }, [tickerData, isPlaying]);
-    
-    const tick = useCallback(() => {
-        const currentTickerData = tickerDataRef.current;
-        if (!currentTickerData || currentTickerData.length === 0) {
-            console.warn("Tick called but no ticker data available");
-            return;
-        }
-
-        setIsAtMarker(false);
-
-        setCurrentIndex(prevIndex => {
-            const nextIndex = (prevIndex + 1) % currentTickerData.length;
-            const nextStation = currentTickerData[nextIndex];
-
-            console.log(`Tick: Switching from index ${prevIndex} to ${nextIndex}, station: ${nextStation?.name}`);
-
-            if (typeof window.mapboxAutoSwitch === 'function' && nextStation) {
-                console.log("Auto switching to next station:", nextStation.name);
-                try {
-                    window.mapboxAutoSwitch(nextStation, nextIndex);
-                    
-                    setTimeout(() => {
-                        setIsAtMarker(true);
-                    }, 1000);
-                } catch (error) {
-                    console.error("Error calling mapboxAutoSwitch:", error);
-                    setIsAtMarker(true);
-                }
-            } else {
-                console.warn("mapboxAutoSwitch is not available or station is undefined");
-                setIsAtMarker(true);
-            }
-
-            if (onStationChange) {
-                onStationChange(nextStation, nextIndex);
-            }
-
-            return nextIndex;
-        });
-    }, [onStationChange]);
-
-    // Fungsi untuk menghentikan auto switch segera tanpa delay
-    const stopAutoSwitchImmediately = useCallback(() => {
-        console.log("Stopping auto switch immediately");
-        
-        if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-        }
-        
-        if (stopTimeoutRef.current) {
-            clearTimeout(stopTimeoutRef.current);
-            stopTimeoutRef.current = null;
-        }
-        
-        setIsPlaying(false);
-        setIsPendingStop(false);
-        setIsAtMarker(true);
-        
-        document.dispatchEvent(
-            new CustomEvent("autoSwitchDeactivated", {
-                detail: { active: false },
-            })
-        );
-        
-        if (onAutoSwitchToggle) {
-            onAutoSwitchToggle(false);
-        }
-    }, [onAutoSwitchToggle]);
-
-    useEffect(() => {
-        console.log("AutoSwitchToggle effect running, isPlaying:", isPlaying);
-        
-        if (intervalRef.current) {
-            console.log("Clearing existing interval");
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-        }
-        
-        if (isPlaying) {
-            if (stopTimeoutRef.current) {
-                console.log("Clearing pending stop timeout");
-                clearTimeout(stopTimeoutRef.current);
-                stopTimeoutRef.current = null;
-                setIsPendingStop(false);
-            }
-
-            if (tickerDataRef.current && tickerDataRef.current.length > 0) {
-                const currentData = tickerDataRef.current;
-                const firstStation = currentData[currentIndex];
-                
-                setIsAtMarker(false);
-                
-                if (typeof window.mapboxAutoSwitch === 'function' && firstStation) {
-                    console.log("Initial auto switch to station:", firstStation.name, "at index:", currentIndex);
-                    try {
-                        window.mapboxAutoSwitch(firstStation, currentIndex);
-                        
-                        setTimeout(() => {
-                            setIsAtMarker(true);
-                        }, 1000);
-                    } catch (error) {
-                        console.error("Error on initial switch:", error);
-                        setIsAtMarker(true);
-                    }
-                } else {
-                    console.warn("Cannot perform initial switch: mapboxAutoSwitch not available or no station data");
-                    setIsAtMarker(true);
-                }
-                
-                tick();
-                
-                console.log(`Starting new interval with ${interval}ms delay`);
-                intervalRef.current = setInterval(() => tick(), interval);
-                
-                document.dispatchEvent(
-                    new CustomEvent("autoSwitchActivated", {
-                        detail: { active: true, currentIndex, stationCount: currentData.length },
-                    })
-                );
-            } else {
-                console.warn("Cannot start auto switch: No ticker data available");
-                stopAutoSwitchImmediately();
-            }
-        } else if (!isPendingStop) {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-                intervalRef.current = null;
-                
-                console.log("Auto switch interval cleared due to isPlaying = false");
-                
-                document.dispatchEvent(
-                    new CustomEvent("autoSwitchDeactivated", {
-                        detail: { active: false },
-                    })
-                );
-            }
-        }
-
-        return () => {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-                intervalRef.current = null;
-            }
-            if (stopTimeoutRef.current) {
-                clearTimeout(stopTimeoutRef.current);
-                stopTimeoutRef.current = null;
-            }
-        };
-    }, [isPlaying, isPendingStop, interval, tick, stopAutoSwitchImmediately]);
-
-    const startAutoSwitch = () => {
-        const currentData = tickerDataRef.current;
-        if (!currentData || currentData.length === 0) {
-            console.warn("Cannot start auto switch: No ticker data available");
-            return;
-        }
-        
-        if (stopTimeoutRef.current) {
-            clearTimeout(stopTimeoutRef.current);
-            stopTimeoutRef.current = null;
+        const handleAutoSwitchActivated = (event) => {
+            console.log('AutoSwitchToggle: Auto switch activated event received', event.detail);
+            setIsPlaying(true);
             setIsPendingStop(false);
-        }
-        
-        console.log("Auto switch starting. Available stations:", currentData.length);
-        if (currentData.length > 0) {
-            console.log("Station names:", currentData.map(s => s.name).join(", "));
-        }
-        console.log("Starting with station index:", currentIndex);
-        
-        if (typeof window.mapboxAutoSwitch !== 'function') {
-            console.warn("mapboxAutoSwitch function is not available on window object!");
-            console.log("Window object functions:", Object.keys(window).filter(key => typeof window[key] === 'function'));
-        }
-        
-        setIsPlaying(true);
-    };
-
-    const stopAutoSwitch = () => {
-        if (isPendingStop) {
-            console.log("Already pending stop, ignoring stopAutoSwitch call");
-            return;
-        }
-        
-        console.log("Auto switch will stop in", stopDelay/1000, "seconds");
-        setIsPendingStop(true);
-        
-        if (stopTimeoutRef.current) {
-            clearTimeout(stopTimeoutRef.current);
-        }
-        
-        stopTimeoutRef.current = setTimeout(() => {
-            stopAutoSwitchImmediately();
-        }, stopDelay);
-    };
-
-    const togglePlayPause = () => {
-        console.log("Toggle play/pause called. Current state - isPlaying:", isPlaying, "isPendingStop:", isPendingStop);
-        
-        if (isPendingStop) {
-            if (stopTimeoutRef.current) {
-                clearTimeout(stopTimeoutRef.current);
-                stopTimeoutRef.current = null;
-            }
-            setIsPendingStop(false);
-            console.log("Auto switch stop cancelled, continuing");
-            return;
-        }
-        
-        const newIsPlaying = !isPlaying;
-        console.log("Setting isPlaying to:", newIsPlaying);
-        
-        if (newIsPlaying) {
-            startAutoSwitch();
-        } else {
-            stopAutoSwitchImmediately();
-        }
-        
-        if (onAutoSwitchToggle) {
-            onAutoSwitchToggle(newIsPlaying);
-        }
-    };
-
-    // Sinkronisasi dengan external currentStationIndex
-    useEffect(() => {
-        if (currentStationIndex !== undefined && currentStationIndex !== currentIndex) {
-            console.log("Syncing with external currentStationIndex:", currentStationIndex);
-            setCurrentIndex(currentStationIndex);
+            setIsAtMarker(false);
             
-            if (isPlaying && tickerDataRef.current && tickerDataRef.current.length > 0) {
-                const station = tickerDataRef.current[currentStationIndex];
-                if (station && typeof window.mapboxAutoSwitch === 'function') {
-                    console.log("Auto updating to new index station:", station.name);
-                    
-                    setIsAtMarker(false);
-                    
-                    window.mapboxAutoSwitch(station, currentStationIndex);
-                    
-                    setTimeout(() => {
-                        setIsAtMarker(true);
-                    }, 1000);
-                }
-            }
-        }
-    }, [currentStationIndex]);
-
-    // Event listener
+            // Set marker as ready after animation delay
+            setTimeout(() => {
+                setIsAtMarker(true);
+            }, 1000);
+        };
+        
+        const handleAutoSwitchDeactivated = (event) => {
+            console.log('AutoSwitchToggle: Auto switch deactivated event received', event.detail);
+            setIsPlaying(false);
+            setIsPendingStop(false);
+            setIsAtMarker(true);
+        };
+        
+        const handleAutoSwitchPaused = (event) => {
+            console.log('AutoSwitchToggle: Auto switch paused event received', event.detail);
+            setIsPendingStop(true);
+            setIsAtMarker(true);
+        };
+        
+        const handleAutoSwitchResumed = (event) => {
+            console.log('AutoSwitchToggle: Auto switch resumed event received', event.detail);
+            setIsPendingStop(false);
+            setIsAtMarker(false);
+            
+            // Set marker as ready after animation delay
+            setTimeout(() => {
+                setIsAtMarker(true);
+            }, 1000);
+        };
+        
+        const handleAutoSwitchError = (event) => {
+            console.error('AutoSwitchToggle: Auto switch error event received', event.detail);
+            setIsPlaying(false);
+            setIsPendingStop(false);
+            setIsAtMarker(true);
+        };
+        
+        const handleAutoSwitchSuccess = (event) => {
+            console.log('AutoSwitchToggle: Auto switch success event received', event.detail);
+            setIsAtMarker(false);
+            
+            // Set marker as ready after animation delay
+            setTimeout(() => {
+                setIsAtMarker(true);
+            }, 1000);
+        };
+        
+        // Register event listeners
+        document.addEventListener('autoSwitchActivated', handleAutoSwitchActivated);
+        document.addEventListener('autoSwitchDeactivated', handleAutoSwitchDeactivated);
+        document.addEventListener('autoSwitchPaused', handleAutoSwitchPaused);
+        document.addEventListener('autoSwitchResumed', handleAutoSwitchResumed);
+        document.addEventListener('autoSwitchError', handleAutoSwitchError);
+        document.addEventListener('autoSwitchSuccess', handleAutoSwitchSuccess);
+        
+        return () => {
+            document.removeEventListener('autoSwitchActivated', handleAutoSwitchActivated);
+            document.removeEventListener('autoSwitchDeactivated', handleAutoSwitchDeactivated);
+            document.removeEventListener('autoSwitchPaused', handleAutoSwitchPaused);
+            document.removeEventListener('autoSwitchResumed', handleAutoSwitchResumed);
+            document.removeEventListener('autoSwitchError', handleAutoSwitchError);
+            document.removeEventListener('autoSwitchSuccess', handleAutoSwitchSuccess);
+        };
+    }, []);
+    
+    // Handle user interaction to pause autoswitch
     useEffect(() => {
         const handleUserInteraction = (event) => {
             if (isPlaying && !isPendingStop) {
-                console.log("User interaction detected, starting stop delay:", event.detail);
-                stopAutoSwitch();
+                console.log("AutoSwitchToggle: User interaction detected, pausing auto switch:", event.detail);
+                setIsPendingStop(true);
                 
-                const filterButton = document.querySelector('[aria-label="Buka Filter"]');
-                if (filterButton) {
-                    filterButton.style.backgroundColor = "white";
-                }
+                // Dispatch pause event to useAutoSwitch hook
+                document.dispatchEvent(new CustomEvent('pauseAutoSwitch', {
+                    detail: { reason: 'user_interaction', source: event.detail?.source }
+                }));
+                
+                // Auto resume after delay
+                setTimeout(() => {
+                    if (isPlaying) {
+                        console.log("AutoSwitchToggle: Auto resuming after user interaction");
+                        document.dispatchEvent(new CustomEvent('resumeAutoSwitch', {
+                            detail: { reason: 'auto_resume' }
+                        }));
+                    }
+                }, stopDelay);
             }
         };
 
         document.addEventListener("userInteraction", handleUserInteraction);
         
-        const logAutoSwitchEvent = (event) => {
-            console.log("Auto switch event received:", event.type, event.detail);
-        };
-        
-        const handleMapboxReady = (event) => {
-            console.log("Received mapboxReadyForAutoSwitch event:", event.detail);
-            
-            if (isPlaying && !intervalRef.current && tickerDataRef.current?.length > 0) {
-                console.log("Restarting tick interval after mapbox confirmation");
-                
-                if (intervalRef.current) {
-                    clearInterval(intervalRef.current);
-                    intervalRef.current = null;
-                }
-                
-                setIsAtMarker(false);
-                
-                tick();
-                
-                intervalRef.current = setInterval(() => tick(), interval);
-            }
-        };
-        
-        document.addEventListener("autoSwitchActivated", logAutoSwitchEvent);
-        document.addEventListener("autoSwitchDeactivated", logAutoSwitchEvent);
-        document.addEventListener("mapboxReadyForAutoSwitch", handleMapboxReady);
-
         return () => {
             document.removeEventListener("userInteraction", handleUserInteraction);
-            document.removeEventListener("autoSwitchActivated", logAutoSwitchEvent);
-            document.removeEventListener("autoSwitchDeactivated", logAutoSwitchEvent);
-            document.removeEventListener("mapboxReadyForAutoSwitch", handleMapboxReady);
         };
-    }, [isPlaying, isPendingStop, interval, tick]);
+    }, [isPlaying, isPendingStop, stopDelay]);
 
-    const hasData = tickerData && tickerData.length > 0;
+    const togglePlayPause = () => {
+        console.log("AutoSwitchToggle: Toggle play/pause called. Current state - isPlaying:", isPlaying, "isPendingStop:", isPendingStop);
+        
+        if (isPendingStop) {
+            // Cancel pending stop
+            console.log("AutoSwitchToggle: Cancelling pending stop");
+            setIsPendingStop(false);
+            document.dispatchEvent(new CustomEvent('resumeAutoSwitch', {
+                detail: { reason: 'user_cancel' }
+            }));
+            return;
+        }
+        
+        const newIsPlaying = !isPlaying;
+        console.log("AutoSwitchToggle: Setting isPlaying to:", newIsPlaying);
+        
+        // Call parent callback
+        if (onAutoSwitchToggle) {
+            onAutoSwitchToggle(newIsPlaying);
+        }
+    };
+
+    const hasData = devices && devices.length > 0;
 
     return (
         <div className="flex flex-col sm:flex-row items-center justify-between w-full p-3 bg-white rounded-lg shadow-sm border border-gray-200">
@@ -338,27 +153,30 @@ const AutoSwitchToggle = ({
                 <span className="text-sm font-semibold text-gray-800">Auto Switch</span>
                 
                 <div className="flex items-center gap-2">
-                    {isPlaying && !isPendingStop && (
+                    {isPlaying && (
                         <div className="flex items-center gap-1">
                             <div className={`w-2.5 h-2.5 rounded-full ${isAtMarker ? 'bg-green-500 animate-pulse' : 'bg-yellow-500 animate-ping'}`}></div>
                             <span className={`text-xs font-medium ${isAtMarker ? 'text-green-600' : 'text-yellow-600'}`}>
-                                {isAtMarker ? 'At Marker' : 'Moving...'}
+                                {isAtMarker ? 'Active' : 'Moving...'}
                             </span>
                         </div>
                     )}
-                    {isPendingStop && (
-                        <div className="flex items-center gap-1">
-                            <div className="w-2.5 h-2.5 bg-yellow-500 rounded-full animate-ping"></div>
-                            <span className="text-xs font-medium text-yellow-600">Stopping...</span>
-                        </div>
-                    )}
-                    {!isPlaying && !isPendingStop && (
+                    {!isPlaying && (
                         <div className="flex items-center gap-1">
                             <div className="w-2.5 h-2.5 bg-gray-400 rounded-full"></div>
                             <span className="text-xs font-medium text-gray-500">Inactive</span>
                         </div>
                     )}
                 </div>
+                
+                {/* Device count indicator */}
+                {hasData && (
+                    <div className="flex items-center gap-1">
+                        <span className="text-xs text-gray-500">
+                            {devices.length} devices
+                        </span>
+                    </div>
+                )}
             </div>
 
             <button
@@ -367,8 +185,8 @@ const AutoSwitchToggle = ({
                 className={`relative inline-flex items-center h-7 rounded-full transition-all duration-200 ease-in-out focus:outline-none select-none ${
                     !hasData ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:opacity-90"
                 }`}
-                title={isPendingStop ? "Cancel stop" : isPlaying ? "Stop Auto Switch" : "Start Auto Switch"}
-                aria-label={isPendingStop ? "Cancel auto switch stop" : isPlaying ? "Stop auto switch" : "Start auto switch"}
+                title={isPendingStop ? "Resume Auto Switch" : isPlaying ? "Stop Auto Switch" : "Start Auto Switch"}
+                aria-label={isPendingStop ? "Resume auto switch" : isPlaying ? "Stop auto switch" : "Start auto switch"}
             >
                 <div
                     className={`relative w-12 h-7 rounded-full transition-all duration-200 ease-in-out ${

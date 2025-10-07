@@ -8,3 +8,16 @@ export const useAppContext = () => {
     }
     return context;
 };
+
+// Hook khusus untuk devices (untuk backward compatibility)
+export const useDevices = () => {
+    const { devices, devicesLoading, devicesError, lastFetch, refreshDevices, hasDevices } = useAppContext();
+    return {
+        devices,
+        loading: devicesLoading,
+        error: devicesError,
+        lastFetch,
+        refreshDevices,
+        hasDevices
+    };
+};
