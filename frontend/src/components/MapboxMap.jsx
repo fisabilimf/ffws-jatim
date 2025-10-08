@@ -2,6 +2,17 @@ import React, { useEffect, useRef, useState, lazy, Suspense } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
+// Set Mapbox access token from environment variable
+const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
+if (!mapboxToken) {
+    console.error('❌ VITE_MAPBOX_ACCESS_TOKEN not found in environment variables!');
+    console.error('Please add VITE_MAPBOX_ACCESS_TOKEN to your .env file');
+} else {
+    mapboxgl.accessToken = mapboxToken;
+    console.log('✅ Mapbox token loaded from environment');
+}
+
+
 // Lazy load MapTooltip untuk optimasi bundle
 const MapTooltip = lazy(() => import("./devices/maptooltip"));
 
@@ -401,9 +412,10 @@ const MapboxMap = ({ devicesData, onStationSelect, onMapFocus, onStationChange }
     }, []);
     // Initialize map
     useEffect(() => {
+        // Token sudah diset di bagian atas file dari environment variable
         if (!mapboxgl.accessToken) {
-            mapboxgl.accessToken =
-                "pk.eyJ1IjoiZGl0b2ZhdGFoaWxsYWgxIiwiYSI6ImNtZjNveGloczAwNncya3E1YzdjcTRtM3MifQ.kIf5rscGYOzvvBcZJ41u8g";
+            console.error('Mapbox access token not found! Please check VITE_MAPBOX_ACCESS_TOKEN in .env file');
+            return;
         }
         if (map.current) return;
 

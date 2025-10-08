@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import AutoSwitchToggle from "../devices/AutoSwitchToggle";
+import AutoSwitchToggle from "./AutoSwitchToggle";
 import { Sliders, ToggleLeft, ToggleRight, Layers, Keyboard, AlertTriangle } from "lucide-react";
 
 /**

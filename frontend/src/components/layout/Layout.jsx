@@ -1,14 +1,14 @@
 import React, { useState, useRef, useCallback, memo, lazy, Suspense, useEffect } from "react";
 import { useDevices } from "@/hooks/useAppContext";
 import { useAutoSwitch } from "@/hooks/useAutoSwitch";
-const GoogleMapsSearchbar = lazy(() => import("@components/common/GoogleMapsSearchbar"));
+const GoogleMapsSearchbar = lazy(() => import("@/components/common/GoogleMapsSearchbar"));
 const MapboxMap = lazy(() => import("@/components/MapboxMap"));
-const FloatingLegend = lazy(() => import("@components/common/FloatingLegend"));
+const FloatingLegend = lazy(() => import("@/components/common/FloatingLegend"));
 const FloodRunningBar = lazy(() => import("@/components/common/FloodRunningBar"));
-const StationDetail = lazy(() => import("@components/layout/StationDetail"));
-const DetailPanel = lazy(() => import("@components/layout/DetailPanel"));
-const FilterPanel = lazy(() => import("@components/common/FilterPanel"));
-const AutoSwitchToggle = lazy(() => import("@components/common/AutoSwitchToggle"));
+const StationDetail = lazy(() => import("@/components/layout/StationDetail"));
+const DetailPanel = lazy(() => import("@/components/layout/DetailPanel"));
+const FilterPanel = lazy(() => import("@/components/common/FilterPanel"));
+const AutoSwitchToggle = lazy(() => import("@/components/common/AutoSwitchToggle"));
 const Layout = ({ children }) => {
     // Get devices data from context
     const { devices, loading: devicesLoading, error: devicesError, hasDevices } = useDevices();
@@ -157,12 +157,29 @@ const Layout = ({ children }) => {
         // Bisa dikomunikasikan dengan MapboxMap component
     }, []);
 
-    const handleAutoSwitch = useCallback((station, index) => {
-        setCurrentStationIndex(index);
-        setSelectedStation(station);
-        // Auto open sidebar when auto switching
+    const handleAutoSwitch = useCallback((index) => {
+        // Menggunakan devices dari context
+        if (!devices || !devices.length || index < 0 || index >= devices.length) {
+            console.warn('Layout: Invalid index or no devices available');
+            return;
+        }
+        
+        const device = devices[index];
+        console.log('Layout: Auto switch to device from context:', device?.name, 'index:', index);
+        
+        // Set selected station dari context
+        setSelectedStation(device);
         setIsSidebarOpen(true);
-    }, []);
+        
+        // Trigger map auto switch
+        if (window.mapboxAutoSwitch) {
+            try {
+                window.mapboxAutoSwitch(device, index);
+            } catch (error) {
+                console.error('Layout: Error calling mapboxAutoSwitch:', error);
+            }
+        }
+    }, [devices]);
 
     return (
         <div className="h-screen bg-gray-50 relative overflow-hidden">
@@ -277,15 +294,7 @@ const Layout = ({ children }) => {
                 <FilterPanel
                     isOpen={isFilterOpen}
                     onOpen={() => setIsFilterOpen(true)}
-<<<<<<< HEAD
-                    onClose={() => setIsFilterOpen(false)}
-                    devicesData={devices}
-                    handleStationChange={handleStationChange}
-                    currentStationIndex={autoSwitchIndex}
-                    handleAutoSwitchToggle={handleAutoSwitchToggle}
-=======
                     onClose={() => setIsFilterOpen(false)} // Tambahkan handler untuk menutup panel
->>>>>>> 9f9c665b932e2f075a960cada8468378ee0d7a87
                 />
             </Suspense>
         </div>
