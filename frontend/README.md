@@ -78,12 +78,7 @@ zoom: 14            // Map zoom level
 
 ## 📚 **DOCUMENTATION**
 
-- **[DOCUMENTATION.md](./DOCUMENTATION.md)** - Complete project documentation
-  - Auto Switch feature guide
-  - API integration guide
-  - Component structure guide
-  - Troubleshooting guide
-  - Performance optimization
+- **[DOCUMENTATION.md](./DOCUMENTATION.md)** - Complete documentation (API, Auto Switch, Components, Troubleshooting)
 
 ## 🎯 **USAGE**
 

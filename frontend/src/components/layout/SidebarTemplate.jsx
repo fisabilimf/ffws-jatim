@@ -34,12 +34,12 @@ const SidebarTemplate  = ({
   
   return (
     <div 
-      className={`fixed top-20 left-0 h-[calc(100vh-5rem)] w-96 bg-white shadow-2xl z-[60] transform transition-all duration-300 ease-in-out flex flex-col ${
+      className={`fixed top-20 left-0 h-[calc(100vh-5rem)] w-96 bg-white shadow-2xl z-[60] transform transition-all duration-300 ease-in-out flex flex-col rounded-tr-lg rounded-br-lg ${
         isVisible ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'
       }`}
       style={{ willChange: 'transform, opacity' }}
     >
-      <div className="bg-white p-4 flex-shrink-0">
+      <div className="rounded-tr-lg p-4 border-b border-gray-200 bg-gray-50/50 flex-shrink-0">
         <div className="flex items-center space-x-3">
           <button
             onClick={handleClose}

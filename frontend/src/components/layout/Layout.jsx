@@ -1,8 +1,6 @@
 import React, { useState, useRef, useCallback, memo, lazy, Suspense, useEffect } from "react";
 import { useDevices } from "@/hooks/useAppContext";
 import { useAutoSwitch } from "@/hooks/useAutoSwitch";
-
-// Lazy load komponen yang tidak critical untuk initial load
 const GoogleMapsSearchbar = lazy(() => import("@components/common/GoogleMapsSearchbar"));
 const MapboxMap = lazy(() => import("@/components/MapboxMap"));
 const FloatingLegend = lazy(() => import("@components/common/FloatingLegend"));
@@ -10,6 +8,7 @@ const FloodRunningBar = lazy(() => import("@/components/common/FloodRunningBar")
 const StationDetail = lazy(() => import("@components/layout/StationDetail"));
 const DetailPanel = lazy(() => import("@components/layout/DetailPanel"));
 const FilterPanel = lazy(() => import("@components/common/FilterPanel"));
+const AutoSwitchToggle = lazy(() => import("@components/common/AutoSwitchToggle"));
 const Layout = ({ children }) => {
     // Get devices data from context
     const { devices, loading: devicesLoading, error: devicesError, hasDevices } = useDevices();
@@ -279,7 +278,6 @@ const Layout = ({ children }) => {
                     isOpen={isFilterOpen}
                     onOpen={() => setIsFilterOpen(true)}
                     onClose={() => setIsFilterOpen(false)}
-                    title="Filter"
                     devicesData={devices}
                     handleStationChange={handleStationChange}
                     currentStationIndex={autoSwitchIndex}

@@ -1,5 +1,5 @@
 const API_BASE_URL = "https://ffws-backend.rachmanesa.com/api";
-const AUTH_TOKEN = "6|aESjE6p715Q32zPDSbAUE0Pa42tEYzYgmQtmh2MA223ef02f";
+const AUTH_TOKEN = "10|WwjflubP2UfeV8DKGlfkdGSOx4Gh6fbCV9tW7Vxda1aaf18a";
 
 /**
  * A custom fetch wrapper that adds the authentication token to the request headers.
@@ -15,44 +15,31 @@ export const fetchWithAuth = async (endpoint, options = {}) => {
     };
 
     const fullUrl = `${API_BASE_URL}${endpoint}`;
-    
-    console.log('=== API CALL ===');
-    console.log('URL:', fullUrl);
-    console.log('Headers:', headers);
-    console.log('Options:', options);
+
+    console.log("=== API CALL ===");
+    console.log("URL:", fullUrl);
+    console.log("Headers:", headers);
+    console.log("Options:", options);
 
     try {
         const response = await fetch(fullUrl, { ...options, headers });
-        
-        console.log('Response status:', response.status);
-        console.log('Response ok:', response.ok);
-        
+
+        console.log("Response status:", response.status);
+        console.log("Response ok:", response.ok);
+
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('API Error:', response.status, errorText);
+            console.error("API Error:", response.status, errorText);
             throw new Error(`Network response was not ok: ${response.status} - ${errorText}`);
         }
-        
+
         const data = await response.json();
-        console.log('API Response data:', data);
-        console.log('API Response data type:', typeof data);
-        console.log('API Response data keys:', Object.keys(data || {}));
-        
-        // Jika response memiliki struktur { data: [...] }, log isinya
-        if (data && data.data) {
-            console.log('API Response data.data:', data.data);
-            console.log('API Response data.data type:', typeof data.data);
-            console.log('API Response data.data length:', data.data?.length);
-            if (Array.isArray(data.data) && data.data.length > 0) {
-                console.log('First device sample:', data.data[0]);
-            }
-        }
-        
-        console.log('=== END API CALL ===');
+        console.log("API Response data:", data);
+        console.log("=== END API CALL ===");
         return data;
     } catch (error) {
-        console.error('API Call failed:', error);
-        console.log('=== END API CALL (ERROR) ===');
+        console.error("API Call failed:", error);
+        console.log("=== END API CALL (ERROR) ===");
         throw error;
     }
 };

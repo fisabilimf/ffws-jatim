@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useState, useEffect, useCallback, useRef } from "react";
 import { fetchTestData } from "@/services/api";
 import { fetchDevices } from "@/services/devices";
 
@@ -15,13 +15,24 @@ export const AppProvider = ({ children }) => {
     const [devicesLoading, setDevicesLoading] = useState(true);
     const [devicesError, setDevicesError] = useState(null);
     const [lastFetch, setLastFetch] = useState(null);
+    const isFetchingRef = useRef(false);
+
+    // Konfigurasi auto refresh dari ENV
+    const REFRESH_ENABLED = (import.meta?.env?.VITE_DEVICES_REFRESH_ENABLED ?? "true") === "true";
+    const REFRESH_MS = Number(import.meta?.env?.VITE_DEVICES_REFRESH_MS ?? 30000);
 
     // Load devices function
-    const loadDevices = useCallback(async (retryCount = 0) => {
+    const loadDevices = useCallback(async (retryCount = 0, { isBackground = false } = {}) => {
         const maxRetries = 3;
         
         try {
-            setDevicesLoading(true);
+            // Hindari overlap fetch
+            if (isFetchingRef.current) return;
+            isFetchingRef.current = true;
+
+            if (!isBackground) {
+                setDevicesLoading(true);
+            }
             setDevicesError(null);
             
             console.log('=== APP CONTEXT: FETCHING DEVICES ===');
@@ -123,7 +134,12 @@ export const AppProvider = ({ children }) => {
                 throw new Error('No valid devices found - all devices missing name or coordinates');
             }
             
-            setDevices(validDevices);
+            // Hanya update state jika data berubah untuk mencegah re-render tidak perlu
+            const isSameLength = devices.length === validDevices.length;
+            const sameIds = isSameLength && devices.every((d, i) => d.id === validDevices[i].id);
+            if (!isSameLength || !sameIds) {
+                setDevices(validDevices);
+            }
             setLastFetch(Date.now());
             console.log('Device data stored in context successfully');
             console.log('=== APP CONTEXT: FETCH COMPLETED ===');
@@ -136,7 +152,7 @@ export const AppProvider = ({ children }) => {
                 const retryDelay = (retryCount + 1) * 2000;
                 console.log(`Retrying in ${retryDelay}ms...`);
                 setTimeout(() => {
-                    loadDevices(retryCount + 1);
+                    loadDevices(retryCount + 1, { isBackground });
                 }, retryDelay);
             } else {
                 console.error(`All ${maxRetries + 1} attempts failed`);
@@ -144,12 +160,11 @@ export const AppProvider = ({ children }) => {
             }
             console.error('=== END APP CONTEXT: FETCH ERROR ===');
         } finally {
-            if (retryCount === 0 || retryCount === maxRetries) {
-                setDevicesLoading(false);
-                console.log('Devices loading state set to false');
-            }
+            isFetchingRef.current = false;
+            setDevicesLoading(false);
+            console.log('Devices loading state set to false');
         }
-    }, []);
+    }, [devices.length]);
 
     // Load test data
     useEffect(() => {
@@ -172,18 +187,20 @@ export const AppProvider = ({ children }) => {
 
     // Load devices on mount
     useEffect(() => {
-        loadDevices();
+        loadDevices(0, { isBackground: false });
     }, [loadDevices]);
 
     // Auto refresh devices setiap 30 detik
     useEffect(() => {
+        if (!REFRESH_ENABLED) return;
         const interval = setInterval(() => {
+            if (document.visibilityState !== 'visible') return;
             console.log('Auto refreshing devices data...');
-            loadDevices();
-        }, 30000);
-        
+            loadDevices(0, { isBackground: true });
+        }, REFRESH_MS);
+
         return () => clearInterval(interval);
-    }, [loadDevices]);
+    }, [loadDevices, REFRESH_ENABLED, REFRESH_MS]);
 
     const value = {
         // Test data

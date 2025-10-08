@@ -1,6 +1,6 @@
-  import React, { useEffect, useState } from "react";
-import AutoSwitchToggle from "@components/common/AutoSwitchToggle";
-import { Sliders, ToggleLeft, ToggleRight, Layers, Keyboard, AlertTriangle } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import AutoSwitchToggle from "./AutoSwitchToggle";
+import { Sliders, ToggleRight, Layers, AlertTriangle } from "lucide-react";
 
 /**
  * FilterPanel
@@ -106,7 +106,7 @@ const FilterPanel = ({
             <section className="space-y-3">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                 <ToggleRight className="w-4 h-4 text-blue-600" />
-                Station Auto Switch
+                Device Auto Switch
               </h3>
               <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
                 <AutoSwitchToggle

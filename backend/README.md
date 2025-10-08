@@ -1,61 +1,329 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# FFWS Jawa Timur - Backend API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Backend API untuk sistem Flood Early Warning System (FFWS) Jawa Timur menggunakan Laravel dan Laravel Sanctum untuk authentication.
 
-## About Laravel
+## 🚀 Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- ✅ RESTful API dengan Laravel
+- ✅ Token-based Authentication dengan Laravel Sanctum
+- ✅ **Token Expiration & Auto-Refresh** (NEW!)
+- ✅ User Management
+- ✅ Device Management
+- ✅ Sensor Management
+- ✅ River Basin Management
+- ✅ Comprehensive API Documentation
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 📋 Requirements
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP 8.1 or higher
+- Composer
+- MySQL/PostgreSQL/SQLite
+- Laravel 11.x
 
-## Learning Laravel
+## 🛠️ Installation
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+1. Clone repository
+```bash
+git clone <repository-url>
+cd backend
+```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+2. Install dependencies
+```bash
+composer install
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+3. Copy environment file
+```bash
+cp .env.example .env
+```
 
-## Laravel Sponsors
+4. Generate application key
+```bash
+php artisan key:generate
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+5. Configure database di `.env`
+```env
+DB_CONNECTION=sqlite
+DB_DATABASE=/absolute/path/to/database.sqlite
+```
 
-### Premium Partners
+6. **Configure Token Expiration (NEW!)**
+```env
+# Token expired dalam 60 menit (1 jam) - Recommended
+SANCTUM_EXPIRATION=60
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+# Untuk token unlimited (tidak expired), gunakan:
+# SANCTUM_EXPIRATION=null
+```
 
-## Contributing
+7. Run migrations dan seeders
+```bash
+php artisan migrate --seed
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+8. Start development server
+```bash
+php artisan serve
+```
 
-## Code of Conduct
+API akan berjalan di `http://localhost:8000`
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## 🔐 Authentication & Token Management
 
-## Security Vulnerabilities
+### Token Expiration
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Token API memiliki waktu expiration yang dapat dikonfigurasi:
+- **Default**: 60 menit (1 jam)
+- **Konfigurasi**: Set `SANCTUM_EXPIRATION` di file `.env`
 
-## License
+### Auto Refresh Token
+
+Sistem mendukung **auto-refresh token** untuk seamless user experience:
+- Token dapat di-refresh tanpa perlu login ulang
+- Token lama otomatis di-revoke saat refresh
+- Response authentication mengembalikan `expires_in` dan `expires_at`
+
+### Quick Start
+
+#### Login
+```bash
+curl -X POST http://localhost:8000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "admin@example.com", "password": "password"}'
+```
+
+Response:
+```json
+{
+  "success": true,
+  "data": {
+    "user": {...},
+    "token": "1|abc123...",
+    "token_type": "Bearer",
+    "expires_in": 3600,
+    "expires_at": "2024-01-01T01:00:00+00:00"
+  }
+}
+```
+
+#### Refresh Token
+```bash
+curl -X POST http://localhost:8000/api/auth/refresh \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+Lihat dokumentasi lengkap di [PANDUAN_REFRESH_TOKEN.md](PANDUAN_REFRESH_TOKEN.md)
+
+## 📚 Documentation
+
+- **[API Documentation](API_DOCUMENTATION.md)** - Dokumentasi lengkap semua endpoints
+- **[Panduan Refresh Token](PANDUAN_REFRESH_TOKEN.md)** - 🔄 **Panduan lengkap Auto-Refresh Token** (WAJIB BACA!)
+
+### Key Endpoints
+
+| Endpoint | Method | Description | Auth |
+|----------|--------|-------------|------|
+| `/api/auth/register` | POST | Register user baru | ❌ |
+| `/api/auth/login` | POST | Login user | ❌ |
+| `/api/auth/me` | GET | Get user info | ✅ |
+| `/api/auth/refresh` | POST | Refresh token | ✅ |
+| `/api/auth/logout` | POST | Logout user | ✅ |
+| `/api/users` | GET | Get all users | ✅ |
+| `/api/devices` | GET | Get all devices | ✅ |
+| `/api/sensors` | GET | Get all sensors | ✅ |
+
+## 💻 Frontend Integration
+
+### JavaScript (Fetch API)
+
+```javascript
+// Login
+const login = async (email, password) => {
+    const response = await fetch('http://localhost:8000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+    });
+    const data = await response.json();
+    
+    if (data.success) {
+        localStorage.setItem('token', data.data.token);
+        localStorage.setItem('token_expires_at', data.data.expires_at);
+        return data.data.user;
+    }
+    throw new Error(data.message);
+};
+
+// Auto Refresh Token
+const setupAutoRefresh = () => {
+    setInterval(async () => {
+        const expiresAt = localStorage.getItem('token_expires_at');
+        if (!expiresAt) return;
+        
+        const timeUntilExpiry = new Date(expiresAt).getTime() - Date.now();
+        
+        // Refresh 5 menit sebelum expired
+        if (timeUntilExpiry < 5 * 60 * 1000 && timeUntilExpiry > 0) {
+            await refreshToken();
+        }
+    }, 60000); // Cek setiap 1 menit
+};
+
+setupAutoRefresh();
+```
+
+### Axios with Interceptor
+
+```javascript
+import axios from 'axios';
+
+const api = axios.create({
+    baseURL: 'http://localhost:8000/api',
+    headers: { 'Content-Type': 'application/json' }
+});
+
+// Auto attach token
+api.interceptors.request.use(config => {
+    const token = localStorage.getItem('token');
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+});
+
+// Auto refresh on 401
+api.interceptors.response.use(
+    response => response,
+    async error => {
+        if (error.response?.status === 401 && !error.config._retry) {
+            error.config._retry = true;
+            const { data } = await api.post('/auth/refresh');
+            localStorage.setItem('token', data.data.token);
+            return api(error.config);
+        }
+        return Promise.reject(error);
+    }
+);
+```
+
+Lihat contoh lengkap di [PANDUAN_REFRESH_TOKEN.md](PANDUAN_REFRESH_TOKEN.md)
+
+## 🧪 Testing
+
+### Default Users (seeded)
+
+| Email | Password | Role |
+|-------|----------|------|
+| admin@example.com | password | admin |
+| user@example.com | password | user |
+
+### Test Token Expiration
+
+1. Set token expired cepat untuk testing:
+```env
+SANCTUM_EXPIRATION=1  # 1 menit
+```
+
+2. Clear config cache:
+```bash
+php artisan config:clear
+```
+
+3. Login dan tunggu token expired
+
+4. Test refresh token
+
+## 🔧 Useful Commands
+
+```bash
+# Clear all cache
+php artisan config:clear
+php artisan cache:clear
+php artisan route:clear
+
+# Run migrations fresh
+php artisan migrate:fresh --seed
+
+# Check current config
+php artisan tinker
+>>> config('sanctum.expiration')
+
+# View routes
+php artisan route:list
+```
+
+## 🐛 Troubleshooting
+
+### Token Tidak Expired
+```bash
+php artisan config:clear
+php artisan cache:clear
+```
+
+### 401 Unauthorized
+- Cek apakah token valid
+- Cek format header: `Authorization: Bearer {token}`
+- Cek apakah token sudah expired
+
+### Auto Refresh Tidak Bekerja
+- Pastikan `expires_at` disimpan di localStorage
+- Cek console log untuk error
+- Verifikasi interval timer berjalan
+
+Lihat troubleshooting lengkap di [PANDUAN_REFRESH_TOKEN.md](PANDUAN_REFRESH_TOKEN.md)
+
+## 📁 Project Structure
+
+```
+backend/
+├── app/
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   │   └── Api/
+│   │   │       ├── AuthController.php  ← ✅ Authentication logic + Token expiry
+│   │   │       ├── UserController.php
+│   │   │       └── Admin/
+│   │   └── Middleware/
+│   └── Models/
+├── config/
+│   └── sanctum.php  ← ✅ Token expiration configuration
+├── database/
+│   ├── migrations/
+│   └── seeders/
+├── routes/
+│   └── api.php  ← API routes
+├── API_DOCUMENTATION.md  ← Full API reference
+├── PANDUAN_REFRESH_TOKEN.md  ← 🔄 Panduan Auto-Refresh Token (WAJIB BACA!)
+└── README.md  ← You are here
+```
+
+## 🔐 Security
+
+- ✅ Token expiration: 60 menit (default)
+- ✅ Auto token revocation saat refresh/logout
+- ✅ Input validation pada semua endpoints
+- ✅ Rate limiting untuk auth endpoints
+- ✅ CORS configuration
+- ⚠️ Gunakan HTTPS di production
+- ⚠️ Set `SANCTUM_EXPIRATION` di production
+
+## 📝 License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## 👥 Contributors
+
+FFWS Jawa Timur Team
+
+## 📞 Support
+
+Untuk pertanyaan atau bantuan, silakan:
+- 🔄 **WAJIB BACA**: [Panduan Refresh Token](PANDUAN_REFRESH_TOKEN.md)
+- 📖 Baca [API Documentation](API_DOCUMENTATION.md)
+- ❓ Check FAQ dan troubleshooting di panduan
+- 📞 Contact development team
+
+---
+
+**Last Updated**: October 2025  
+**Version**: 1.0.0 with Auto-Refresh Token Support
