@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import AutoSwitchToggle from "./AutoSwitchToggle";
-import { Sliders, ToggleRight, Layers, AlertTriangle } from "lucide-react";
+import AutoSwitchToggle from "../devices/AutoSwitchToggle";
+import { Sliders, ToggleLeft, ToggleRight, Layers, Keyboard, AlertTriangle } from "lucide-react";
 
 /**
  * FilterPanel
@@ -33,11 +33,10 @@ const FilterPanel = ({
 
   useEffect(() => {
     if (isOpen) {
-      // delay ensures transition applies when mounted
-      const t = setTimeout(() => setIsVisible(true), 10);
-      return () => clearTimeout(t);
+      setIsVisible(true);
     } else {
-      setIsVisible(false);
+      const timeout = setTimeout(() => setIsVisible(false), 300); // Delay untuk transisi
+      return () => clearTimeout(timeout);
     }
   }, [isOpen]);
 

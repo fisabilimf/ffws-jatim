@@ -6,7 +6,7 @@ import MapTooltip from "./maptooltip";
 import { fetchDevices } from "../../services/devices";
 import VectorTilesAPI from "./VectorTilesAPI";
 
-if (!mapboxgl.accessToken) mapboxgl.accessToken = "pk.eyJ1IjoiZGl0b2ZhdGFoaWxsYWgxIiwiYSI6ImNtZjNveGloczAwNncya3E1YzdjcTRtM3MifQ.kIf5rscGYOzvvBcZJ41u8g";
+if (!mapboxgl.accessToken) mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
 const MapboxMap = ({ tickerData, onStationSelect, onMapFocus }) => {
   const mapContainer = useRef(null);

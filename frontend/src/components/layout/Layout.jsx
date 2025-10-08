@@ -277,11 +277,15 @@ const Layout = ({ children }) => {
                 <FilterPanel
                     isOpen={isFilterOpen}
                     onOpen={() => setIsFilterOpen(true)}
+<<<<<<< HEAD
                     onClose={() => setIsFilterOpen(false)}
                     devicesData={devices}
                     handleStationChange={handleStationChange}
                     currentStationIndex={autoSwitchIndex}
                     handleAutoSwitchToggle={handleAutoSwitchToggle}
+=======
+                    onClose={() => setIsFilterOpen(false)} // Tambahkan handler untuk menutup panel
+>>>>>>> 9f9c665b932e2f075a960cada8468378ee0d7a87
                 />
             </Suspense>
         </div>
