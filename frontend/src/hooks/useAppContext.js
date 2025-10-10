@@ -9,15 +9,40 @@ export const useAppContext = () => {
     return context;
 };
 
-// Hook khusus untuk devices (untuk backward compatibility)
-export const useDevices = () => {
-    const { devices, devicesLoading, devicesError, lastFetch, refreshDevices, hasDevices } = useAppContext();
+// Hook khusus untuk app metadata
+export const useAppMetadata = () => {
+    const { isOnline, appVersion, lastUpdate, isInitialized } = useAppContext();
     return {
-        devices,
-        loading: devicesLoading,
-        error: devicesError,
-        lastFetch,
-        refreshDevices,
-        hasDevices
+        isOnline,
+        appVersion,
+        lastUpdate,
+        isInitialized
     };
+};
+
+// Hook khusus untuk UI preferences
+export const useAppPreferences = () => {
+    const { theme, language, toggleTheme, changeLanguage } = useAppContext();
+    return {
+        theme,
+        language,
+        toggleTheme,
+        changeLanguage
+    };
+};
+
+// Hook khusus untuk app functions
+export const useAppFunctions = () => {
+    const { checkConnection, updateVersion, initializeApp } = useAppContext();
+    return {
+        checkConnection,
+        updateVersion,
+        initializeApp
+    };
+};
+
+// Hook khusus untuk debug info
+export const useAppDebug = () => {
+    const { debugInfo } = useAppContext();
+    return debugInfo;
 };

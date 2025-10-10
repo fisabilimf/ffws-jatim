@@ -27,10 +27,10 @@ const AutoSwitchToggle = ({
             setIsPendingStop(false);
             setIsAtMarker(false);
             
-            // Set marker as ready after animation delay
+            // Set marker as ready after animation delay - sinkron dengan fly to
             setTimeout(() => {
                 setIsAtMarker(true);
-            }, 1000);
+            }, 1500);
         };
         
         const handleAutoSwitchDeactivated = (event) => {
@@ -51,10 +51,10 @@ const AutoSwitchToggle = ({
             setIsPendingStop(false);
             setIsAtMarker(false);
             
-            // Set marker as ready after animation delay
+            // Set marker as ready after animation delay - sinkron dengan fly to
             setTimeout(() => {
                 setIsAtMarker(true);
-            }, 1000);
+            }, 1500);
         };
         
         const handleAutoSwitchError = (event) => {
@@ -68,10 +68,10 @@ const AutoSwitchToggle = ({
             console.log('AutoSwitchToggle: Auto switch success event received', event.detail);
             setIsAtMarker(false);
             
-            // Set marker as ready after animation delay
+            // Set marker as ready after animation delay - sinkron dengan fly to
             setTimeout(() => {
                 setIsAtMarker(true);
-            }, 1000);
+            }, 1500);
         };
         
         // Register event listeners
@@ -185,13 +185,13 @@ const AutoSwitchToggle = ({
                 className={`relative inline-flex items-center h-7 rounded-full transition-all duration-200 ease-in-out focus:outline-none select-none ${
                     !hasData ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:opacity-90"
                 }`}
-                title={isPendingStop ? "Resume Auto Switch" : isPlaying ? "Stop Auto Switch" : "Start Auto Switch"}
-                aria-label={isPendingStop ? "Resume auto switch" : isPlaying ? "Stop auto switch" : "Start auto switch"}
+                title={isPlaying && isAtMarker ? "Stop Auto Switch" : isPlaying && !isAtMarker ? "Moving to device..." : "Start Auto Switch"}
+                aria-label={isPlaying && isAtMarker ? "Stop auto switch" : isPlaying && !isAtMarker ? "Moving to device" : "Start auto switch"}
             >
                 <div
                     className={`relative w-12 h-7 rounded-full transition-all duration-200 ease-in-out ${
-                        isPendingStop ? "bg-yellow-400" : 
-                        isPlaying ? "bg-green-500" : "bg-gray-300"
+                        isPlaying && isAtMarker ? "bg-green-500" : 
+                        isPlaying && !isAtMarker ? "bg-yellow-400" : "bg-gray-300"
                     }`}
                 >
                     <div

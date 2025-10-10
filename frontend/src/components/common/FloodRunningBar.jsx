@@ -1,13 +1,11 @@
 import React, { useState, useEffect, lazy, Suspense } from "react";
-import { useDevices } from "@/hooks/useAppContext";
+import { useDevices } from "@/hooks/useDevicesContext";
 
-// Lazy load Chart component untuk optimasi bundle
+// Lazy load Chart component for bundle optimization
 const Chart = lazy(() => import("@/components/common/Chart"));
 
 const FloodRunningBar = ({ onStationSelect, onMapFocus, isSidebarOpen = false }) => {
     const [tickerData, setTickerData] = useState([]);
-
-    // Ambil devices dari context dan bangun ticker dari data API saja (tanpa ticker acak)
     const { devices } = useDevices();
 
     useEffect(() => {
@@ -57,8 +55,6 @@ const FloodRunningBar = ({ onStationSelect, onMapFocus, isSidebarOpen = false })
         });
     }, [devices]);
 
-    // Removed onDataUpdate dependency - no longer needed
-
     const getStatusColor = (status) => {
         switch (status) {
             case "safe":
@@ -92,16 +88,15 @@ const FloodRunningBar = ({ onStationSelect, onMapFocus, isSidebarOpen = false })
         }).format(value);
     };
 
-    // Hitung durasi animasi berdasarkan jumlah data
     if (tickerData.length === 0) {
-        return null; // atau tampilkan placeholder jika diperlukan
+        return null; 
     }
-    const animationDuration = tickerData.length * 4; // 4 detik per item
+    const animationDuration = tickerData.length * 4; 
 
     return (
         <div
             className={`fixed top-4 z-[70] transition-all duration-300 ease-in-out left-[calc(368px+2rem)] flood-running-bar`}
-            // className={`fixed top-4 z-[70] transition-all duration-300 ease-in-out left-[calc(368px+2rem)] right-[calc(1rem+48px+1rem)] sm:right-[calc(1.5rem+48px+1rem)] flood-running-bar`}
+            
         >
             <div className="w-full">
                 <div className="overflow-hidden bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-1.5 sm:p-2">

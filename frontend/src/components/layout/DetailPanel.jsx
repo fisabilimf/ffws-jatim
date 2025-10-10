@@ -11,8 +11,30 @@ const DETAIL_TABS = [
     { key: "sensor", label: "Sensor" },
     { key: "cuaca", label: "Cuaca" },
     { key: "monitoring", label: "Monitoring" },
-    { key: "riwayat", label: "Riwayat" },
+    { key: "riwayat", label: "Riwayat" }
 ];
+
+// Komponen Status Badge
+const StatusBadge = ({ status }) => {
+    const getStatusClasses = (status) => {
+        switch (status) {
+            case "safe":
+                return "bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300";
+            case "warning":
+                return "bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border-yellow-300";
+            case "alert":
+                return "bg-gradient-to-r from-red-100 to-red-200 text-red-800 border-red-300";
+            default:
+                return "bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border-gray-300";
+        }
+    };
+
+    return (
+        <div className={`text-sm font-bold px-4 py-2 rounded-xl border-2 shadow-lg ${getStatusClasses(status)}`}>
+            {getStatusText(status)}
+        </div>
+    );
+};
 
 /**
  * Komponen panel detail dengan layout two column
@@ -25,6 +47,13 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
     const [isTabChanging, setIsTabChanging] = useState(false);
     const [previousTab, setPreviousTab] = useState(null);
     const [isDotAnimating, setIsDotAnimating] = useState(false);
+
+
+    console.log('=== DETAIL PANEL DEBUG ===');
+    console.log('isOpen:', isOpen);
+    console.log('stationData:', stationData);
+    console.log('isAutoSwitchOn:', isAutoSwitchOn);
+    console.log('=== END DETAIL PANEL DEBUG ===');
 
     // Mengatur animasi visibility saat panel dibuka/ditutup
     useEffect(() => {
@@ -54,75 +83,47 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
         const style = document.createElement("style");
         style.id = styleId;
         style.textContent = `
-      @keyframes underlineSlideIn {
+      @keyframes tabSlideIn {
         0% {
-          transform: translateX(-50%) scaleX(0);
+          transform: translateY(-10px) scale(0.95);
           opacity: 0;
         }
-        30% {
-          opacity: 0.8;
-        }
         100% {
-          transform: translateX(-50%) scaleX(1);
+          transform: translateY(0) scale(1);
           opacity: 1;
         }
       }
       
-      @keyframes dotPopIn {
+      @keyframes tabHover {
         0% {
-          transform: translateX(-50%) scale(0);
-          opacity: 0;
+          transform: scale(1);
         }
         100% {
-          transform: translateX(-50%) scale(1);
-          opacity: 1;
+          transform: scale(1.02);
         }
       }
       
-      @keyframes dotSlideOut {
+      @keyframes tabActive {
         0% {
-          transform: translateX(-50%) scale(1);
-          opacity: 1;
-        }
-        50% {
-          transform: translateX(-50%) scale(0.8);
-          opacity: 0.8;
+          transform: scale(1);
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
         100% {
-          transform: translateX(-50%) scale(0);
-          opacity: 0;
+          transform: scale(1.05);
+          box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
         }
       }
       
-      @keyframes underlineClose {
-        0% {
-          transform: translateX(-50%) scaleX(1);
-          opacity: 1;
-        }
-        50% {
-          transform: translateX(-50%) scaleX(0.3);
-          opacity: 0.6;
-        }
-        100% {
-          transform: translateX(-50%) scaleX(0);
-          opacity: 0;
-        }
+      .tab-slide-in {
+        animation: tabSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
       }
       
-      .underline-active {
-        animation: underlineSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      .tab-hover {
+        animation: tabHover 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
       }
       
-      .dot-hover {
-        animation: dotPopIn 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-      }
-      
-      .dot-slide-out {
-        animation: dotSlideOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-      }
-      
-      .underline-close {
-        animation: underlineClose 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+      .tab-active {
+        animation: tabActive 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
       }
     `;
         document.head.appendChild(style);
@@ -138,7 +139,6 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
     // Auto close detail panel saat auto switch berjalan
     useEffect(() => {
         if (isAutoSwitchOn && isOpen) {
-            // Tutup detail panel dengan animasi saat auto switch aktif
             handleClose();
         }
     }, [isAutoSwitchOn]);
@@ -170,12 +170,10 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
                     setIsDotAnimating(false);
                     setPreviousTab(null);
                 }, 400); // 400ms untuk animasi underline baru
-            }, 400); // 400ms delay untuk animasi underline menutup
+            }, 400); // 400ms delay animasi underline 
         },
         [isTabChanging, activeTab]
     );
-
-    // Tidak render jika panel tidak dibuka atau data tidak ada
     if (!isOpen) return null;
 
     // Fallback jika stationData tidak ada
@@ -197,18 +195,14 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
     }
 
     return (
-        <div
-            className={`rounded-tr-lg fixed top-20 left-96 right-80 bottom-0 z-[50] bg-white shadow-2xl transform transition-all duration-300 ease-in-out ${
-                isVisible ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
-            }`}
-            style={{ willChange: "transform, opacity" }}
-        >
+        <div className={`fixed top-20 left-96 right-80 bottom-0 z-50 bg-white shadow-2xl rounded-tr-lg transform transition-all duration-300 ${
+            isVisible ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
+        }`}>
             <div className="h-full flex flex-col">
                 <div className="rounded-tr-lg p-4 flex-shrink-0 border-b border-gray-200 bg-gray-50/50">
-                    {/* Baris judul + tombol close dengan alignment yang rapi */}
+ 
                     <div className="flex items-center justify-between">
-                        {/* Bagian kiri - tombol back + judul */}
-                        <div className="flex items-center gap-3">
+                     <div className="flex items-center gap-3">
                             <button
                                 onClick={handleClose}
                                 className="p-2 rounded-full transition-all duration-200 group focus:outline-none hover:bg-gray-100 hover:shadow-md"
@@ -229,16 +223,10 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
                                 </svg>
                             </button>
                             <div className="min-w-0">
-                                <h3
-                                    className="text-2xl font-bold text-gray-900 tracking-tight"
-                                    style={{ fontFamily: "Inter, system-ui, -apple-system, sans-serif" }}
-                                >
+                                <h3 className="text-2xl font-bold text-gray-900 tracking-tight">
                                     Detail Informasi
                                 </h3>
-                                <p
-                                    className="text-base text-gray-700 mt-1 font-semibold"
-                                    style={{ fontFamily: "Inter, system-ui, -apple-system, sans-serif" }}
-                                >
+                                <p className="text-base text-gray-700 mt-1 font-semibold">
                                     {stationData.name}
                                 </p>
                             </div>
@@ -253,91 +241,72 @@ const DetailPanel = ({ isOpen, onClose, stationData, chartHistory, isAutoSwitchO
                                         Auto Switch
                                     </div>
                                 )}
-                                <div
-                                    className={`text-sm font-bold px-4 py-2 rounded-xl border-2 shadow-lg ${
-                                        stationData.status === "safe"
-                                            ? "bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300"
-                                            : stationData.status === "warning"
-                                            ? "bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border-yellow-300"
-                                            : stationData.status === "alert"
-                                            ? "bg-gradient-to-r from-red-100 to-red-200 text-red-800 border-red-300"
-                                            : "bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border-gray-300"
-                                    }`}
-                                >
-                                    {getStatusText(stationData.status)}
-                                </div>
+                                <StatusBadge status={stationData.status} />
                             </div>
-                            <div
-                                className="text-sm text-gray-600 font-semibold"
-                                style={{ fontFamily: "Inter, system-ui, -apple-system, sans-serif" }}
-                            >
+                            <div className="text-sm text-gray-600 font-semibold">
                                 Update {new Date().toLocaleTimeString("id-ID")}
                             </div>
                         </div>
                     </div>
-                    {/* Navigation tabs dengan modern styling */}
                     <div
-                        className={`mt-6 pb-3 transition-all duration-500 ease-out ${
+                        className={`mt-6 transition-all duration-500 ease-out ${
                             isNavbarVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
                         }`}
                     >
                         <nav className="relative">
-                            <div className="flex items-center justify-center space-x-8 text-base">
-                                {DETAIL_TABS.map((tab) => (
-                                    <button
-                                        key={tab.key}
-                                        onClick={() => handleTabClick(tab.key)}
-                                        disabled={isTabChanging}
-                                        className={`relative py-4 px-4 transition-all duration-500 ease-out rounded-lg group ${
-                                            activeTab === tab.key
-                                                ? "text-gray-800 font-semibold"
-                                                : "text-gray-600 font-medium hover:text-gray-800"
-                                        } ${isTabChanging ? "opacity-70 cursor-wait" : "cursor-pointer"}`}
-                                        role="tab"
-                                        aria-selected={activeTab === tab.key}
-                                        style={{ fontFamily: "Inter, system-ui, -apple-system, sans-serif" }}
-                                    >
-                                        <span className="relative z-10 whitespace-nowrap text-base font-semibold leading-tight">
-                                            {tab.label}
-                                        </span>
-                                        {/* Active indicator - sejajar dengan kotak navbar */}
-                                        {activeTab === tab.key ? (
-                                            <div className="absolute bottom-0 left-1/2 w-8 h-1 bg-gradient-to-r from-blue-300 to-blue-800 rounded-full shadow-sm underline-active" />
-                                        ) : (
-                                            <div className="absolute -bottom-1 left-1/2 w-2 h-2 bg-blue-400 rounded-full opacity-0 group-hover:opacity-100 group-hover:dot-hover transition-all duration-300 ease-out" />
-                                        )}
-                                    </button>
-                                ))}
+                            <div className="bg-white/90 backdrop-blur-md border border-gray-200/50 rounded-2xl p-4 shadow-lg shadow-gray-200/50">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
+                                    {DETAIL_TABS.map((tab) => (
+                                        <button
+                                            key={tab.key}
+                                            onClick={() => handleTabClick(tab.key)}
+                                            disabled={isTabChanging}
+                                            className={`relative w-full px-4 py-3 mx-1 rounded-xl transition-all duration-300 ease-out group flex items-center justify-center ${
+                                                activeTab === tab.key
+                                                    ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30 transform scale-105 tab-active"
+                                                    : "text-gray-600 hover:text-gray-800 hover:bg-gray-50/80 hover:shadow-md hover:shadow-gray-200/50 hover:tab-hover"
+                                            } ${isTabChanging ? "opacity-70 cursor-wait" : "cursor-pointer"} tab-slide-in`}
+                                            role="tab"
+                                            aria-selected={activeTab === tab.key}
+                                        >
+                                            <span className="relative z-10 whitespace-nowrap text-sm sm:text-base font-semibold leading-tight">
+                                                {tab.label}
+                                            </span>
+                                            
+                                            {activeTab === tab.key && (
+                                                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg" />
+                                            )}
+                                            
+                                            {activeTab !== tab.key && (
+                                                <div className="absolute inset-0 bg-gradient-to-r from-gray-100 to-gray-50 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                                            )}
+                                            
+                                            {isTabChanging && activeTab === tab.key && (
+                                                <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-500 rounded-xl animate-pulse" />
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </nav>
                     </div>
                 </div>
-
-                {/* Konten Panel - Layout yang lebih rapi */}
                 <div className="flex-1 overflow-y-auto p-6">
-                    <div
-                        className={`space-y-6 transition-all duration-500 ease-out ${
-                            isTabChanging ? "opacity-50 scale-95" : "opacity-100 scale-100"
-                        }`}
-                    >
+                    <div className={`space-y-6 transition-all duration-500 ease-out ${
+                        isTabChanging ? "opacity-50 scale-95" : "opacity-100 scale-100"
+                    }`}>
                         {/* Chart utama - hanya untuk tab selain sensor */}
                         {activeTab !== "sensor" && (
                             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                                 <div className="px-8 pt-8 pb-6 bg-gray-50/50 border-b border-gray-200">
                                     <div className="flex items-center justify-between mb-3">
-                                        <h3
-                                            className="text-2xl font-bold text-gray-900 tracking-tight"
-                                            style={{ fontFamily: "Inter, system-ui, -apple-system, sans-serif" }}
-                                        >
+                                        <h3 className="text-2xl font-bold text-gray-900 tracking-tight">
                                             {activeTab === "riwayat" && "Riwayat Data"}
                                             {activeTab === "cuaca" && "Cuaca"}
                                             {activeTab === "monitoring" && "Aktual & Prediksi"}
                                         </h3>
                                     </div>
-                                    <p
-                                        className="text-base text-gray-600 font-semibold"
-                                        style={{ fontFamily: "Inter, system-ui, -apple-system, sans-serif" }}
-                                    >
+                                    <p className="text-base text-gray-600 font-semibold">
                                         {stationData.location}
                                     </p>
                                 </div>

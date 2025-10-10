@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, memo, lazy, Suspense, useEffect } from "react";
-import { useDevices } from "@/hooks/useAppContext";
+import { useDevices } from "@/hooks/useDevicesContext";
 import { useAutoSwitch } from "@/hooks/useAutoSwitch";
 const GoogleMapsSearchbar = lazy(() => import("@/components/common/GoogleMapsSearchbar"));
 const MapboxMap = lazy(() => import("@/components/MapboxMap"));
@@ -102,8 +102,8 @@ const Layout = ({ children }) => {
         isLoadingDevices: autoSwitchLoading
     } = useAutoSwitch({
         onStationChange: handleStationChange,
-        interval: 8000, // 8 detik untuk memberikan waktu melihat station detail
-        stopDelay: 5000
+        interval: Number(import.meta?.env?.VITE_AUTOSWITCH_INTERVAL ?? 10000), 
+        stopDelay: Number(import.meta?.env?.VITE_AUTOSWITCH_STOP_DELAY ?? 5000)  
     });
 
     // Update ref when isAutoSwitchOn changes
@@ -121,7 +121,7 @@ const Layout = ({ children }) => {
         if (isOn) {
             console.log('Starting auto switch...');
             startAutoSwitch();
-            // Jika auto switch diaktifkan, tutup detail panel
+            // close detail panel
             setIsDetailPanelOpen(false);
         } else {
             console.log('Stopping auto switch...');
@@ -138,14 +138,25 @@ const Layout = ({ children }) => {
     }, []);
 
     const handleToggleDetailPanel = useCallback(() => {
+        console.log('=== TOGGLE DETAIL PANEL DEBUG ===');
+        console.log('Current isDetailPanelOpen:', isDetailPanelOpen);
+        console.log('selectedStation:', selectedStation);
+        console.log('isAutoSwitchOn:', isAutoSwitchOn);
+        
         if (isDetailPanelOpen) {
-            // Jika panel terbuka, tutup dengan animasi
+            console.log('Closing detail panel...');
             handleCloseDetailPanel();
         } else {
-            // Jika panel tertutup, buka langsung
-            setIsDetailPanelOpen(true);
+            console.log('Opening detail panel...');
+            // Pastikan ada selectedStation sebelum membuka panel
+            if (selectedStation) {
+                setIsDetailPanelOpen(true);
+            } else {
+                console.warn('Cannot open detail panel: no selected station');
+            }
         }
-    }, [isDetailPanelOpen]);
+        console.log('=== END TOGGLE DETAIL PANEL DEBUG ===');
+    }, [isDetailPanelOpen, selectedStation, isAutoSwitchOn]);
 
     const handleCloseDetailPanel = useCallback(() => {
         setIsDetailPanelOpen(false);
@@ -294,7 +305,11 @@ const Layout = ({ children }) => {
                 <FilterPanel
                     isOpen={isFilterOpen}
                     onOpen={() => setIsFilterOpen(true)}
-                    onClose={() => setIsFilterOpen(false)} // Tambahkan handler untuk menutup panel
+                    onClose={() => setIsFilterOpen(false)}
+                    devicesData={devices}
+                    handleStationChange={handleStationChange}
+                    currentStationIndex={autoSwitchIndex}
+                    handleAutoSwitchToggle={handleAutoSwitchToggle}
                 />
             </Suspense>
         </div>

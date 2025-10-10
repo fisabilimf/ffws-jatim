@@ -28,8 +28,8 @@ const Chart = ({ data = [], status = "safe", className = "" }) => {
                     const ctx = context.chart.ctx;
                     const gradient = ctx.createLinearGradient(0, 0, 0, context.chart.height);
                     const color = getLineColor();
-                    gradient.addColorStop(0, `${color}80`); // 50% opacity
-                    gradient.addColorStop(1, `${color}00`); // 0% opacity
+                    gradient.addColorStop(0, `${color}80`); 
+                    gradient.addColorStop(1, `${color}00`); 
                     return gradient;
                 },
                 fill: true,

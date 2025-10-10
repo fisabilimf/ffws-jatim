@@ -57,14 +57,21 @@ const MapboxMap = ({ devicesData, onStationSelect, onMapFocus, onStationChange }
         const { lat, lng, zoom, stationId, stationName } = focusData;
         setSelectedStationCoords([lng, lat]);
 
+        // Konfigurasi animasi yang konsisten dengan autoswitch
+        const FOCUS_ZOOM = zoom || Number(import.meta?.env?.VITE_FLYTO_ZOOM ?? 14);
+        const FOCUS_SPEED = Number(import.meta?.env?.VITE_FLYTO_SPEED ?? 1.2);
+        const FOCUS_CURVE = Number(import.meta?.env?.VITE_FLYTO_CURVE ?? 1.4);
+        const FOCUS_PITCH = Number(import.meta?.env?.VITE_FLYTO_PITCH ?? 45);
+        const FOCUS_BEARING = Number(import.meta?.env?.VITE_FLYTO_BEARING ?? -17.6);
+        
         map.current.flyTo({
             center: [lng, lat],
-            zoom: zoom || 14,
-            pitch: 45,
-            bearing: -17.6,
-            speed: 1.2,
-            curve: 1.4,
-            easing: (t) => t,
+            zoom: FOCUS_ZOOM,
+            pitch: FOCUS_PITCH,
+            bearing: FOCUS_BEARING,
+            speed: FOCUS_SPEED,
+            curve: FOCUS_CURVE,
+            easing: (t) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2,
             essential: true,
         });
         // Tampilkan tooltip setelah jeda singkat
@@ -86,7 +93,13 @@ const MapboxMap = ({ devicesData, onStationSelect, onMapFocus, onStationChange }
     };
     // Handler untuk auto switch dari toggle
     const handleAutoSwitch = (device, index) => {
-        console.log(`handleAutoSwitch called with device: ${device?.name || device?.device_name || device?.station_name || 'undefined'}, index: ${index}`);
+        console.log(`=== HANDLE AUTO SWITCH DEBUG ===`);
+        console.log(`Device:`, device);
+        console.log(`Index:`, index);
+        console.log(`Device name:`, device?.name || device?.device_name || device?.station_name || 'undefined');
+        console.log(`Device coordinates:`, device?.coordinates);
+        console.log(`Device latitude:`, device?.latitude);
+        console.log(`Device longitude:`, device?.longitude);
         
         if (!map.current || !device) {
             console.warn("Map or device not available for auto switch");
@@ -97,13 +110,20 @@ const MapboxMap = ({ devicesData, onStationSelect, onMapFocus, onStationChange }
         
         try {
             // Check if device has direct coordinates
-            if (device.coordinates && Array.isArray(device.coordinates)) {
+            if (device.coordinates && Array.isArray(device.coordinates) && device.coordinates.length >= 2) {
                 coordinates = device.coordinates;
                 console.log("Using direct coordinates from device object:", coordinates);
             } else if (device.latitude && device.longitude) {
-                coordinates = [parseFloat(device.longitude), parseFloat(device.latitude)];
-                console.log("Using lat/lng from device object:", coordinates);
+                const lat = parseFloat(device.latitude);
+                const lng = parseFloat(device.longitude);
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    coordinates = [lng, lat];
+                    console.log("Using lat/lng from device object:", coordinates);
+                } else {
+                    console.warn("Invalid latitude/longitude values:", device.latitude, device.longitude);
+                }
             } else {
+                console.log("No direct coordinates found, trying name lookup...");
                 // Fallback to searching by name
                 const deviceName = device.name || device.device_name || device.station_name;
                 coordinates = getStationCoordinates(deviceName);
@@ -113,11 +133,14 @@ const MapboxMap = ({ devicesData, onStationSelect, onMapFocus, onStationChange }
             if (!coordinates) {
                 const deviceName = device.name || device.device_name || device.station_name;
                 console.warn("No coordinates found for device:", deviceName);
+                console.log("Available devices:", devices.map(d => ({
+                    name: d.name || d.device_name || d.station_name,
+                    hasLatLng: !!(d.latitude && d.longitude),
+                    hasCoordinates: !!(d.coordinates && Array.isArray(d.coordinates))
+                })));
                 
                 // Coba lakukan pencarian lebih agresif berdasarkan nama
                 const deviceLowerName = deviceName.toLowerCase();
-                // Log semua perangkat untuk debug
-                console.log("Attempting fuzzy match with devices:", devices.map(d => d.name || d.device_name || d.station_name));
                 
                 const matchedDevice = devices.find(d => {
                     const dName = d.name || d.device_name || d.station_name;
@@ -127,20 +150,39 @@ const MapboxMap = ({ devicesData, onStationSelect, onMapFocus, onStationChange }
                 });
                 
                 if (matchedDevice && matchedDevice.latitude && matchedDevice.longitude) {
-                    coordinates = [parseFloat(matchedDevice.longitude), parseFloat(matchedDevice.latitude)];
-                    console.log("Found coordinates through fuzzy matching:", coordinates);
-                } else {
+                    const lat = parseFloat(matchedDevice.latitude);
+                    const lng = parseFloat(matchedDevice.longitude);
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        coordinates = [lng, lat];
+                        console.log("Found coordinates through fuzzy matching:", coordinates);
+                    }
+                }
+                
+                if (!coordinates) {
                     console.error("Still could not find coordinates after fuzzy matching");
                     
                     // Jika tidak ada koordinat ditemukan, gunakan koordinat default
                     if (devices.length > 0 && devices[0].latitude && devices[0].longitude) {
-                        coordinates = [parseFloat(devices[0].longitude), parseFloat(devices[0].latitude)];
-                        console.log("Using first device coordinates as fallback:", coordinates);
+                        const lat = parseFloat(devices[0].latitude);
+                        const lng = parseFloat(devices[0].longitude);
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                            coordinates = [lng, lat];
+                            console.log("Using first device coordinates as fallback:", coordinates);
+                        }
                     } else {
+                        console.error("No valid coordinates found in any device");
                         return;
                     }
                 }
             }
+            
+            // Validasi koordinat akhir
+            if (!coordinates || coordinates.length < 2 || isNaN(coordinates[0]) || isNaN(coordinates[1])) {
+                console.error("Invalid coordinates:", coordinates);
+                return;
+            }
+            
+            console.log("Final coordinates:", coordinates);
         } catch (error) {
             console.error("Error processing device coordinates:", error);
             return;
@@ -153,40 +195,126 @@ const MapboxMap = ({ devicesData, onStationSelect, onMapFocus, onStationChange }
         // Simpan zoom sebelum fokus
         try { previousZoomRef.current = map.current.getZoom(); } catch (e) { previousZoomRef.current = 12; }
         
-        // Target zoom untuk fokus marker
-        const TARGET_ZOOM = 15;
-        const PADDING = { left: 360, right: 40, top: 80, bottom: 120 }; // perhitungkan sidebar dan header
-        const smoothEase = (t) => 1 - Math.pow(1 - t, 3); // cubic-out
+        // Intelligent zoom calculation based on device type and location
+        const calculateOptimalZoom = (device, coordinates) => {
+            // Base zoom level
+            let baseZoom = Number(import.meta?.env?.VITE_FLYTO_ZOOM ?? 15);
+            
+            // Adjust zoom based on device type
+            if (device.device_type === 'flood_gate' || device.device_type === 'dam') {
+                baseZoom = 16; // Closer zoom for critical infrastructure
+            } else if (device.device_type === 'weather_station') {
+                baseZoom = 14; // Wider view for weather stations
+            }
+            
+            // Adjust zoom based on location density
+            const nearbyDevices = devices.filter(d => {
+                if (!d.latitude || !d.longitude) return false;
+                const distance = Math.sqrt(
+                    Math.pow(parseFloat(d.longitude) - coordinates[0], 2) + 
+                    Math.pow(parseFloat(d.latitude) - coordinates[1], 2)
+                );
+                return distance < 0.01; // Within ~1km
+            });
+            
+            if (nearbyDevices.length > 3) {
+                baseZoom = Math.max(baseZoom - 1, 12); // Zoom out for dense areas
+            }
+            
+            return baseZoom;
+        };
         
-        // Lakukan easeTo dengan konfigurasi smooth
+        const TARGET_ZOOM = calculateOptimalZoom(device, coordinates);
+        const PADDING = { left: 360, right: 40, top: 80, bottom: 120 };
+        
+        // Enhanced animation configuration
+        const FLYTO_SPEED = Number(import.meta?.env?.VITE_FLYTO_SPEED ?? 1.5);
+        const FLYTO_CURVE = Number(import.meta?.env?.VITE_FLYTO_CURVE ?? 1.8);
+        const FLYTO_PITCH = Number(import.meta?.env?.VITE_FLYTO_PITCH ?? 45);
+        const FLYTO_BEARING = Number(import.meta?.env?.VITE_FLYTO_BEARING ?? -17.6);
+        
+        // Advanced easing function for smooth transitions
+        const advancedEase = (t) => {
+            // Ease-in-out with slight bounce for natural feel
+            if (t < 0.5) {
+                return 2 * t * t * (3 - 2 * t);
+            } else {
+                return 1 - 2 * (1 - t) * (1 - t) * (3 - 2 * (1 - t));
+            }
+        };
+        
+        // Get current map state for smooth transition
+        const currentZoom = map.current.getZoom();
+        const currentCenter = map.current.getCenter();
+        const currentPitch = map.current.getPitch();
+        const currentBearing = map.current.getBearing();
+        
+        // Calculate distance for speed adjustment
+        const distance = Math.sqrt(
+            Math.pow(coordinates[0] - currentCenter.lng, 2) + 
+            Math.pow(coordinates[1] - currentCenter.lat, 2)
+        );
+        
+        // Adjust speed based on distance
+        const adjustedSpeed = distance > 0.1 ? FLYTO_SPEED * 0.8 : FLYTO_SPEED * 1.2;
+        
+        // Enhanced flyTo with intelligent parameters
         try {
-            // Hentikan animasi sebelumnya agar tidak saling tumpang tindih
+            // Stop any existing animations
             try { map.current.stop(); } catch (_) {}
             
-            map.current.easeTo({
+            // Multi-stage flyTo for better visual experience
+            const flyToOptions = {
                 center: coordinates,
                 zoom: TARGET_ZOOM,
-                pitch: 45,
-                bearing: -17.6,
-                duration: 1200,
-                curve: 1.25,
-                easing: smoothEase,
+                pitch: FLYTO_PITCH,
+                bearing: FLYTO_BEARING,
+                speed: adjustedSpeed,
+                curve: FLYTO_CURVE,
+                easing: advancedEase,
                 essential: true,
                 padding: PADDING,
+                // Add duration for consistency
+                duration: Math.max(1500, distance * 2000)
+            };
+            
+            console.log('=== ENHANCED FLY TO ===');
+            console.log('Target coordinates:', coordinates);
+            console.log('Target zoom:', TARGET_ZOOM);
+            console.log('Distance:', distance);
+            console.log('Adjusted speed:', adjustedSpeed);
+            console.log('Fly to options:', flyToOptions);
+            
+            map.current.flyTo(flyToOptions);
+            
+            // Add event listeners for better control
+            map.current.once('moveend', () => {
+                console.log('Fly to completed successfully');
+                // Ensure we're at the exact coordinates
+                map.current.setCenter(coordinates);
             });
+            
         } catch (e) {
-            console.warn('Accurate smooth zoom failed, falling back to flyTo:', e);
-            map.current.flyTo({ center: coordinates, zoom: TARGET_ZOOM, essential: true });
+            console.warn('Enhanced flyTo failed, using fallback:', e);
+            // Fallback with basic flyTo
+            map.current.flyTo({ 
+                center: coordinates, 
+                zoom: TARGET_ZOOM, 
+                essential: true,
+                speed: 1.0,
+                duration: 1000
+            });
         }
         
-        // Munculkan tooltip sedikit setelah kamera stabil
+        // Munculkan tooltip setelah animasi flyTo selesai - timing yang dioptimasi
+        const tooltipDelay = Math.max(1000, distance * 1500);
         setTimeout(() => {
             setTooltip({
                 visible: true,
                 station: device, // Keep as station for tooltip compatibility
                 coordinates: coordinates,
             });
-        }, 650);
+        }, tooltipDelay);
         
         // Jika fungsi onStationChange tersedia, panggil dengan device saat ini
         if (onStationChange) {
@@ -346,7 +474,7 @@ const MapboxMap = ({ devicesData, onStationSelect, onMapFocus, onStationChange }
                 }
                 
                 // Validasi koordinat sebelum memanggil handleAutoSwitch
-                const hasDirectCoordinates = device.coordinates && Array.isArray(device.coordinates) && device.coordinates.length === 2;
+                const hasDirectCoordinates = device.coordinates && Array.isArray(device.coordinates) && device.coordinates.length >= 2;
                 const hasLatLng = device.latitude && device.longitude && 
                     !isNaN(parseFloat(device.latitude)) && !isNaN(parseFloat(device.longitude));
                 const hasLookupCoordinates = getStationCoordinates(deviceName);
@@ -354,16 +482,14 @@ const MapboxMap = ({ devicesData, onStationSelect, onMapFocus, onStationChange }
                 const hasValidCoordinates = hasDirectCoordinates || hasLatLng || hasLookupCoordinates;
                 
                 if (!hasValidCoordinates) {
-                    console.error("Error: No valid coordinates found for device:", deviceName);
-                    document.dispatchEvent(new CustomEvent('autoSwitchError', {
-                        detail: { 
-                            error: 'No valid coordinates found',
-                            type: 'coordinate_error',
-                            device: device,
-                            index: index
-                        }
-                    }));
-                    return;
+                    console.warn("Warning: No valid coordinates found for device:", deviceName);
+                    console.log("Device details:", {
+                        hasDirectCoordinates,
+                        hasLatLng,
+                        hasLookupCoordinates,
+                        device: device
+                    });
+                    // Jangan return, biarkan handleAutoSwitch yang handle fallback
                 }
                 
                 // Call the actual switch function
@@ -478,9 +604,9 @@ const MapboxMap = ({ devicesData, onStationSelect, onMapFocus, onStationChange }
                 // Re-register fungsi jika hilang
                 if (map.current) {
                     console.log("Re-registering mapboxAutoSwitch function");
-                    window.mapboxAutoSwitch = (station, index) => {
-                        console.log("Re-registered mapboxAutoSwitch called with:", station?.name);
-                        handleAutoSwitch(station, index);
+                    window.mapboxAutoSwitch = (device, index) => {
+                        console.log("Re-registered mapboxAutoSwitch called with:", device?.name);
+                        handleAutoSwitch(device, index);
                     };
                 }
             }

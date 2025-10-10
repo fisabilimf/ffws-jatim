@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useDevices } from '@/hooks/useAppContext';
+import { useDevices } from '@/hooks/useDevicesContext';
 
 // Custom hook untuk auto switch logic yang menggunakan DevicesContext sebagai single source of truth
 export const useAutoSwitch = ({
   onStationChange,
-  interval = 8000, // 8 detik untuk memberikan waktu melihat station detail
-  stopDelay = 5000
+  interval = Number(import.meta?.env?.VITE_AUTOSWITCH_INTERVAL ?? 10000), 
+  stopDelay = Number(import.meta?.env?.VITE_AUTOSWITCH_STOP_DELAY ?? 5000)  
 }) => {
   // Get devices from context - single source of truth
   const { devices, loading: devicesLoading, error: devicesError } = useDevices();
@@ -51,6 +51,8 @@ export const useAutoSwitch = ({
     
     console.log('=== GET CURRENT DATA SOURCE ===');
     console.log('Devices from context:', devicesData?.length || 0);
+    console.log('Devices loading:', devicesLoading);
+    console.log('Devices error:', devicesError);
     
     // Hanya menggunakan devices dari context
     if (devicesData && devicesData.length > 0) {
@@ -60,16 +62,23 @@ export const useAutoSwitch = ({
     
     console.log('No devices available from context');
     return [];
-  }, []);
+  }, [devicesLoading, devicesError]);
   
   // Tick logic using refs to avoid stale closures
   const performTick = useCallback(() => {
+    console.log('=== PERFORM TICK CALLED ===');
+    console.log('isPlayingRef.current:', isPlayingRef.current);
+    console.log('intervalRef.current:', intervalRef.current);
+    console.log('pauseUntilRef.current:', pauseUntilRef.current);
+    console.log('Date.now():', Date.now());
+    
     if (!isPlayingRef.current) {
       console.log('Tick skipped - auto switch not playing');
       return;
     }
     // Skip tick when paused window is active
     if (pauseUntilRef.current && Date.now() < pauseUntilRef.current) {
+      console.log('Tick skipped - paused window active');
       return;
     }
     const dataSource = getCurrentDataSource();
@@ -98,7 +107,8 @@ export const useAutoSwitch = ({
         console.error('Error notifying parent:', error);
       }
     }
-    // Set marker ready setelah jeda animasi
+    // Set marker ready setelah jeda animasi - sinkron dengan fly to animation
+    // Fly to dengan speed 1.2 biasanya memakan waktu ~1.5 detik
     setTimeout(() => {
       setIsAtMarker(true);
     }, 1500);
@@ -107,10 +117,19 @@ export const useAutoSwitch = ({
   
   // Start auto switch
   const startAutoSwitch = useCallback(() => {
+    console.log('=== START AUTO SWITCH DEBUG ===');
+    console.log('devicesLoading:', devicesLoading);
+    console.log('devicesError:', devicesError);
+    console.log('devices from context:', devices);
+    console.log('devicesRef.current:', devicesRef.current);
+    
     const dataSource = getCurrentDataSource();
+    console.log('dataSource from getCurrentDataSource:', dataSource);
+    console.log('dataSource length:', dataSource?.length || 0);
     
     if (!dataSource || dataSource.length === 0) {
       console.warn('Cannot start auto switch: No data available. Will start when devices arrive.');
+      console.log('Setting pendingStartRef.current = true');
       pendingStartRef.current = true;
       return;
     }
@@ -140,7 +159,7 @@ export const useAutoSwitch = ({
         
         setTimeout(() => {
           setIsAtMarker(true);
-        }, 1000);
+        }, 1500);
       } catch (error) {
         console.error('Immediate switch error:', error);
       }
@@ -151,10 +170,22 @@ export const useAutoSwitch = ({
     
     // Start accurate timer loop (drift-resistant)
     const runTick = () => {
+      console.log('=== RUN TICK CALLED ===');
+      console.log('Current time:', Date.now());
+      console.log('Next tick time:', nextTickTimeRef.current);
+      console.log('Interval:', interval);
+      console.log('isPlayingRef.current:', isPlayingRef.current);
+      
       performTick();
-      nextTickTimeRef.current += interval;
-      const delay = Math.max(0, nextTickTimeRef.current - Date.now());
-      intervalRef.current = setTimeout(runTick, delay);
+      
+      if (isPlayingRef.current) {
+        nextTickTimeRef.current += interval;
+        const delay = Math.max(0, nextTickTimeRef.current - Date.now());
+        console.log('Setting next tick in:', delay, 'ms');
+        intervalRef.current = setTimeout(runTick, delay);
+      } else {
+        console.log('Auto switch stopped, not scheduling next tick');
+      }
     };
 
     nextTickTimeRef.current = Date.now() + interval;
@@ -172,7 +203,7 @@ export const useAutoSwitch = ({
     
     console.log('Auto switch started successfully');
     console.log('=== AUTO SWITCH STARTED ===');
-  }, [getCurrentDataSource, currentIndex, interval, performTick, isPlaying]);
+  }, [getCurrentDataSource, currentIndex, interval, performTick]);
 
   // Attempt to start when devices arrive if there was a pending start
   useEffect(() => {
@@ -198,11 +229,18 @@ export const useAutoSwitch = ({
       stopTimeoutRef.current = null;
     }
     
+    if (pauseTimeoutRef.current) {
+      clearTimeout(pauseTimeoutRef.current);
+      pauseTimeoutRef.current = null;
+    }
+    
     setIsPlaying(false);
     isPlayingRef.current = false;
     pendingStartRef.current = false;
     setIsPendingStop(false);
     setIsAtMarker(true);
+    pauseUntilRef.current = 0;
+    nextTickTimeRef.current = 0;
     
     // Dispatch deactivation event
     document.dispatchEvent(new CustomEvent('autoSwitchDeactivated', {
@@ -255,19 +293,52 @@ export const useAutoSwitch = ({
   // Handle user interaction and pause/resume events
   useEffect(() => {
     const handleUserInteraction = (event) => {
-      if (!isPlayingRef.current) return;
-      console.log('User interaction detected, turning OFF auto switch:', event.detail);
-      stopAutoSwitchImmediately();
+      console.log('=== USER INTERACTION DETECTED ===');
+      console.log('isPlayingRef.current:', isPlayingRef.current);
+      console.log('event.detail:', event.detail);
+      
+      if (!isPlayingRef.current) {
+        console.log('Auto switch not playing, ignoring user interaction');
+        return;
+      }
+      
+      console.log('User interaction detected - handled by AutoSwitchToggle for pause/resume:', event.detail);
+      // Biarkan AutoSwitchToggle yang handle user interaction
+      // Jangan langsung stop auto switch untuk tampilan publik
     };
 
     const handlePauseAutoSwitch = (event) => {
-      console.log('Pause auto switch event received (interpreted as OFF):', event.detail);
-      if (!isPlayingRef.current) return;
-      stopAutoSwitchImmediately();
+      console.log('=== PAUSE AUTO SWITCH EVENT ===');
+      console.log('isPlayingRef.current:', isPlayingRef.current);
+      console.log('event.detail:', event.detail);
+      
+      if (!isPlayingRef.current) {
+        console.log('Auto switch not playing, ignoring pause event');
+        return;
+      }
+      
+      console.log('Pause auto switch event received - handled by AutoSwitchToggle:', event.detail);
+      // Biarkan AutoSwitchToggle yang handle pause/resume logic
+      // Jangan langsung stop auto switch
     };
 
     const handleResumeAutoSwitch = (event) => {
-      console.log('Resume auto switch event received - ignored (requires manual toggle ON):', event.detail);
+      console.log('=== RESUME AUTO SWITCH EVENT ===');
+      console.log('event.detail:', event.detail);
+      console.log('Resume auto switch event received from AutoSwitchToggle:', event.detail);
+      
+      // Jika auto switch sedang playing, tidak perlu resume
+      if (isPlayingRef.current) {
+        console.log('Auto switch already playing, no need to resume');
+        return;
+      }
+      
+      // Jika ada pending start, jalankan start
+      if (pendingStartRef.current) {
+        console.log('Resuming from pending start');
+        pendingStartRef.current = false;
+        startAutoSwitch();
+      }
     };
 
     document.addEventListener('userInteraction', handleUserInteraction);
@@ -316,6 +387,18 @@ export const useAutoSwitch = ({
     togglePlayPause,
     
     // For compatibility
-    isAutoSwitchOn: isPlaying
+    isAutoSwitchOn: isPlaying,
+    
+    // Debug info
+    debugInfo: {
+      devicesCount: currentDataSource.length,
+      isLoading: devicesLoading,
+      hasError: !!devicesError,
+      errorMessage: devicesError,
+      isPlaying: isPlaying,
+      currentIndex: currentIndex,
+      isPendingStop: isPendingStop,
+      isAtMarker: isAtMarker
+    }
   };
 };
